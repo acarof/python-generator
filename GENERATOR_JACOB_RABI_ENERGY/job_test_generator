@@ -1,0 +1,1008 @@
+#!/bin/sh
+
+CP2K_VERSION=$1
+DATE=$2
+
+myvar=2
+let myvar+1
+echo $myvar
+
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo 
+echo    INFO : START PROGRAM 'job_test_generator'
+echo    INFO : VERSION 16.06.16
+echo    INFO : DATE = $(date)
+echo    INFO : DIRECTORY =
+pwd
+echo    INFO : CP2K_VERSION = $1 
+echo    
+
+HaEV=27
+kcalmolEV=0.043
+
+MODULEPAT=/scratch/grudorff/modulefiles module load mpich
+PATH_EXE=/scratch/grudorff/antoine/bin
+PATH_TEMPLATE=$(pwd)/TEMPLATE/
+PATH_COORD=$(pwd)/COORD/
+PATH_COMPARE=$(pwd)/DATA_COMPARE/
+PATH_PROJECT=/homes/acarof/PROJECT/NAMD_SH_CP2K/IMPLEMENT_AOM_CP_T28
+EXE=${PATH_EXE}/cp2k_nonadiabatic_scutum_160427.sopt
+
+
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo   0-PREPARE THE DIRECTORY
+echo   $(date)
+echo 
+NAME_DIR=TEST_NAMD_${CP2K_VERSION}_${DATE}
+cd     ..
+rm -rf ${NAME_DIR}
+mkdir  ${NAME_DIR}
+cd     ${NAME_DIR}
+
+PATH_FINAL=$(pwd)/FINAL
+mkdir FINAL
+cp     ${PATH_COMPARE}/*dat FINAL/
+cp     ${PATH_COMPARE}/*exe FINAL/
+
+
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo   0a-CHECK THAT FIST WORKS WITH THE CODE
+echo   $(date)
+mkdir  CHECK_FIST
+cd     CHECK_FIST
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_FIST_long
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+        awk '{if (NR>= 2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_FIST_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+
+        cd ..
+done
+cd ..
+
+
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo   1-COMPARE HAMILTONIAN, NACE, NACV WITH JACOB-LAURA CODE
+echo   $(date)
+echo 
+mkdir  HAMILTONIAN_vs_NAMDTCL
+cd     HAMILTONIAN_vs_NAMDTCL
+
+NUMBER_CONFIG=100
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_SH_short_C06519
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk  '{if (NR==16) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/Hab-total-cp2k-${NAME_DIR}.dat
+        awk  '{if (NR==16) print $4}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/E2-total-cp2k-${NAME_DIR}.dat
+        awk  '{if (NR==15) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/E1-total-cp2k-${NAME_DIR}.dat
+        awk  '{if (NR==15) print $4}' ETHYLENE_DIMER-nace-1.xyz >> ${PATH_FINAL}/nace-total-cp2k-${NAME_DIR}.dat
+        FILEIN=pre_ETHYLENE_DIMER-nacv-1.xyz
+        tail -108 ETHYLENE_DIMER-nacv-1.xyz > $FILEIN
+        FILEOUT=${PATH_FINAL}/nacv-total-cp2k-${NAME_DIR}.dat
+        awk '{if (NR%3 ==2) print $2}' $FILEIN >> $FILEOUT
+        awk '{if (NR%3 ==0) print $1}' $FILEIN >> $FILEOUT
+        rm $FILEIN
+
+        cd ..
+done
+cd ..
+       
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo   2-COMPARE ELECTRONIC PROPAGATION \(FROZEN HAMILTONIAN\) 
+echo     WITH RABI OSCILLATIONS
+echo   $(date)
+echo 
+mkdir   ELECTRONIC_PROP_vs_RABI
+cd      ELECTRONIC_PROP_vs_RABI
+
+NUMBER_CONFIG=3
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_RABI
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-mat-1.xyz > pre-population
+        awk '{if (NR>=10) print $0}'  pre-population > forgraph_population_a_CONF${CONFIG}_${NAME_DIR}.dat
+        awk '{if (NR%4 == 0) print $5}' ETHYLENE_DIMER-mat-1.xyz > pre-population
+        awk '{if (NR>=10) print $0}'  pre-population > forgraph_population_b_CONF${CONFIG}_${NAME_DIR}.dat
+        hab="$(awk '{if (NR==4) print $3}' ETHYLENE_DIMER-hamilt-1.xyz)"
+        e1="$(awk '{if (NR==4) print $4}' ETHYLENE_DIMER-hamilt-1.xyz)"
+        e2="$(awk '{if (NR==3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz)"
+        echo  $hab   $e2   $e1  0.1   1000  >      input_CONF${CONFIG}_${NAME_DIR}.dat 
+
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+
+done
+cd ..
+
+
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo   3-COMPARE DIAGONAL FORCES WITH FIST FORCES
+echo   $(date)
+echo 
+mkdir   DIAGONAL_FORCES_vs_FIST
+cd      DIAGONAL_FORCES_vs_FIST
+
+NUMBER_CONFIG=100
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        DIR=CONFIG_BO1_Hab0_$CONFIG
+        mkdir $DIR
+        cp ${PATH_TEMPLATE}/* $DIR/
+        cp ${PATH_COORD}/COORD_$CONFIG $DIR/COORD.init
+        cd $DIR
+
+        NAME=DIMER_ETHYLENE_BO1_Hab0
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+        NUMBER_ATOM=14
+        for  (( ATOM=3; ATOM<=$NUMBER_ATOM; ATOM=ATOM+1))
+        do
+           if [ $ATOM = 3 ]
+           then
+                TEST=0
+           elif [ $ATOM = 9 ]
+           then
+                TEST=0
+           #elif [ $ATOM = 14 ]
+           #then 
+           #     awk -v var=0 '{if (NR%14 == var) print $2}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_BO1_Hab0_${NAME_DIR}.dat
+           else
+                awk -v var=$ATOM '{if (NR%14 == var) print $2}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_BO1_Hab0_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var) print $3}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_BO1_Hab0_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var) print $4}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_BO1_Hab0_${NAME_DIR}.dat
+           fi
+        done
+
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+        DIR=CONFIG_BO2_Hab0_$CONFIG
+        mkdir $DIR
+        cp ${PATH_TEMPLATE}/* $DIR/
+        cp ${PATH_COORD}/COORD_$CONFIG $DIR/COORD.init
+        cd $DIR
+
+        NAME=DIMER_ETHYLENE_BO2_Hab0
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+        NUMBER_ATOM=14
+        for  (( ATOM=3; ATOM<=$NUMBER_ATOM; ATOM=ATOM+1))
+        do
+           if [ $ATOM = 3 ]
+           then
+                TEST=0
+           elif [ $ATOM = 9 ]
+           then
+                TEST=0
+           else
+                awk -v var=$ATOM '{if (NR%14 == var) print $2}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_BO2_Hab0_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var) print $3}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_BO2_Hab0_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var) print $4}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_BO2_Hab0_${NAME_DIR}.dat
+           fi
+        done
+
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+        DIR=CONFIG_FIST_SITE1_$CONFIG
+        mkdir $DIR
+        cp ${PATH_TEMPLATE}/* $DIR/
+        cp ${PATH_COORD}/COORD_$CONFIG $DIR/COORD.init
+        cd $DIR
+
+
+        NAME=DIMER_ETHYLENE_FIST_SITE1
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+        NUMBER_ATOM=14
+        for (( ATOM=3; ATOM<=$NUMBER_ATOM; ATOM=ATOM+1))
+        do
+           if [ $ATOM = 3 ]
+           then
+                TEST=0
+           elif [ $ATOM = 9 ]
+           then
+                TEST=0
+           else
+                awk -v var=$ATOM '{if (NR%14 == var) print $2}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_FIST_SITE1_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var) print $3}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_FIST_SITE1_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var) print $4}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_FIST_SITE1_${NAME_DIR}.dat
+           fi
+        done
+
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+        DIR=CONFIG_FIST_SITE2_$CONFIG
+        mkdir $DIR
+        cp ${PATH_TEMPLATE}/* $DIR/
+        cp ${PATH_COORD}/COORD_$CONFIG $DIR/COORD.init
+        cd $DIR
+
+
+        NAME=DIMER_ETHYLENE_FIST_SITE2
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+        NUMBER_ATOM=14
+        for  (( ATOM=3; ATOM<=$NUMBER_ATOM; ATOM=ATOM+1))
+        do
+           if [ $ATOM = 3 ]
+           then
+                TEST=0
+           elif [ $ATOM = 9 ]
+           then
+                TEST=0
+           else
+                awk -v var=$ATOM '{if (NR%14 == var) print $2}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_FIST_SITE2_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var) print $3}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_FIST_SITE2_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var) print $4}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_FIST_SITE2_${NAME_DIR}.dat
+           fi
+        done
+
+        mv  *.dat  ${PATH_FINAL}/
+
+        cd ..
+
+done
+cd ..
+
+
+
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo   4-BORN-OPPENHEIMER: CHECK ENERGY CONSERVATION AND COMPARE  
+echo   WITH ANALYTICAL FORCES
+echo   a_GROUND STATE
+echo   $(date)
+echo 
+mkdir   BO_GROUND_STATE
+cd      BO_GROUND_STATE
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_BO1
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        NUMBER_ATOM=14
+        for  (( ATOM=3; ATOM<=$NUMBER_ATOM; ATOM=ATOM+1))
+        do
+           if [ $ATOM = 3 ]
+           then
+                TEST=0
+           elif [ $ATOM = 9 ]
+           then
+                TEST=0
+           else
+                awk -v var=$ATOM '{if (NR%14 == var) print $2}' ETHYLENE_DIMER-frc-1.xyz >>   numfrc_BO1_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var) print $3}' ETHYLENE_DIMER-frc-1.xyz >>   numfrc_BO1_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var) print $4}' ETHYLENE_DIMER-frc-1.xyz >>   numfrc_BO1_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var && NR>=15) print $1}' ETHYLENE_DIMER-exfrc-1.xyz >> anfrc_BO1_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var && NR>=15) print $2}' ETHYLENE_DIMER-exfrc-1.xyz >> anfrc_BO1_${NAME_DIR}.dat
+                awk -v var=$ATOM '{if (NR%14 == var && NR>=15) print $3}' ETHYLENE_DIMER-exfrc-1.xyz >> anfrc_BO1_${NAME_DIR}.dat
+           fi
+        done
+        awk '{if (NR>= 2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_BO1_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_BO1_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+done
+cd ..
+
+
+NAME_HERE=BO1_C0065
+echo   b_GROUND STATE: $NAME_HERE
+echo   $(date)
+echo
+mkdir   $NAME_HERE
+cd      $NAME_HERE
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_$NAME_HERE
+
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-${NAME_HERE}_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-${NAME_HERE}_${NAME_DIR}.dat E1-${NAME_HERE}_${NAME_DIR}.dat > forgraph_DeltaE21-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_${NAME_HERE}_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+done
+cd ..
+
+
+
+NAME_HERE=BO1_C1956
+echo   b_GROUND STATE: $NAME_HERE
+echo   $(date)
+echo
+mkdir   $NAME_HERE
+cd      $NAME_HERE
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_$NAME_HERE
+
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-${NAME_HERE}_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-${NAME_HERE}_${NAME_DIR}.dat E1-${NAME_HERE}_${NAME_DIR}.dat > forgraph_DeltaE21-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_${NAME_HERE}_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+done
+cd ..
+
+
+
+
+
+
+NAME_HERE=BO2_C0652
+echo   b_EXCITED STATE: $NAME_HERE
+echo   $(date)
+echo
+mkdir   $NAME_HERE
+cd      $NAME_HERE
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_$NAME_HERE
+
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        NUMBER_ATOM=14
+        for  (( ATOM=3; ATOM<=$NUMBER_ATOM; ATOM=ATOM+1))
+        do
+        if   [ $ATOM = 3 ]
+        then
+             TEST=0
+        elif [ $ATOM = 9 ]
+        then
+             TEST=0
+        else
+             awk -v var=$ATOM '{if (NR%14 == var) print $2}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_BO2_${NAME_DIR}.dat
+             awk -v var=$ATOM '{if (NR%14 == var) print $3}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_BO2_${NAME_DIR}.dat
+             awk -v var=$ATOM '{if (NR%14 == var) print $4}' ETHYLENE_DIMER-frc-1.xyz >> numfrc_BO2_${NAME_DIR}.dat
+             awk -v var=$ATOM '{if (NR%14 == var && NR>=15) print $1}' ETHYLENE_DIMER-exfrc-1.xyz >> anfrc_BO2_${NAME_DIR}.dat
+             awk -v var=$ATOM '{if (NR%14 == var && NR>=15) print $2}' ETHYLENE_DIMER-exfrc-1.xyz >> anfrc_BO2_${NAME_DIR}.dat
+             awk -v var=$ATOM '{if (NR%14 == var && NR>=15) print $3}' ETHYLENE_DIMER-exfrc-1.xyz >> anfrc_BO2_${NAME_DIR}.dat
+        fi
+        done
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-${NAME_HERE}_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-${NAME_HERE}_${NAME_DIR}.dat E1-${NAME_HERE}_${NAME_DIR}.dat > forgraph_DeltaE21-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_${NAME_HERE}_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+done
+cd ..
+
+
+NAME_HERE=BO2_C0065
+echo   b_EXCITED STATE: $NAME_HERE
+echo   $(date)
+echo
+mkdir   $NAME_HERE
+cd      $NAME_HERE
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_$NAME_HERE
+
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-${NAME_HERE}_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-${NAME_HERE}_${NAME_DIR}.dat E1-${NAME_HERE}_${NAME_DIR}.dat > forgraph_DeltaE21-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_${NAME_HERE}_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+done
+cd ..
+
+
+NAME_HERE=BO2_C0130
+echo   b_EXCITED STATE: $NAME_HERE
+echo   $(date)
+echo
+mkdir   $NAME_HERE
+cd      $NAME_HERE
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_$NAME_HERE
+
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-${NAME_HERE}_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-${NAME_HERE}_${NAME_DIR}.dat E1-${NAME_HERE}_${NAME_DIR}.dat > forgraph_DeltaE21-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_${NAME_HERE}_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+done
+cd ..
+
+
+
+
+NAME_HERE=BO2_C0325
+echo   b_EXCITED STATE: $NAME_HERE
+echo   $(date)
+echo
+mkdir   $NAME_HERE
+cd      $NAME_HERE
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_$NAME_HERE
+
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-${NAME_HERE}_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-${NAME_HERE}_${NAME_DIR}.dat E1-${NAME_HERE}_${NAME_DIR}.dat > forgraph_DeltaE21-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_${NAME_HERE}_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+done
+cd ..
+
+
+
+NAME_HERE=BO2_C1956
+echo   b_EXCITED STATE: $NAME_HERE
+echo   $(date)
+echo
+mkdir   $NAME_HERE
+cd      $NAME_HERE
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_$NAME_HERE
+
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-${NAME_HERE}_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-${NAME_HERE}_${NAME_DIR}.dat E1-${NAME_HERE}_${NAME_DIR}.dat > forgraph_DeltaE21-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_${NAME_HERE}_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+done
+cd ..
+
+NAME_HERE=BO2_C3912
+echo   b_EXCITED STATE: $NAME_HERE
+echo   $(date)
+echo
+mkdir   $NAME_HERE
+cd      $NAME_HERE
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_$NAME_HERE
+
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-${NAME_HERE}_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-${NAME_HERE}_${NAME_DIR}.dat E1-${NAME_HERE}_${NAME_DIR}.dat > forgraph_DeltaE21-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_${NAME_HERE}_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+done
+cd ..
+
+
+
+
+NAME_HERE=BO2_C9780
+echo   b_EXCITED STATE: $NAME_HERE
+echo   $(date)
+echo
+mkdir   $NAME_HERE
+cd      $NAME_HERE
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_$CONFIG/COORD.init
+        cd CONFIG_$CONFIG
+        NAME=DIMER_ETHYLENE_$NAME_HERE
+
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-${NAME_HERE}_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-${NAME_HERE}_${NAME_DIR}.dat E1-${NAME_HERE}_${NAME_DIR}.dat > forgraph_DeltaE21-${NAME_HERE}_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_${NAME_HERE}_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+done
+cd ..
+
+
+
+
+
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo   5-CHECK ENERGY CONSERVATION FOR SURFACE HOPPING
+echo   $(date)
+echo
+
+mkdir ENERGY_CONSERVATION
+cd    ENERGY_CONSERVATION
+
+NUMBER_CONFIG=1
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+        mkdir CONFIG_C0065_$CONFIG 
+        cp ${PATH_TEMPLATE}/* CONFIG_C0065_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_C0065_$CONFIG/COORD.init
+        cd CONFIG_C0065_$CONFIG
+        NAME=DIMER_ETHYLENE_SH_long_C0065
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+       
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-SH_C0065_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-SH_C0065_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-SH_C0065_${NAME_DIR}.dat E1-SH_C0065_${NAME_DIR}.dat > forgraph_DeltaE21-SH_C0065_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_SH_C0065_${NAME_DIR}.dat
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_SH_C0065_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+        
+
+        mkdir CONFIG_C0130_$CONFIG 
+        cp ${PATH_TEMPLATE}/* CONFIG_C0130_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_C0130_$CONFIG/COORD.init
+        cd CONFIG_C0130_$CONFIG
+        NAME=DIMER_ETHYLENE_SH_long_C0130
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+       
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-SH_C0130_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-SH_C0130_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-SH_C0130_${NAME_DIR}.dat E1-SH_C0130_${NAME_DIR}.dat > forgraph_DeltaE21-SH_C0130_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_SH_C0130_${NAME_DIR}.dat
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_SH_C0130_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+
+        NAME_HERE=0.1_C0065
+        mkdir CONFIG_${NAME_HERE}_$CONFIG 
+        cp ${PATH_TEMPLATE}/* CONFIG_0.1_C0065_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_0.1_C0065_$CONFIG/COORD.init
+        cd CONFIG_0.1_C0065_$CONFIG
+        NAME=DIMER_ETHYLENE_SH_long_0.1_C0065
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+       
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_SH_0.1_C0065_${NAME_DIR}.dat
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_SH_0.1_C0065_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+
+
+
+        NAME_HERE=0.05_C0065
+        mkdir CONFIG_${NAME_HERE}_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_0.1_C0065_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_0.1_C0065_$CONFIG/COORD.init
+        cd CONFIG_0.1_C0065_$CONFIG
+        NAME=DIMER_ETHYLENE_SH_long_0.1_C0065
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_SH_0.1_C0065_${NAME_DIR}.dat
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_SH_0.05_C0065_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+
+
+        NAME_HERE=1_C0065
+        mkdir CONFIG_${NAME_HERE}_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_0.1_C0065_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_0.1_C0065_$CONFIG/COORD.init
+        cd CONFIG_0.1_C0065_$CONFIG
+        NAME=DIMER_ETHYLENE_SH_long_0.1_C0065
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_SH_0.1_C0065_${NAME_DIR}.dat
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_SH_1_C0065_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+
+
+
+
+        mkdir CONFIG_C0325_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_C0325_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_C0325_$CONFIG/COORD.init
+        cd CONFIG_C0325_$CONFIG
+        NAME=DIMER_ETHYLENE_SH_long_C0325
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-SH_C0325_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-SH_C0325_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-SH_C0325_${NAME_DIR}.dat E1-SH_C0325_${NAME_DIR}.dat > forgraph_DeltaE21-SH_C0325_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_SH_C0325_${NAME_DIR}.dat
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_SH_C0325_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+
+        mkdir CONFIG_C0652_$CONFIG
+        cp ${PATH_TEMPLATE}/* CONFIG_C0652_$CONFIG/
+        cp ${PATH_COORD}/COORD_$CONFIG CONFIG_C0652_$CONFIG/COORD.init
+        cd CONFIG_C0652_$CONFIG
+        NAME=DIMER_ETHYLENE_SH_long_C0652
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-SH_C0652_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-SH_C0652_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-SH_C0652_${NAME_DIR}.dat E1-SH_C0652_${NAME_DIR}.dat > forgraph_DeltaE21-SH_C0652_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_SH_C0652_${NAME_DIR}.dat
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_SH_C0652_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+
+
+	mkdir CONFIG_C1956_$CONFIG
+	cp ${PATH_TEMPLATE}/* CONFIG_C1956_$CONFIG/
+	cp ${PATH_COORD}/COORD_$CONFIG CONFIG_C1956_$CONFIG/COORD.init
+	cd CONFIG_C1956_$CONFIG
+	NAME=DIMER_ETHYLENE_SH_long_C1956
+        $EXE $NAME.inp > $NAME.out 2> $NAME.err < /dev/null
+
+        awk  '{if (NR%4 == 0) print $4}' ETHYLENE_DIMER-hamilt-1.xyz > E2-SH_C1956_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 3) print $3}' ETHYLENE_DIMER-hamilt-1.xyz > E1-SH_C1956_${NAME_DIR}.dat
+        awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-SH_C1956_${NAME_DIR}.dat E1-SH_C1956_${NAME_DIR}.dat > forgraph_DeltaE21-SH_C1956_${NAME_DIR}.dat
+        awk  '{if (NR%4 == 0) print $3}' ETHYLENE_DIMER-hamilt-1.xyz >> ${PATH_FINAL}/forgraph_Hab_SH_C1956_${NAME_DIR}.dat
+        awk '{if (NR>=2) print $6}' ETHYLENE_DIMER-1.ener >> forgraph_energy_SH_C1956_${NAME_DIR}.dat
+        mv  *.dat  ${PATH_FINAL}/
+        cd ..
+
+
+done
+cd ..
+
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo   6-PREPARE .dat FOR GNUPLOT
+echo   $(date)
+echo
+
+cd    ${PATH_FINAL}
+
+echo COMPARE HAMILTONIAN, NACE, NACV WITH JACOB-LAURA CODE
+awk -v HaEV=$HaEV -v kcalmolEV=$kcalmolEV  'NR==FNR{a[NR]=$1; next} {print kcalmolEV*a[FNR], HaEV*$1}' Hab-laura-160419.dat Hab-total-cp2k-${NAME_DIR}.dat > forgraph_Hab-${NAME_DIR}.dat
+awk -v HaEV=$HaEV -v kcalmolEV=$kcalmolEV  'NR==FNR{a[NR]=$1; next} {print a[FNR], $1}' nacv-laura-160708.dat  nacv-total-cp2k-${NAME_DIR}.dat > forgraph_nacv-${NAME_DIR}.dat
+awk -v HaEV=$HaEV -v kcalmolEV=$kcalmolEV  'NR==FNR{a[NR]=$1; next} {print a[FNR], $1}' nace-laura-160708.dat  nace-total-cp2k-${NAME_DIR}.dat > forgraph_nace-${NAME_DIR}.dat
+
+awk 'NR==FNR{a[NR]=$1; next} {print a[FNR]-$1}'  E2-total-cp2k-${NAME_DIR}.dat E1-total-cp2k-${NAME_DIR}.dat > DeltaE21-total-cp2k-${NAME_DIR}.dat
+awk 'NR==FNR{a[NR]=$2; next} {print a[FNR]-$2}'  E2-laura-160419.dat E1-laura-160419.dat > DeltaE21-laura-160419.dat
+
+awk -v HaEV=$HaEV -v kcalmolEV=$kcalmolEV  'NR==FNR{a[NR]=$1; next} {print kcalmolEV*a[FNR], HaEV*$1}'  DeltaE21-laura-160419.dat DeltaE21-total-cp2k-${NAME_DIR}.dat > forgraph_DeltaE21-${NAME_DIR}.dat
+
+
+echo COMPARE ELECTRONIC PROPAGATION \(FROZEN HAMILTONIAN\) 
+
+
+NUMBER_CONFIG=3
+for (( CONFIG=1; CONFIG<=$NUMBER_CONFIG; CONFIG++ ))
+do
+     analytic_rabi_oscillation.exe < input_CONF${CONFIG}_${NAME_DIR}.dat
+     cp analytic_rabi_oscillation.dat forgraph_analytic_rabi_oscillation_CONF${CONFIG}_${NAME_DIR}.dat
+done
+
+echo COMPARE DIAGONAL FORCES WITH FIST FORCE
+awk 'NR==FNR{a[NR]=$1; next} {print a[FNR], $1}' numfrc_BO1_Hab0_${NAME_DIR}.dat numfrc_FIST_SITE1_${NAME_DIR}.dat > forgraph_numfrc_SITE1-${NAME_DIR}.dat 
+awk 'NR==FNR{a[NR]=$1; next} {print a[FNR], $1}' numfrc_BO2_Hab0_${NAME_DIR}.dat numfrc_FIST_SITE2_${NAME_DIR}.dat > forgraph_numfrc_SITE2-${NAME_DIR}.dat
+
+ 
+echo BORN-OPPENHEIMER: CHECK ENERGY CONSERVATION AND COMPARE 
+
+awk 'NR==FNR{a[NR]=$1; next} {print a[FNR], $1}'  anfrc_BO1_${NAME_DIR}.dat   numfrc_BO1_${NAME_DIR}.dat > forgraph_BO1_frc-${NAME_DIR}.dat
+awk 'NR==FNR{a[NR]=$1; next} {print a[FNR], $1}'  anfrc_BO2_${NAME_DIR}.dat   numfrc_BO2_${NAME_DIR}.dat > forgraph_BO2_frc-${NAME_DIR}.dat
+
+
+
+
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo   7z-TAR
+echo   $(date)
+echo
+
+cd     ../..
+tar -czvf TEST_NAMD_${CP2K_VERSION}_${DATE}.tar.gz TEST_NAMD_${CP2K_VERSION}_${DATE}
+
+
+
+
+echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo   7-GNUPLOT 
+echo   $(date)
+echo
+
+rm -rf ${PATH_PROJECT}/${NAME_DIR}
+mkdir ${PATH_PROJECT}/${NAME_DIR}
+cp ${PATH_FINAL}/forgraph_* ${PATH_PROJECT}/${NAME_DIR}
+cd ${PATH_PROJECT}/${NAME_DIR}
+
+cat << EOF > fit_pop.gnu
+  set output "graph_Rabi_Population-${NAME_DIR}.png"
+  set terminal png size 1024,768 enhanced font 'Verdana,17'
+
+  set xlabel "Time (fs)"
+  set ylabel "Population"
+  
+  plot "forgraph_population_b_CONF1_${NAME_DIR}.dat" using (\$0)/10:1 with lines, \
+   "forgraph_analytic_rabi_oscillation_CONF1_${NAME_DIR}.dat" using (\$0)/10:1 with lines, \
+   "forgraph_population_b_CONF2_${NAME_DIR}.dat" using (\$0)/10:1 with lines, \
+   "forgraph_analytic_rabi_oscillation_CONF2_${NAME_DIR}.dat" using (\$0)/10:1 with lines, \
+   "forgraph_population_b_CONF3_${NAME_DIR}.dat" using (\$0)/10:1 with lines, \
+   "forgraph_analytic_rabi_oscillation_CONF3_${NAME_DIR}.dat" using (\$0)/10:1 with lines
+EOF
+gnuplot fit_pop.gnu > fit_pop.log
+
+cat << EOF > fit_en_bo.gnu
+  set output "graph_Energy-Conservation-${NAME_DIR}.png"
+  set terminal png size 1024,768 enhanced font 'Verdana,17'
+
+  set xlabel "Time (ps)"
+  set ylabel "Energy (Ha/atoms)"
+  
+  plot "forgraph_energy_BO1_${NAME_DIR}.dat" using (\$0)/2000:(\$1/12) with lines, \
+   "forgraph_energy_BO2_${NAME_DIR}.dat" using (\$0)/2000:(\$1/12) with lines, \
+   "forgraph_energy_FIST_${NAME_DIR}.dat" using (\$0)/2000:(\$1/12) with lines
+EOF
+gnuplot fit_en_bo.gnu > fit_en_bo.log
+
+
+cat << EOF > fit_en_small.gnu
+  set output "graph_Energy-Conservation-SmallHab-${NAME_DIR}.png"
+  set terminal png size 1024,768 enhanced font 'Verdana,17'
+
+  set xlabel "Time (ps)"
+  set ylabel "Energy (Ha/atoms)"
+  
+  plot "forgraph_energy_SH_C0065_${NAME_DIR}.dat" using (\$0)/2000:(\$1/12) with lines, \
+   "forgraph_energy_SH_often_C0065_${NAME_DIR}.dat" using (\$0)/10000:(\$1/12) with lines
+EOF
+gnuplot fit_en_small.gnu > fit_en_small.log
+
+
+cat << EOF > fit_en_sh.gnu
+  set output "graph_Energy-Conservation-SH-${NAME_DIR}.png"
+  set terminal png size 1024,768 enhanced font 'Verdana,17'
+
+  set xlabel "Time (ps)"
+  set ylabel "Energy (Ha/atoms)"
+  
+  plot "forgraph_energy_SH_C0065_${NAME_DIR}.dat" using (\$0)/2000:(\$1/12) with lines, \
+   "forgraph_energy_SH_C0130_${NAME_DIR}.dat" using (\$0)/2000:(\$1/12) with lines, \
+   "forgraph_energy_SH_C0325_${NAME_DIR}.dat" using (\$0)/2000:(\$1/12) with lines, \
+   "forgraph_energy_SH_C0652_${NAME_DIR}.dat" using (\$0)/2000:(\$1/12) with lines, \
+   "forgraph_energy_SH_C1956_${NAME_DIR}.dat" using (\$0)/2000:(\$1/12) with lines
+EOF
+gnuplot fit_en_sh.gnu > fit_en_sh.log
+
+
+cat << EOF > fit_hab_sh.gnu
+  set output "graph_Hab-Conservation-SH-${NAME_DIR}.png"
+  set terminal png size 1024,768 enhanced font 'Verdana,17'
+
+  set xlabel "Time (ps)"
+  set ylabel "Hab (Hartree)"
+  
+  plot "forgraph_Hab_SH_C0065_${NAME_DIR}.dat" using (\$0)/2000:(\$1) with lines, \
+   "forgraph_Hab_SH_C0130_${NAME_DIR}.dat" using (\$0)/2000:(\$1) with lines, \
+   "forgraph_Hab_SH_C0325_${NAME_DIR}.dat" using (\$0)/2000:(\$1) with lines, \
+   "forgraph_Hab_SH_C0652_${NAME_DIR}.dat" using (\$0)/2000:(\$1) with lines, \
+   "forgraph_Hab_SH_C1956_${NAME_DIR}.dat" using (\$0)/2000:(\$1) with lines
+EOF
+gnuplot fit_hab_sh.gnu > fit_hab_sh.log
+
+
+cat << EOF > fit_nacv.gnu
+   set output "graph_NACV-${NAME_DIR}.png"
+   set terminal png size 1024,768 enhanced font 'Verdana,17'
+   a=-1.0
+   b=0.0
+
+   g(x) = a*x+b
+   set xlabel "NACV-NAMDTCL (bohr-1)"
+   set ylabel "NACV-CP2K (bohr-1)"
+
+   plot "forgraph_nacv-${NAME_DIR}.dat" using 1:2
+   fit g(x) "forgraph_nacv-${NAME_DIR}.dat" using 1:2 via a,b
+
+EOF
+gnuplot fit_nacv.gnu > fit_nacv.log
+
+
+
+cat << EOF > fit_nace.gnu
+   set output "graph_NACE-${NAME_DIR}.png"
+   set terminal png size 1024,768 enhanced font 'Verdana,17'
+   a=-1.0
+   b=0.0
+
+   g(x) = a*x+b
+   set xlabel "NACE-NAMDTCL (bohr-1)"
+   set ylabel "NACE-CP2K (bohr-1)"
+
+   plot "forgraph_nace-${NAME_DIR}.dat" using 1:2
+   fit g(x) "forgraph_nace-${NAME_DIR}.dat" using 1:2 via a,b
+
+EOF
+gnuplot fit_nace.gnu > fit_nace.log
+
+
+
+
+cat << EOF > fit_hab.gnu
+   set output "graph_Hab-${NAME_DIR}.png"
+   set terminal png size 1024,768 enhanced font 'Verdana,17'
+   a=-1.0
+   b=0.0
+
+   g(x) = a*x+b
+   set xlabel "Hab-NAMDTCL (eV)"
+   set ylabel "Hab-CP2K (eV)"
+
+   plot "forgraph_Hab-${NAME_DIR}.dat" using 1:2
+   fit g(x) "forgraph_Hab-${NAME_DIR}.dat" using 1:2 via a,b
+
+EOF
+gnuplot fit_hab.gnu > fit_hab.log
+
+
+cat << EOF > fit_deltaE.gnu
+   set output "graph_DeltaE21-${NAME_DIR}.png"
+   set terminal png size 1024,768 enhanced font 'Verdana,17'
+   a=-1.0
+   b=0.0
+
+   g(x) = a*x+b
+   set xlabel "DeltaE21-NAMDTCL (eV)"
+   set ylabel "DeltaE21-CP2K (eV)"
+
+   plot "forgraph_DeltaE21-${NAME_DIR}.dat" using 1:2
+   fit g(x) "forgraph_DeltaE21-${NAME_DIR}.dat" using 1:2 via a,b
+
+EOF
+gnuplot fit_deltaE.gnu > fit_deltaE.log
+
+
+cat << EOF > fit_bo1frc.gnu
+   set output "graph_BO1_frc-${NAME_DIR}.png"
+   set terminal png size 1024,768 enhanced font 'Verdana,17'
+   a=-1.0
+   b=0.0
+
+   g(x) = a*x+b
+   set xlabel "Analytical forces - BO1 (u.a.)"
+   set ylabel "Numerical  forces - BO1 (u.a.)"
+
+   plot "forgraph_BO1_frc-${NAME_DIR}.dat" using 1:2
+   fit g(x) "forgraph_BO1_frc-${NAME_DIR}.dat" using 1:2 via a,b
+
+EOF
+gnuplot fit_bo1frc.gnu > fit_bo1frc.log
+
+
+cat << EOF > fit_bo2frc.gnu
+   set output "graph_BO2_frc-${NAME_DIR}.png"
+   set terminal png size 1024,768 enhanced font 'Verdana,17'
+   a=-1.0
+   b=0.0
+
+   g(x) = a*x+b
+   set xlabel "Analytical forces - BO2 (u.a.)"
+   set ylabel "Numerical  forces - BO2 (u.a.)"
+
+   plot "forgraph_BO2_frc-${NAME_DIR}.dat" using 1:2
+   fit g(x) "forgraph_BO2_frc-${NAME_DIR}.dat" using 1:2 via a,b
+
+EOF
+gnuplot fit_bo2frc.gnu > fit_bo2frc.log
+
+
+cat << EOF > fit_fistfrc_site1.gnu
+   set output "graph_FIST1_frc-${NAME_DIR}.png"
+   set terminal png size 1024,768 enhanced font 'Verdana,17'
+   a=-1.0
+   b=0.0
+
+   g(x) = a*x+b
+   set xlabel "Fist forces - Site 1 (a.u.)"
+   set ylabel "FSSH forces - Site 1 (a.u.)"
+
+   plot "forgraph_numfrc_SITE1-${NAME_DIR}.dat" using 1:2
+EOF
+gnuplot fit_fistfrc_site1.gnu > fit_fistfrc_site1.log
+
+
+
+cat << EOF > fit_fistfrc_site2.gnu
+   set output "graph_FIST2_frc-TEST_NAMD__.png"
+   set terminal png size 1024,768 enhanced font 'Verdana,17'
+   a=-1.0
+   b=0.0
+
+   g(x) = a*x+b
+   set xlabel "Fist forces - Site 2 (a.u.)"
+   set ylabel "FSSH forces - Site 2 (a.u.)"
+
+   plot "forgraph_numfrc_SITE2-${NAME_DIR}.dat" using 1:2
+EOF
+gnuplot fit_fistfrc_site2.gnu > fit_fistfrc_site2.log
+
+

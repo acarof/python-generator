@@ -1,0 +1,346 @@
+# THERMODYNAMICS
+@SET myENSEMBLE    NVE
+@SET myTEMPERATURE 298
+
+# TRAJECTORY
+@SET mySTEPS       200000
+@SET myTIMESTEP    0.5D0
+@SET myPRINT       1
+
+#SYSTEMS SIZE 
+@SET myLBOX	   18.625
+@SET myRCUT        9.3250D0
+@SET myNATOMS      12
+#@SET myNMOL        2
+
+# EWALD PARAMETERS
+@SET myGMAX        17
+@SET myOSPLINE     6
+@SET myALPHA       0.36460D0
+
+&GLOBAL
+  BLACS_GRID             SQUARE
+  PREFERRED_FFT_LIBRARY  FFTW
+  PRINT_LEVEL            LOW
+  PROGRAM_NAME           CP2K
+  PROJECT_NAME           ETHYLENE_DIMER
+  RUN_TYPE               MD
+&END GLOBAL
+&MOTION
+	&MD
+     		ENSEMBLE      ${myENSEMBLE}
+     		STEPS         ${mySTEPS}
+   		TIMESTEP      ${myTIMESTEP}
+     		TEMPERATURE   ${myTEMPERATURE}
+   	&END MD
+#        &CONSTRAINT
+#             SHAKE_TOLERANCE    9.9999999999999982E-13
+#             ROLL_TOLERANCE     1.0000000000000000E-10
+#             CONSTRAINT_INIT  T
+#            &FIXED_ATOMS
+#               COMPONENTS_TO_FIX XYZ
+#               LIST    1  7
+#             &END FIXED_ATOMS
+#        &END CONSTRAINT
+#   	&CONSTRAINT
+#     		SHAKE_TOLERANCE     1.0E-12
+#     		ROLL_TOLERANCE      1.0E-10
+#     		CONSTRAINT_INIT     T
+#     		&G3X3
+#       			MOLECULE            1
+#       			INTERMOLECULAR      F
+#       			ATOMS               1              2              3
+#			DISTANCES           1.890359170D0  1.8903591720D0 3.086920340D0
+#     		&END G3X3
+#   	&END CONSTRAINT
+  	&PRINT
+		&TRAJECTORY  LOW
+       			FORMAT  XYZ
+       			&EACH
+         			MD          ${myPRINT}
+       			&END EACH
+     		&END TRAJECTORY
+     		&VELOCITIES  LOW
+       			FORMAT  XYZ
+       			&EACH
+         			MD          ${myPRINT}
+       			&END EACH
+     		&END VELOCITIES
+     		&FORCES  LOW
+       			FORMAT  XYZ
+       			&EACH
+         			MD          ${myPRINT}
+       			&END EACH
+     		&END FORCES
+   	&END PRINT
+&END MOTION
+&MULTIPLE_FORCE_EVALS
+   FORCE_EVAL_ORDER 1 2 3 
+&END
+&FORCE_EVAL
+        METHOD MIXED
+        &MIXED
+                MIXING_TYPE ADIABATIC
+                &ADIABATIC
+                        METHOD_PROPAGATION FSSH
+                	METHOD_COUPLING    AOM
+                        &AOM
+                             NUMBER_DIABATIC_STATES                2
+                             NUMBER_ATOMS_PER_SITE                 6
+                             NUMBER_ORBITALS                       1
+                             CUT_OFF [angstrom]      12.0D0
+                             SCALING_FACTOR   [hartree]            0.0325D0
+                             FIRST_DIABAT                          1
+                             FIRST_ADIABAT                          1
+                             DECOHERENCE_CRITERION                 1.0E-06
+                             CBAR                                  0.50820D0
+                             ATOMIC_OVERLAP_CUTOFF                 1.0E-17
+                             NUCLEAR_TIMESTEP  [fs]                ${myTIMESTEP}
+                             ELECTRONIC_PARTIAL_STEP               5
+                             COLLAPSE                              T
+                             ANALYTICS                             T
+                             METHOD_RESCALING                      SIMPLE
+                             NACV_INCREMENT   [bohr]               1.889725989E-3
+                             @INCLUDE AOM_COEFF.init
+                        &END AOM
+                        &PRINT
+                            &COEFFICIENTS  LOW
+                               &EACH
+                                   MD          ${myPRINT}
+                               &END EACH
+                            &END COEFFICIENTS
+                            &POPULATIONS  LOW
+                               &EACH
+                                   MD          ${myPRINT}
+                               &END EACH
+                            &END POPULATIONS
+                            &HAMILTONIAN
+                               UNIT     hartree
+                               &EACH
+                                   MD          ${myPRINT}
+                               &END EACH
+                            &END HAMILTONIAN
+                            &DENSITY_MATRIX
+                               &EACH
+                                   MD          ${myPRINT}
+                               &END EACH
+                            &END DENSITY_MATRIX
+                            &NACV
+                               &EACH
+                                   MD          ${myPRINT}
+                               &END EACH
+                            &END NACV
+                            &NACE
+                               &EACH
+                                   MD          ${myPRINT}
+                               &END EACH
+                            &END NACE
+                            &STATE
+                               &EACH
+                                   MD          ${myPRINT}
+                               &END EACH
+                            &END STATE
+                            &EXACT_FORCES
+                               &EACH
+                                   MD          ${myPRINT}
+                               &END EACH
+                            &END EXACT_FORCES
+                            &ACTIVE_STATE_INFO
+                               &EACH
+                                   MD          ${myPRINT}
+                               &END EACH
+                            &END ACTIVE_STATE_INFO
+                            &SH_INFO
+                               &EACH
+                                   MD          ${myPRINT}
+                               &END EACH
+                            &END SH_INFO
+                            &ADIABAT_ENERGIES
+                               &EACH
+                                   MD          ${myPRINT}
+                               &END EACH
+                            &END ADIABAT_ENERGIES
+                        &END PRINT
+                &END ADIABATIC
+     		&PRINT
+      			&PROGRAM_RUN_INFO LOW
+        				&EACH
+          					MD 1
+        				&END EACH
+      			&END PROGRAM_RUN_INFO
+     		&END PRINT
+        &END MIXED
+   	&SUBSYS
+     		&CELL
+       			ABC                    ${myLBOX}      ${myLBOX}      ${myLBOX}
+       			PERIODIC  XYZ
+       			MULTIPLE_UNIT_CELL     1              1              1
+     		&END CELL
+     		&COORD
+     			@include COORD.init
+     		&END COORD
+     		&VELOCITY  
+     			@include VELOC.init
+     		&END VELOCITY
+		&KIND C1
+       			ELEMENT C
+     		&END KIND
+     		&KIND H
+       			ELEMENT H
+     		&END KIND
+		&KIND C2
+       			ELEMENT C
+     		&END KIND
+     		&TOPOLOGY
+       			NUMBER_OF_ATOMS                   ${myNATOMS}
+       			CONN_FILE_FORMAT  MOL_SET
+       			MULTIPLE_UNIT_CELL                1              1              1
+       			&MOL_SET
+         			&MOLECULE
+           				NMOL              1
+           				CONN_FILE_NAME    ./ethylene1.psf
+           				CONN_FILE_FORMAT  PSF
+         			&END MOLECULE
+                                &MOLECULE
+                                        NMOL              1
+                                        CONN_FILE_NAME    ./ethylene2.psf
+                                        CONN_FILE_FORMAT  PSF
+                                &END MOLECULE
+       			&END MOL_SET
+     		&END TOPOLOGY
+   	&END SUBSYS
+&END FORCE_EVAL
+&FORCE_EVAL
+	METHOD  FIST
+	&MM
+    		&FORCEFIELD
+      			&SPLINE
+        			RCUT_NB         ${myRCUT}
+       			&END SPLINE
+			@INCLUDE FF_ETHYLENES_SITE1.inc
+		&END FORCEFIELD	
+		&POISSON
+       			&EWALD
+         			EWALD_TYPE  EWALD
+         			ALPHA        ${myALPHA}
+         			GMAX         ${myGMAX}
+         			O_SPLINE     ${myOSPLINE}
+       			&END EWALD
+     		&END POISSON
+     		&PRINT
+      			&ITER_INFO  SILENT
+      			&END ITER_INFO
+      				&PROGRAM_RUN_INFO LOW
+        				&EACH
+          					MD 1
+        				&END EACH
+      				&END PROGRAM_RUN_INFO
+     			&END PRINT
+   	&END MM
+   	&SUBSYS
+     		&CELL
+       			ABC                    ${myLBOX}      ${myLBOX}      ${myLBOX}
+       			PERIODIC  XYZ
+       			MULTIPLE_UNIT_CELL     1              1              1
+     		&END CELL
+     		&COORD
+     			@include COORD.init
+     		&END COORD
+     		&VELOCITY  
+     			@include VELOC.init
+     		&END VELOCITY
+                &KIND C1
+                        ELEMENT C
+                &END KIND
+                &KIND H
+                        ELEMENT H
+                &END KIND
+                &KIND C2
+                        ELEMENT C
+                &END KIND
+                &TOPOLOGY
+                        NUMBER_OF_ATOMS                   ${myNATOMS}
+                        CONN_FILE_FORMAT  MOL_SET
+                        MULTIPLE_UNIT_CELL                1              1              1
+                        &MOL_SET
+                                &MOLECULE
+                                        NMOL              1
+                                        CONN_FILE_NAME    ./ethylene1.psf
+                                        CONN_FILE_FORMAT  PSF
+                                &END MOLECULE
+                                &MOLECULE
+                                        NMOL              1
+                                        CONN_FILE_NAME    ./ethylene2.psf
+                                        CONN_FILE_FORMAT  PSF
+                                &END MOLECULE
+                        &END MOL_SET
+                &END TOPOLOGY
+   	&END SUBSYS
+&END FORCE_EVAL
+&FORCE_EVAL
+        METHOD  FIST
+        &MM
+                &FORCEFIELD
+                        &SPLINE
+                                RCUT_NB         ${myRCUT}
+                        &END SPLINE
+                        @INCLUDE FF_ETHYLENES_SITE2.inc
+                &END FORCEFIELD
+                &POISSON
+                        &EWALD
+                                EWALD_TYPE  EWALD
+                                ALPHA        ${myALPHA}
+                                GMAX         ${myGMAX}
+                                O_SPLINE     ${myOSPLINE}
+                        &END EWALD
+                &END POISSON
+                &PRINT
+                        &ITER_INFO  SILENT
+                        &END ITER_INFO
+                                &PROGRAM_RUN_INFO LOW
+                                        &EACH
+                                                MD 1
+                                        &END EACH
+                                &END PROGRAM_RUN_INFO
+                        &END PRINT
+        &END MM
+        &SUBSYS
+                &CELL
+                        ABC                    ${myLBOX}      ${myLBOX}      ${myLBOX}
+                        PERIODIC  XYZ
+                        MULTIPLE_UNIT_CELL     1              1              1
+                &END CELL
+                &COORD
+                        @include COORD.init
+                &END COORD
+                &VELOCITY
+                        @include VELOC.init
+                &END VELOCITY
+                &KIND C1
+                        ELEMENT C
+                &END KIND
+                &KIND H
+                        ELEMENT H
+                &END KIND
+                &KIND C2
+                        ELEMENT C
+                &END KIND
+                &TOPOLOGY
+                        NUMBER_OF_ATOMS                   ${myNATOMS}
+                        CONN_FILE_FORMAT  MOL_SET
+                        MULTIPLE_UNIT_CELL                1              1              1
+                        &MOL_SET
+                                &MOLECULE
+                                        NMOL              1
+                                        CONN_FILE_NAME    ./ethylene1.psf
+                                        CONN_FILE_FORMAT  PSF
+                                &END MOLECULE
+                                &MOLECULE
+                                        NMOL              1
+                                        CONN_FILE_NAME    ./ethylene2.psf
+                                        CONN_FILE_FORMAT  PSF
+                                &END MOLECULE
+                        &END MOL_SET
+                &END TOPOLOGY
+        &END SUBSYS
+&END FORCE_EVAL
