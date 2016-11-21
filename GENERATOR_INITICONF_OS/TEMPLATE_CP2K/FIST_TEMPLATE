@@ -1,0 +1,116 @@
+# THERMODYNAMICS
+@SET myENSEMBLE    NVE
+@SET myTEMPERATURE 298
+
+# TRAJECTORY
+@SET mySTEPS       sedSTEPS
+@SET myTIMESTEP    sedTIMESTEP
+@SET myPRINT       sedPRINT
+
+#SYSTEMS SIZE 
+@SET myLBOX	   sedLBOX
+@SET myRCUT        sedRCUT
+@SET myNATOMS      sedNATOMS
+
+# EWALD PARAMETERS
+@SET myGMAX        17
+@SET myOSPLINE     6
+@SET myALPHA       0.36460D0
+
+&GLOBAL
+  BLACS_GRID             SQUARE
+  PREFERRED_FFT_LIBRARY  FFTW
+  PRINT_LEVEL            LOW
+  PROGRAM_NAME           CP2K
+  PROJECT_NAME           run
+  RUN_TYPE               MD
+&END GLOBAL
+&MOTION
+	&MD
+     		ENSEMBLE      ${myENSEMBLE}
+     		STEPS         ${mySTEPS}
+   		TIMESTEP      ${myTIMESTEP}
+     		TEMPERATURE   ${myTEMPERATURE}
+   	&END MD
+        &CONSTRAINT
+             SHAKE_TOLERANCE    9.9999999999999982E-13
+             ROLL_TOLERANCE     1.0000000000000000E-10
+             CONSTRAINT_INIT  T
+             @INCLUDE sedCONSTRAINT
+        &END CONSTRAINT
+  	&PRINT
+		&TRAJECTORY  LOW
+       			FORMAT  XYZ
+       			&EACH
+         			MD          ${myPRINT}
+       			&END EACH
+     		&END TRAJECTORY
+     		&VELOCITIES  LOW
+       			FORMAT  XYZ
+       			&EACH
+         			MD          ${myPRINT}
+       			&END EACH
+     		&END VELOCITIES
+     		&FORCES  LOW
+       			FORMAT  XYZ
+       			&EACH
+         			MD          ${myPRINT}
+       			&END EACH
+     		&END FORCES
+   	&END PRINT
+&END MOTION
+&FORCE_EVAL
+	METHOD  FIST
+	&MM
+    		&FORCEFIELD
+      			&SPLINE
+        			RCUT_NB         ${myRCUT}
+       			&END SPLINE
+			@INCLUDE sedFORCEFIELD
+		&END FORCEFIELD	
+		&POISSON
+       			&EWALD
+         			EWALD_TYPE  EWALD
+         			ALPHA        ${myALPHA}
+         			GMAX         ${myGMAX}
+         			O_SPLINE     ${myOSPLINE}
+       			&END EWALD
+     		&END POISSON
+     		&PRINT
+      			&ITER_INFO  SILENT
+      			&END ITER_INFO
+      				&PROGRAM_RUN_INFO LOW
+        				&EACH
+          					MD 1
+        				&END EACH
+      				&END PROGRAM_RUN_INFO
+     			&END PRINT
+   	&END MM
+   	&SUBSYS
+     		&CELL
+       			ABC                    ${myLBOX}      
+       			PERIODIC  XYZ
+       			MULTIPLE_UNIT_CELL     1              1              1
+     		&END CELL
+     		&COORD
+     			@include COORD.init
+     		&END COORD
+                &KIND CP
+                        ELEMENT C
+                &END KIND
+                &KIND H
+                        ELEMENT H
+                &END KIND
+                &KIND CN
+                        ELEMENT C
+                &END KIND
+                &TOPOLOGY
+                        NUMBER_OF_ATOMS                   ${myNATOMS}
+                        CONN_FILE_FORMAT  MOL_SET
+                        MULTIPLE_UNIT_CELL                1              1              1
+                        &MOL_SET
+                            @INCLUDE sedPSF
+                        &END MOL_SET
+                &END TOPOLOGY
+   	&END SUBSYS
+&END FORCE_EVAL
