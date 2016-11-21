@@ -1,0 +1,156 @@
+#!/usr/bin/python
+
+import string, re, struct, sys, math, os, time
+
+def generate_coord_files(FILEIN, FILEOUT, atom_number, atom_mol, diabat_number):
+    template = open(FILEIN,'r')
+    lines    = template.readlines()
+    template.close
+    atom_label = []
+    atom_coord = []
+    for atom_index in range(atom_number):
+        l = string.strip(lines[atom_index])
+        info = re.split('\s+',l)
+        atom_label.append(info[0])
+        atom_coord.append([info[1], info[2], info[3]])
+    for diabat_index in range(diabat_number):
+        fileout = open( FILEOUT + '_' + str(diabat_index+1) + '.init', 'w')
+        for atom_index in range(atom_number):
+            index = ( atom_index + diabat_index * atom_mol) % (atom_number)
+            result = '%s  %s %s %s\n' \
+                     %( atom_label[index], \
+                        atom_coord[atom_index][0], \
+                        atom_coord[atom_index][1], \
+                        atom_coord[atom_index][2] )
+            fileout.write(result)
+    fileout.close()
+ 
+def generate_input_file_dimer(METHOD, FILECOORD, FILEVELOC,DIABAT = 1, SCALING = 0.0065, TIMESTEP = 0.5, STEPS = 10, PRINT = 5 ):
+   cmd = 'sed                     \
+        -e \'s/sedMETHOD/%s/g\'   \
+        -e \'s/sedDIABAT/%s/g\'  \
+        -e \'s/sedSCALING/%s/g\'  \
+        -e \'s/sedTIMESTEP/%s/g\' \
+        -e \'s/sedSTEPS/%s/g\'    \
+        -e \'s/sedPRINT/%s/g\'    \
+       DIMER_ETHYLENE_TEMPLATE > run.inp' \
+      % (METHOD, DIABAT, SCALING, TIMESTEP, STEPS, PRINT) 
+   os.system(cmd)
+   generate_coord_files(FILEIN=FILECOORD, FILEOUT='COORD', atom_number=12, atom_mol=6,diabat_number=2)
+
+
+def create_and_run(CONFIGLIST = [1], METHODLIST = ['FSSH'], DIABATLIST = [1], SCALINGLIST  = [0.0065],  \
+                   TIMESTEPLIST = [0.5], number_dir = -1, STEPSLIST = [1], NAME_COORD = 'COORD',              \
+                   NAME_VELOC = 'VELOC.init'):
+    for config in CONFIGLIST:
+        for method in METHODLIST:
+            for diabat in DIABATLIST:
+                for scaling in SCALINGLIST:
+                    for timestepInd in range(len(TIMESTEPLIST)):
+                        timestep = TIMESTEPLIST[timestepInd]
+                        steps = STEPSLIST[timestepInd]
+                        number_dir = number_dir + 1
+                        run = 'run%d' % number_dir
+                        print """
+                          RUN = %s
+                          METHOD  = %s
+                          DIABAT = %d
+                          CONFIG  = %d
+                          SCALING FACTOR = %f
+                          """ % (run, method, diabat+1, config, scaling)
+                        os.mkdir(run)
+                        os.chdir(run)
+                        os.system('cp %s/* .' % PATH_TEMPLATE)
+                        name_coord_config = NAME_COORD + '_' + str(config)
+                        name_veloc_config = NAME_VELOC  # TO MODIFY IN THE FUTURE
+                        os.system('cp %s/%s    . ' % ( PATH_CONFIG, name_coord_config))
+                        os.system('cp %s/%s    . ' % ( PATH_CONFIG, name_veloc_config))  
+                        generate_input_file_dimer(METHOD=method, DIABAT=diabat + 1, \
+                              SCALING=scaling, TIMESTEP = timestep, STEPS = steps,  \
+                              FILECOORD = name_coord_config, FILEVELOC = name_veloc_config)
+                        os.system(exe_cp2k + ' run.inp > run.out 2>   run.err')
+                        os.chdir('..')
+    return number_dir; 
+
+
+
+try : 
+         DATE         = sys.argv[1]
+         CP2K_VERSION = sys.argv[2]
+except :
+         raise SystemExit
+
+MODULEPATH = '/scratch/grudorff/modulefiles module load mpich'
+PWD = os.getcwd()
+PATH_EXE = '/scratch/grudorff/antoine/bin'
+PATH_TEMPLATE = PWD  + '/TEMPLATE/'
+PATH_CONFIG = PWD + '/CONFIG_INITIAL'
+exe_cp2k = PATH_EXE + '/cp2k_nonadiabatic_scutum_160427.sopt'
+
+BUCKET='ENERGIES_TEST_%s_%s' % (DATE, CP2K_VERSION)
+os.chdir('..')
+test_bucket = os.path.exists(BUCKET)
+if (test_bucket):
+   print "THE DIRECTORY EXISTS ALREADY!"
+   sys.exit()
+else:
+   os.mkdir(BUCKET)
+   os.chdir(BUCKET)
+
+number_dir = -1
+
+
+print """!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+STUDY BORN_OPPENHEIMER FOR DIFFERENT SCALING FACTOR (COUPLING)
+"""
+scalingList = [0.0065, 0.0130, 0.0325, 0.0652, 0.1956, 0.3912, 0.9780]  # in eV
+diabatList  = [1, 2]
+methodList  = ['BORN_OPPENHEIMER']
+name_coord = 'COORD'
+name_veloc = 'VELOC.init'
+configList = [1]
+stepsList    = [ 10 ]
+configList = [1]
+number_dir  = create_and_run(SCALINGLIST = scalingList, DIABATLIST = diabatList, METHODLIST = methodList, \
+                             number_dir = number_dir, STEPSLIST = stepsList, NAME_COORD = name_coord,             \
+                             NAME_VELOC = name_veloc, CONFIGLIST = configList)
+
+
+
+print """!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+STUDY SURFACE HOPPING FOR DIFFERENT SCALING FACTOR
+"""
+scalingList = [0.0065, 0.0130, 0.0325, 0.0652, 0.1956, 0.3912, 0.9780]  # in eV
+methodList  = ['FSSH']
+name_coord = 'COORD'
+name_veloc = 'VELOC.init'
+configList = [1]
+stepsList    = [ 10 ]
+number_dir  = create_and_run(SCALINGLIST = scalingList,  METHODLIST = methodList, \
+                             number_dir = number_dir, STEPSLIST = stepsList, NAME_COORD = name_coord,             \
+                             NAME_VELOC = name_veloc, CONFIGLIST = configList)
+
+
+print """
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+STUDY SURFACE HOPPING FOR DIFFERENT TIMESTEP 
+"""
+timestepList = [0.05, 0.1, 0.5, 1]
+stepsList    = [ 10 , 10 , 10 ,  10]
+scalingList =  [0.0065]
+methodList  = ['FSSH']
+name_coord = 'COORD'
+name_veloc = 'VELOC.init'
+configList = [1]
+number_dir  = create_and_run(SCALINGLIST = scalingList, METHODLIST = methodList, \
+                             number_dir = number_dir, STEPSLIST = stepsList, NAME_COORD = name_coord,             \
+                             NAME_VELOC = name_veloc, CONFIGLIST = configList,   \
+                             TIMESTEPLIST = timestepList)
+
+
+
+
+
+
+
+
