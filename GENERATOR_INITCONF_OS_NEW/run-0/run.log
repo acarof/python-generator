@@ -1,0 +1,460 @@
+ DBCSR| Multiplication driver                                               BLAS
+ DBCSR| Multrec recursion limit                                              512
+ DBCSR| Multiplication stack size                                           1000
+ DBCSR| Maximum elements for images                                    UNLIMITED
+ DBCSR| Randmat seed                                                    12341313
+ DBCSR| Multiplication size stacks                                             3
+
+
+  **** **** ******  **  PROGRAM STARTED AT               2016-12-02 14:02:52.295
+ ***** ** ***  *** **   PROGRAM STARTED ON                 scutum.phys.ucl.ac.uk
+ **    ****   ******    PROGRAM STARTED BY                                acarof
+ ***** **    ** ** **   PROGRAM PROCESS ID                                 22076
+  **** **  *******  **  PROGRAM STARTED IN /scratch/grudorff/antoine/CP2K/ETHYLE
+                                           NE_161202__TEST/run-0
+
+ CP2K| version string:                    CP2K version 4.0 (Development Version)
+ CP2K| source code revision number:                                  git:ec0c148
+ CP2K| cp2kflags: libint fftw3 libxc libderiv_max_am1=5 libint_max_am=6         
+ CP2K| is freely available from                            https://www.cp2k.org/
+ CP2K| Program compiled at                          Thu  1 Dec 17:51:51 GMT 2016
+ CP2K| Program compiled on                                 scutum.phys.ucl.ac.uk
+ CP2K| Program compiled for                                          local-check
+ CP2K| Data directory path    /scratch/grudorff/antoine/GIT/BLUMBERGER/flavoured
+ CP2K| Input file name                                                   run.inp
+
+ GLOBAL| Force Environment number                                              1
+ GLOBAL| Basis set file name                                           POTENTIAL
+ GLOBAL| MM Potential file name                                     MM_POTENTIAL
+ GLOBAL| Coordinate file name                                      __STD_INPUT__
+ GLOBAL| Method name                                                        CP2K
+ GLOBAL| Project name                                                        run
+ GLOBAL| Preferred FFT library                                             FFTW3
+ GLOBAL| Preferred diagonalization lib.                                       SL
+ GLOBAL| Run type                                                             MD
+ GLOBAL| All-to-all communication in single precision                          F
+ GLOBAL| FFTs using library dependent lengths                                  F
+ GLOBAL| Global print level                                                  LOW
+ GLOBAL| Total number of message passing processes                             1
+ GLOBAL| Number of threads for this process                                    1
+ GLOBAL| This output is from process                                           0
+ GLOBAL| CPU model name :  Intel(R) Xeon(R) CPU E5-1650 v2 @ 3.50GHz
+
+ MEMORY| system memory details [Kb]
+ MEMORY|                        rank 0           min           max       average
+ MEMORY| MemTotal             32891004      32891004      32891004      32891004
+ MEMORY| MemFree               4666832       4666832       4666832       4666832
+ MEMORY| Buffers                  5800          5800          5800          5800
+ MEMORY| Cached               20302628      20302628      20302628      20302628
+ MEMORY| Slab                  3054096       3054096       3054096       3054096
+ MEMORY| SReclaimable          2785636       2785636       2785636       2785636
+ MEMORY| MemLikelyFree        27760896      27760896      27760896      27760896
+
+
+
+                      ************* ******** ***********   
+                     ************* **********************  
+                     ****     **** ****      ***********   
+                     ******** ****  *******     ****       
+                     *******  ****   *******   ****        
+                     ****     ****       ****  ****        
+                     ****     **** **********  ****        
+                      ****     **** ********    ****       
+                     FRONTIERS IN SIMULATION TECHNOLOGY    
+                                                           
+                        C.J. Mundy, S. Balasubramanian,    
+                     Ken Bagchi, J. Hutter, Ari Seitsonen  
+                      IFW Kuo, T. Laino, J. VandeVondele   
+                                 Version 1.0               
+
+                                                           
+
+
+ EWALD| Summation is done by:                                              EWALD
+ EWALD| Alpha parameter [       ANGSTROM^-1]                             17.0000
+ EWALD| Real Space Cutoff [          ANGSTROM]                            0.1985
+ EWALD| G-space max. Miller index                         17        17        17
+          ----------------------------------------------------------------------
+ COLVARS| COLVAR INPUT INDEX:        1
+ COLVARS| BOND          >>> POINTS:                                    1       2
+ COLVARS| INFORMATION ON DEFINED GEOMETRICAL POINTS
+ COLVARS|  POINT Nr.     1 OF TYPE: GEO_CENTER
+ COLVARS|   ATOMS BUILDING THE GEOMETRICAL POINT
+ COLVARS|   ATOM:         1
+ COLVARS|   ATOM:         4
+ COLVARS|  POINT Nr.     2 OF TYPE: GEO_CENTER
+ COLVARS|   ATOMS BUILDING THE GEOMETRICAL POINT
+ COLVARS|   ATOM:         7
+ COLVARS|   ATOM:        10
+          ----------------------------------------------------------------------
+ RESTRAINT| Active restraint on COLLECTIVE section Nr.     1. K [a.u.]= 0.010000
+
+ FORCEFIELD| WARNING: A non Critical ForceField parameter is missing! CP2K GOES!
+ FORCEFIELD| Non critical parameters are:Urey-Bradley,Torsions,Impropers, Opbends and 1-4
+ FORCEFIELD| All missing parameters will not contribute to the potential energy!
+ FORCEFIELD| Activate the print key FF_INFO to have a list of missing parameters
+
+ CHARGE_INFO| Total Charge of the Classical System:                     0.000000
+
+ FORCEFIELD| WARNING: A non Critical ForceField parameter is missing! CP2K GOES!
+ FORCEFIELD| Non critical parameters are:Urey-Bradley,Torsions,Impropers, Opbends and 1-4
+ FORCEFIELD| All missing parameters will not contribute to the potential energy!
+ FORCEFIELD| Activate the print key FF_INFO to have a list of missing parameters
+
+
+ SPLINE_INFO| Generating 6 splines for NONBONDED14 interactions 
+              Due to 3 different atomic kinds
+  ...1  ...2  ...3  ...4  ...5  ...6
+ SPLINE_INFO| Number of unique splines computed:            1
+ SPLINE_INFO| Done
+
+ SPLINE_INFO| Generating 6 splines for NONBONDED interactions 
+              Due to 3 different atomic kinds
+  ...1  ...2  ...3  ...4  ...5  ...6
+ SPLINE_INFO| Number of unique splines computed:            4
+ SPLINE_INFO| Done
+
+ MD| Molecular Dynamics Protocol 
+ MD| Ensemble Type                                                           NVT
+ MD| Number of Time Steps                                                     10
+ MD| Time Step [fs]                                                         0.50
+ MD| Temperature [K]                                                      298.00
+ MD| Temperature tolerance [K]                                              0.00
+ MD| Constraints activated 
+ MD| Tolerance for shake                                              0.1000E-05
+ MD| Print MD information every                                        1 step(s)
+ MD| File type     Print frequency[steps]                             File names
+ MD| Coordinates            5                                      run-pos-1.xyz
+ MD| Velocities             5                                      run-vel-1.xyz
+ MD| Energies               1                                         run-1.ener
+ MD| Dump                  20                                      run-1.restart
+
+ ROT| Rotational Analysis Info 
+ ROT| Principal axes and moments of inertia in atomic units:
+ ROT|                                1                 2                 3
+ ROT| EIGENVALUES            0.250313751E+06   0.124072329E+07   0.141840369E+07
+ ROT|      X                     0.974073409      -0.213716323      -0.074204633
+ ROT|      Y                     0.224020522       0.865437182       0.448144274
+ ROT|      Z                    -0.031556298      -0.453148781       0.890876188
+ ROT| Numer of Rotovibrational vectors:     6
+
+ Calculation of degrees of freedom
+                                                      Number of atoms:        12
+                                 Number of Intramolecular constraints:         0
+                                 Number of Intermolecular constraints:         0
+                                  Invariants(translation + rotations):         6
+                                                   Degrees of freedom:        30
+
+
+ Restraints Information
+                                  Number of Intramolecular restraints:         0
+                                  Number of Intermolecular restraints:         1
+
+ THERMOSTAT| Thermostat Info for PARTICLES
+ THERMOSTAT| Type of thermostat                               Nose-Hoover-Chains
+ THERMOSTAT| Nose-Hoover-Chain length                                          3
+ THERMOSTAT| Nose-Hoover-Chain time constant [  fs]                      1000.00
+ THERMOSTAT| Order of Yoshida integrator                                       3
+ THERMOSTAT| Number of multiple time steps                                     2
+ THERMOSTAT| Initial Potential Energy                                   0.000000
+ THERMOSTAT| Initial Kinetic Energy                                     0.000472
+ THERMOSTAT| End of Thermostat Info for PARTICLES
+
+ ************************** Velocities initialization **************************
+ Initial Temperature                                                    298.00 K
+ COM velocity:            0.000000000000      0.000000000000     -0.000000000000
+ COM position:            3.779588073838      0.000000000000     -0.000067904033
+ Angular velocity:       -0.000089038936      0.000008199591      0.000063041238
+ *******************************************************************************
+
+
+ ENERGY| Total FORCE_EVAL ( FIST ) energy (a.u.):              0.040516272854141
+
+
+ MD_ENERGIES| Initialization proceeding
+
+
+ ******************************** GO CP2K GO! **********************************
+ INITIAL POTENTIAL ENERGY[hartree]     =                      0.405162728541E-01
+ INITIAL KINETIC ENERGY[hartree]       =                      0.141556645845E-01
+ INITIAL TEMPERATURE[K]                =                                 298.000
+ INITIAL VOLUME[bohr^3]                =                      0.319304387391E+06
+ INITIAL CELL LNTHS[bohr]   =      0.6834944E+02   0.6834944E+02   0.6834944E+02
+ INITIAL CELL ANGLS[deg]    =      0.9000000E+02   0.9000000E+02   0.9000000E+02
+ ******************************** GO CP2K GO! **********************************
+
+ ENERGY| Total FORCE_EVAL ( FIST ) energy (a.u.):              0.041103080412949
+
+
+ *******************************************************************************
+ ENSEMBLE TYPE                =                                              NVT
+ STEP NUMBER                  =                                                1
+ TIME [fs]                    =                                         0.500000
+ CONSERVED QUANTITY [hartree] =                               0.551529513110E-01
+
+                                              INSTANTANEOUS             AVERAGES
+ CPU TIME [s]                 =                        0.02                 0.02
+ ENERGY DRIFT PER ATOM [K]    =          0.240998848007E+00   0.000000000000E+00
+ POTENTIAL ENERGY[hartree]    =          0.411030804129E-01   0.411030804129E-01
+ KINETIC ENERGY [hartree]     =          0.135754989594E-01   0.135754989594E-01
+ TEMPERATURE [K]              =                     285.787              285.787
+ *******************************************************************************
+
+
+ ENERGY| Total FORCE_EVAL ( FIST ) energy (a.u.):              0.041876584519691
+
+
+ *******************************************************************************
+ ENSEMBLE TYPE                =                                              NVT
+ STEP NUMBER                  =                                                2
+ TIME [fs]                    =                                         1.000000
+ CONSERVED QUANTITY [hartree] =                               0.551663498630E-01
+
+                                              INSTANTANEOUS             AVERAGES
+ CPU TIME [s]                 =                        0.00                 0.01
+ ENERGY DRIFT PER ATOM [K]    =          0.593575767802E+00   0.296787883901E+00
+ POTENTIAL ENERGY[hartree]    =          0.418765845197E-01   0.414898324663E-01
+ KINETIC ENERGY [hartree]     =          0.128129989446E-01   0.131942489520E-01
+ TEMPERATURE [K]              =                     269.735              277.761
+ *******************************************************************************
+
+
+ ENERGY| Total FORCE_EVAL ( FIST ) energy (a.u.):              0.042626967223979
+
+
+ *******************************************************************************
+ ENSEMBLE TYPE                =                                              NVT
+ STEP NUMBER                  =                                                3
+ TIME [fs]                    =                                         1.500000
+ CONSERVED QUANTITY [hartree] =                               0.551808763549E-01
+
+                                              INSTANTANEOUS             AVERAGES
+ CPU TIME [s]                 =                        0.00                 0.01
+ ENERGY DRIFT PER ATOM [K]    =          0.975833924132E+00   0.523136563978E+00
+ POTENTIAL ENERGY[hartree]    =          0.426269672240E-01   0.418688773855E-01
+ KINETIC ENERGY [hartree]     =          0.120748849029E-01   0.128211276023E-01
+ TEMPERATURE [K]              =                     254.196              269.906
+ *******************************************************************************
+
+
+ ENERGY| Total FORCE_EVAL ( FIST ) energy (a.u.):              0.043126732601861
+
+
+ *******************************************************************************
+ ENSEMBLE TYPE                =                                              NVT
+ STEP NUMBER                  =                                                4
+ TIME [fs]                    =                                         2.000000
+ CONSERVED QUANTITY [hartree] =                               0.551929315711E-01
+
+                                              INSTANTANEOUS             AVERAGES
+ CPU TIME [s]                 =                        0.00                 0.01
+ ENERGY DRIFT PER ATOM [K]    =          0.129306156193E+01   0.715617813465E+00
+ POTENTIAL ENERGY[hartree]    =          0.431267326019E-01   0.421833411896E-01
+ KINETIC ENERGY [hartree]     =          0.115850290554E-01   0.125121029656E-01
+ TEMPERATURE [K]              =                     243.884              263.400
+ *******************************************************************************
+
+
+ ENERGY| Total FORCE_EVAL ( FIST ) energy (a.u.):              0.043187133726559
+
+
+ *******************************************************************************
+ ENSEMBLE TYPE                =                                              NVT
+ STEP NUMBER                  =                                                5
+ TIME [fs]                    =                                         2.500000
+ CONSERVED QUANTITY [hartree] =                               0.551994103869E-01
+
+                                              INSTANTANEOUS             AVERAGES
+ CPU TIME [s]                 =                        0.02                 0.01
+ ENERGY DRIFT PER ATOM [K]    =          0.146354871093E+01   0.865203992959E+00
+ POTENTIAL ENERGY[hartree]    =          0.431871337266E-01   0.423840996970E-01
+ KINETIC ENERGY [hartree]     =          0.115290114836E-01   0.123154846692E-01
+ TEMPERATURE [K]              =                     242.705              259.261
+ *******************************************************************************
+
+
+ ENERGY| Total FORCE_EVAL ( FIST ) energy (a.u.):              0.042706854396357
+
+
+ *******************************************************************************
+ ENSEMBLE TYPE                =                                              NVT
+ STEP NUMBER                  =                                                6
+ TIME [fs]                    =                                         3.000000
+ CONSERVED QUANTITY [hartree] =                               0.551985610583E-01
+
+                                              INSTANTANEOUS             AVERAGES
+ CPU TIME [s]                 =                        0.00                 0.01
+ ENERGY DRIFT PER ATOM [K]    =          0.144119900602E+01   0.961203161803E+00
+ POTENTIAL ENERGY[hartree]    =          0.427068543964E-01   0.424378921469E-01
+ KINETIC ENERGY [hartree]     =          0.120063089875E-01   0.122639553889E-01
+ TEMPERATURE [K]              =                     252.753              258.176
+ *******************************************************************************
+
+
+ ENERGY| Total FORCE_EVAL ( FIST ) energy (a.u.):              0.041699481272135
+
+
+ *******************************************************************************
+ ENSEMBLE TYPE                =                                              NVT
+ STEP NUMBER                  =                                                7
+ TIME [fs]                    =                                         3.500000
+ CONSERVED QUANTITY [hartree] =                               0.551904724130E-01
+
+                                              INSTANTANEOUS             AVERAGES
+ CPU TIME [s]                 =                        0.00                 0.01
+ ENERGY DRIFT PER ATOM [K]    =          0.122834991287E+01   0.999366983384E+00
+ POTENTIAL ENERGY[hartree]    =          0.416994812721E-01   0.423324048791E-01
+ KINETIC ENERGY [hartree]     =          0.130033281834E-01   0.123695800738E-01
+ TEMPERATURE [K]              =                     273.741              260.400
+ *******************************************************************************
+
+
+ ENERGY| Total FORCE_EVAL ( FIST ) energy (a.u.):              0.040292126949946
+
+
+ *******************************************************************************
+ ENSEMBLE TYPE                =                                              NVT
+ STEP NUMBER                  =                                                8
+ TIME [fs]                    =                                         4.000000
+ CONSERVED QUANTITY [hartree] =                               0.551770480218E-01
+
+                                              INSTANTANEOUS             AVERAGES
+ CPU TIME [s]                 =                        0.00                 0.01
+ ENERGY DRIFT PER ATOM [K]    =          0.875093046407E+00   0.983832741262E+00
+ POTENTIAL ENERGY[hartree]    =          0.402921269499E-01   0.420773701379E-01
+ KINETIC ENERGY [hartree]     =          0.143947768881E-01   0.126227296756E-01
+ TEMPERATURE [K]              =                     303.034              265.729
+ *******************************************************************************
+
+
+ ENERGY| Total FORCE_EVAL ( FIST ) energy (a.u.):              0.038695597060505
+
+
+ *******************************************************************************
+ ENSEMBLE TYPE                =                                              NVT
+ STEP NUMBER                  =                                                9
+ TIME [fs]                    =                                         4.500000
+ CONSERVED QUANTITY [hartree] =                               0.551614778121E-01
+
+                                              INSTANTANEOUS             AVERAGES
+ CPU TIME [s]                 =                        0.02                 0.01
+ ENERGY DRIFT PER ATOM [K]    =          0.465369921311E+00   0.926225761267E+00
+ POTENTIAL ENERGY[hartree]    =          0.386955970605E-01   0.417016175738E-01
+ KINETIC ENERGY [hartree]     =          0.159729861064E-01   0.129949803901E-01
+ TEMPERATURE [K]              =                     336.258              273.566
+ *******************************************************************************
+
+
+ ENERGY| Total FORCE_EVAL ( FIST ) energy (a.u.):              0.037154368650868
+
+
+ *******************************************************************************
+ ENSEMBLE TYPE                =                                              NVT
+ STEP NUMBER                  =                                               10
+ TIME [fs]                    =                                         5.000000
+ CONSERVED QUANTITY [hartree] =                               0.551473644110E-01
+
+                                              INSTANTANEOUS             AVERAGES
+ CPU TIME [s]                 =                        0.00                 0.01
+ ENERGY DRIFT PER ATOM [K]    =          0.939820662931E-01   0.843001391770E+00
+ POTENTIAL ENERGY[hartree]    =          0.371543686509E-01   0.412468926815E-01
+ KINETIC ENERGY [hartree]     =          0.174970684345E-01   0.134451891946E-01
+ TEMPERATURE [K]              =                     368.342              283.043
+ *******************************************************************************
+
+
+ -------------------------------------------------------------------------------
+ -                                                                             -
+ -                                DBCSR STATISTICS                             -
+ -                                                                             -
+ -------------------------------------------------------------------------------
+ COUNTER                                    TOTAL       BLAS       SMM       ACC
+ flops total                                    0       0.0%      0.0%      0.0%
+ flops max/rank                                 0       0.0%      0.0%      0.0%
+ matmuls inhomo. stacks                         0       0.0%      0.0%      0.0%
+ matmuls total                                  0       0.0%      0.0%      0.0%
+ number of processed stacks                     0       0.0%      0.0%      0.0%
+ average stack size                                     0.0       0.0       0.0
+ marketing flops                     0.000000E+00
+ -------------------------------------------------------------------------------
+
+ MEMORY| Estimated peak process memory [MiB]                                  26
+
+ -------------------------------------------------------------------------------
+ -                                                                             -
+ -                           R E F E R E N C E S                               -
+ -                                                                             -
+ -------------------------------------------------------------------------------
+ 
+ CP2K version 4.0 (Development Version), the CP2K developers group (2015).
+ CP2K is freely available from https://www.cp2k.org/ .
+
+ Borstnik, U; VandeVondele, J; Weber, V; Hutter, J. 
+ PARALLEL COMPUTING, 40 (5-6), 47-58 (2014). 
+ Sparse matrix multiplication: The distributed block-compressed sparse
+ row library.
+ http://dx.doi.org/10.1016/j.parco.2014.03.012
+
+
+ Hutter, J; Iannuzzi, M; Schiffmann, F; VandeVondele, J. 
+ WILEY INTERDISCIPLINARY REVIEWS-COMPUTATIONAL MOLECULAR SCIENCE, 4 (1), 15-25 (2014). 
+ CP2K: atomistic simulations of condensed matter systems.
+ http://dx.doi.org/10.1002/wcms.1159
+
+
+ Frigo, M; Johnson, SG. 
+ PROCEEDINGS OF THE IEEE, 93 (2), 216-231 (2005). 
+ The design and implementation of FFTW3.
+ http://dx.doi.org/10.1109/JPROC.2004.840301
+
+
+ NOSE, S. JOURNAL OF CHEMICAL PHYSICS, 81 (1), 511-519 (1984). 
+ A UNIFIED FORMULATION OF THE CONSTANT TEMPERATURE MOLECULAR-DYNAMICS
+ METHODS.
+ http://dx.doi.org/10.1063/1.447334
+
+
+ NOSE, S. MOLECULAR PHYSICS, 52 (2), 255-268 (1984). 
+ A MOLECULAR-DYNAMICS METHOD FOR SIMULATIONS IN THE CANONICAL ENSEMBLE.
+ http://dx.doi.org/10.1080/00268978400101201
+
+
+ Ewald, PP. ANNALEN DER PHYSIK, 369 (3), 253-287 (1921). 
+ Die Berechnung optischer und elektrostatischer Gitterpotentiale.
+ http://dx.doi.org/10.1002/andp.19213690304
+
+
+ -------------------------------------------------------------------------------
+ -                                                                             -
+ -                                T I M I N G                                  -
+ -                                                                             -
+ -------------------------------------------------------------------------------
+ SUBROUTINE                       CALLS  ASD         SELF TIME        TOTAL TIME
+                                MAXIMUM       AVERAGE  MAXIMUM  AVERAGE  MAXIMUM
+ CP2K                                 1  1.0    0.002    0.002    0.108    0.108
+ qs_mol_dyn_low                       1  2.0    0.003    0.003    0.085    0.085
+ velocity_verlet                     10  3.0    0.001    0.001    0.040    0.040
+ fist_calc_energy_force              11  3.9    0.000    0.000    0.039    0.039
+ md_write_output                     11  3.9    0.025    0.025    0.039    0.039
+ ewald_evaluate                      11  4.9    0.038    0.038    0.038    0.038
+ md_output                           10  3.0    0.000    0.000    0.026    0.026
+ fist_create_force_env                1  2.0    0.000    0.000    0.019    0.019
+ fist_init                            1  3.0    0.000    0.000    0.019    0.019
+ topology_control                     1  4.0    0.000    0.000    0.018    0.018
+ connectivity_control                 1  5.0    0.000    0.000    0.017    0.017
+ read_topology_psf                    2  6.0    0.003    0.003    0.017    0.017
+ parser_read_line                    40  7.0    0.000    0.000    0.014    0.014
+ write_trajectory                    44  4.9    0.013    0.013    0.014    0.014
+ parser_read_line_low                 2  8.0    0.014    0.014    0.014    0.014
+ write_restart                       10  4.0    0.002    0.002    0.002    0.002
+ -------------------------------------------------------------------------------
+
+ The number of warnings for this run is : 0
+ 
+ -------------------------------------------------------------------------------
+  **** **** ******  **  PROGRAM ENDED AT                 2016-12-02 14:02:52.495
+ ***** ** ***  *** **   PROGRAM RAN ON                     scutum.phys.ucl.ac.uk
+ **    ****   ******    PROGRAM RAN BY                                    acarof
+ ***** **    ** ** **   PROGRAM PROCESS ID                                 22076
+  **** **  *******  **  PROGRAM STOPPED IN /scratch/grudorff/antoine/CP2K/ETHYLE
+                                           NE_161202__TEST/run-0
