@@ -3,7 +3,7 @@
 import string, re, struct, sys, math, os, time
 import numpy
 
-import fist_os, fssh_os, test_cp2k
+import fist_os, fssh_os, test_cp2k, energetics
 from utils import *
 
 
@@ -44,6 +44,8 @@ elif (kind_run == 'FSSH_OS'):
    fssh_os.main(input.dict, paths)   
 elif (kind_run == 'TEST_CP2K'):
    test_cp2k.main(input.dict, paths)   
+elif (kind_run == 'ENERGETICS'):
+   energetics.main(input.dict, paths)   
 else:
    print "NO METHODS TO DO!"
 
