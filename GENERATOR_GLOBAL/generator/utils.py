@@ -38,7 +38,13 @@ class Bucket(object):
 	"""
         """
 	def __init__(self, bucket_dict):
-           self._name = bucket_dict.get('MOL_NAME', 'TEST')
+           self._method = bucket_dict.get('KIND_RUN')
+           if bucket_dict.get('MOL_NAME') is not None:
+              self._name = self._method + '-' + bucket_dict.get('MOL_NAME')
+           elif bucket_dict.get('TITLE') is not None:
+              self._name = self._method + '-' + bucket_dict.get('TITLE')
+           else:
+              self._name = self._method 
            is_test = bucket_dict.get('TEST')
            if is_test == 'YES':
               self.is_test = True
@@ -58,15 +64,15 @@ class Bucket(object):
         def name(self):
             if not self.is_test:
                md5name = self._get_md5name()
-            else:
-               md5name = 'TEST'
-            short_time = time.strftime("%y%m%d", time.localtime())
-            bucket_name = self._name + '_' + short_time + '_'  '_' + md5name
-            old_name = os.path.basename(os.getcwd())
-            if (bucket_name != old_name):
-               os.chdir('..')
-               os.system('mv %s %s' % (old_name, bucket_name))
-               os.chdir(bucket_name)
+            #else:
+            #   md5name = 'TEST'
+               short_time = time.strftime("%y%m%d", time.localtime())
+               bucket_name = self._name + '-' + short_time +  '-' + md5name
+               old_name = os.path.basename(os.getcwd())
+               if (bucket_name != old_name):
+                  os.chdir('..')
+                  os.system('mv %s %s' % (old_name, bucket_name))
+                  os.chdir(bucket_name)
             self.path = os.getcwd()
 
         def checkdir(self, adir):
@@ -132,6 +138,8 @@ class InputFile(object):
              return int(s)
           except ValueError:
              return None
+
+
 
 class Crystal(object):
 	"""
@@ -675,10 +683,13 @@ class CP2KFSSH(object):
           os.chdir(self._bucket_path)
           complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
           print "CP2K FINISHES AT: " + complete_time
-          if val == 0:
-             return ndir + 1
-          else:
-             return -1
+          if val != 0:
+             fail = Dir('fail-%d' % ndir)
+             fail.rm_mkdir()
+             os.system(' mv %s/* %s ' % (dir.path, fail.path) )
+             os.rmdir(dir.path)
+          ndir = ndir + 1
+          return ndir 
 
       def _sed(self, line):
           word_list = line.split()
