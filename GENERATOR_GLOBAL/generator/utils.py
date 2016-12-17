@@ -1,7 +1,7 @@
 import string, re, struct, sys, math, os, time
 import hashlib
 import subprocess
-from numpy import dot, array, prod
+from numpy import dot, array, prod, power
 from numpy.linalg import norm
 from shutil import copyfile
 sed_dict = {'ENSEMBLE': 'NVE',
@@ -158,10 +158,11 @@ class InputFile(object):
             return None
 
 
-class Crystal(object):
+class OSCluster(object):
     """
         """
     def __init__(self, structure_dict, paths):
+        self._structure = structure_dict.get('SYSTEM')
         self._filemol = structure_dict.get('FILEMOL')
         self._vecta = structure_dict.get('VECTA')
         self._vectb = structure_dict.get('VECTB')
@@ -172,8 +173,26 @@ class Crystal(object):
         self._templates_path = paths.get('templates')
         self._bucket_path = paths.get('bucket')
         self._output_path = paths.get('output')
+        self._write()
 
-    def print_info(self):
+    def _write(self):
+        self._create_dir()
+        self._print_info()
+        os.chdir(self._templates_path)
+        self._my_write()
+        os.system(' mv %s %s' % (self._filecrystal, self.parcel.path))
+        os.chdir(self._bucket_path)
+
+    def _my_write(self):
+        self._construct_organic_crystal()
+
+    def _create_dir(self):
+        os.chdir(self._output_path)
+        self.parcel = Dir(self._structure)
+        self.parcel.mkdir()
+        os.chdir(self._bucket_path)
+
+    def _print_info(self):
         print """\n
                MOLECULE FILE   = %s
                CRYSTAL LATTICE a = %s
@@ -191,13 +210,6 @@ class Crystal(object):
                  str(self._sizecrystal).strip('[]'),
                  str(self._coordcharge).strip('[]'),
                  self._filecrystal)
-
-    def write(self):
-        self.create_dir()
-        self.print_info()
-        os.chdir(self._templates_path)
-        self._construct_organic_crystal()
-        os.chdir(self._bucket_path)
 
     def _construct_organic_crystal(self):
         molfile = open(self._filemol, 'r')
@@ -222,14 +234,7 @@ class Crystal(object):
                         crystalfile.write(result)
                         coordfile.write(result)
         crystalfile.close
-        os.system(' mv %s %s' % (self._filecrystal, self.parcel.path))
         coordfile.close
-
-    def create_dir(self):
-        os.chdir(self._output_path)
-        self.parcel = Dir('CRYSTAL', {})
-        self.parcel.mkdir()
-        os.chdir(self._bucket_path)
 
     def _choose_atom_label(self, atom, i3d=[-1, -1, -1], i3dcharge=[-1, -1, -1], imol=-1, icharge=-1):
         if (imol == -1) and (icharge == -1):
@@ -252,6 +257,56 @@ class Crystal(object):
             atom_label = None
             print "THERE IS A PROBLEM in choose_atom_label"
         return atom_label
+
+class OSwSolvent(OSCluster):
+    """
+    """
+
+    def __init__(self, inputs, paths):
+        self._closest_dist = inputs.get('CLOSEST_DIST')
+        self._kind_solvent = inputs.get('SOLVENT')
+        self._density      = inputs.get('DENSITY')
+        self._sizebox      = inputs.get('SIZE_BOX')
+        print self._sizebox
+        super(OSwSolvent, self).__init__(inputs, paths)
+
+    def _my_write(self):
+        self._construct_organic_crystal()
+        self._add_solvent()
+
+    def _add_solvent(self):
+        filecoord = open('COORD.temp', 'a+')
+        self._get_grid()
+        self._get_carbon_pos(filecoord)
+        grid = [[i, j, k] for i in range(1, self._grid[0] + 1)
+                    for j in range(1, self._grid[1] + 1)
+                    for k in range(1, self._grid[2] + 1)]
+        for pos in grid:
+            dist = self._get_os_dist(pos)
+            if dist <= self._closest_dist :
+                result = "%s  %f  %f  %f \n" % (self._kind_solvent, pos[0], pos[1], pos[2])
+                filecoord.write(result)
+        filecoord.close()
+
+    def _get_carbon_pos(self, filecoord):
+        self._carbon_pos = []
+        for line in filecoord.readlines():
+            if 'C' in line:
+                info = re.split('\s+', line)
+                self._carbon_pos.append([float(info[1]), float(info[2]), float(info[3])])
+
+    def _get_grid(self):
+        volume = prod(self._sizebox)
+        pre_natoms = self._density * volume
+        cubic_roots = int(power(pre_natoms, 1.0/3.0))
+        self._grid = [cubic_roots, cubic_roots, cubic_roots]
+
+    def _get_os_dist(self, pos_solvent):
+        list = []
+        for pos_carbon in self._carbon_pos:
+            dist = norm(array(pos_carbon) - array(pos_solvent))
+            list.append(dist)
+        return min(list)
 
 
 class CP2KRun(object):

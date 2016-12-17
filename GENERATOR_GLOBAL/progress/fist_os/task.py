@@ -15,12 +15,11 @@ def main(inputs, paths):
     print "1. CONSTRUCT THE ORGANIC CRYSTAL."
     system = inputs.get('SYSTEM')
     if system == 'CRYSTAL':
-       structure = Crystal(inputs, paths)
+       structure = OSClusterl(inputs, paths)
     elif system == 'SOLVENT':
-       structure = Solvent(inputs)
+       structure = OSwSolvent(inputs, paths)
     else:
         structure = None
-    structure.write()
  
     ndir = 0
     print "2. RUN CP2K"
