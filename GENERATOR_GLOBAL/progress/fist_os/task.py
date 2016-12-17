@@ -8,7 +8,9 @@ from utils import *
 def main(inputs, paths):
     print """
     START THE DIABAT OF SAMPLING OF AN ORGANIC CRYSTAL 
-    """ 
+    """
+    output = Dir('output', paths)
+    output.rm_mkdir()
 
     print "1. CONSTRUCT THE ORGANIC CRYSTAL."
     system = inputs.get('SYSTEM')
@@ -16,15 +18,16 @@ def main(inputs, paths):
        structure = Crystal(inputs, paths)
     elif system == 'SOLVENT':
        structure = Solvent(inputs)
-    structure.complete_dict(inputs)
+    else:
+        structure = None
     structure.write()
  
     ndir = 0
     print "2. RUN CP2K"
-    config_nvt = CP2KFistInput(inputs, paths, ENSEMBLE = 'NVT', STEPS = inputs.get('NEQ'))
+    config_nvt = CP2KOS(inputs, paths, ENSEMBLE = 'NVT', STEPS = inputs.get('NEQ'))
     ndir = config_nvt.run(ndir)
  
-    config_nve = CP2KFistInput(inputs, paths, ENSEMBLE = 'NVE', STEPS = inputs.get('NPROD'))
+    config_nve = CP2KOS(inputs, paths, ENSEMBLE = 'NVE', STEPS = inputs.get('NPROD'))
     ndir = config_nve.run(ndir)
  
  

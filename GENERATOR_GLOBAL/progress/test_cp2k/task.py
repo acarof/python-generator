@@ -9,32 +9,31 @@ def main(inputs, paths):
     print """
     """ 
 
-#    inputs.update({'STEPS' : 2})
+    inputs.update({'STEPS' : 2})
 
-    list_propagation = ['FSSH','BORN_OPPENHEIMER']
-    list_collapse =    ['T']
-    list_first_diabat = [1]
-    list_rescaling    = ['NACV']
-    list_nacv         = [ 'TOTAL']
-    list_reversal     = ['NEVER']
-    list_hab          = [0.0065, 0.0325, 0.0652, 0.3912, 0.9780]
-    list_timestep     = [0.05, 0.1, 0.5, 1, 2]
+    list_propagation = ['FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN']
+    list_analytics   = ['T', 'F']
+    list_collapse = ['T', 'F']
+    list_first_diabat = [1, 2]
+    list_rescaling    = ['SIMPLE', 'NACV']
+    list_nacv         = ['TEST', 'CONTRIBUTION','TOTAL','FAST']
+    list_reversal     = ['NEVER','ALWAYS','TRHULAR','SUBOTNIK']
 
     mega_list = [ { 'PROPAGATION' : prop,
                     'COLLAPSE'    : collapse,
+                    'ANALYTICS'   : analytics,
+                    'FIRST_DIABAT': diabat,
                     'METHOD_RESCALING' : rescaling,
                     'METHOD_ADIAB_NACV' : nacv,
-                    'METHOD_REVERSAL'   : reversal,
-                    'SCALING'           : scaling,
-                    'TIMESTEP'          : timestep
+                    'METHOD_REVERSAL'   : reversal
                    } 
                   for prop in list_propagation
                   for collapse in list_collapse 
+                  for analytics in list_analytics
+                  for diabat    in list_first_diabat
                   for rescaling in list_rescaling
                   for nacv      in list_nacv
                   for reversal  in list_reversal
-                  for scaling   in list_hab
-                  for timestep  in list_timestep
                   ] 
 
     dict_dimer = {
@@ -66,17 +65,25 @@ def main(inputs, paths):
     ndir= 0
 
     for structure in dict_list:
-        os.system(' cp -r %s/%s %s' % ( paths.get('task'), structure.get('FILE_INIT'), paths.get('bucket')) )
+        os.system(' cp -r %s/%s %s' % (paths.get('task'), structure.get('FILE_INIT'), paths.get('bucket')))
         initial = Dir( structure.get('FILE_INIT'), paths)
         initial.checkdir()     
         paths.update({'initial' :  initial.path})
         inputs.update(structure)
         for dict in mega_list:
-            config = CP2KFSSH( inputs, paths, INIT = 1, **dict)
+            if dict.get('PROPAGATION') == 'TEST_HOP':
+               inputs.update({'STEPS':1})
+            if structure.get('FILE_INIT') != 'initial_dimer':
+               dict.update({'ANALYTICS' : 'F' })
+               print dict.get('ANALYTICS')
+            config = CP2KOSFSSH( inputs, paths, INIT = 1, **dict)
             ndir = config.run(ndir)
-            if ndir < 0:
-               print " ERROR IN CP2K FOR THOSE PARAMETERS:"
-               print dict
+            if os.path.exists('run-%d' % (ndir -1) ):
+                os.system('rm -rf run-%d' % (ndir - 1))
+            else:
+                print " ERROR IN CP2K FOR THOSE PARAMETERS:"
+                print dict
+                sys.exit()
 
-    
-    os.system('cp %sanalyser.py %s' % (paths.get('task'), paths.get('bucket')))
+
+

@@ -4,7 +4,7 @@ import string, re, struct, sys, math, os, time
 import numpy
 import importlib, imp
 
-import fist_os, fssh_os, test_cp2k
+
 from utils import *
 
 
@@ -19,9 +19,22 @@ exe_path = '/scratch/grudorff/antoine/bin'
 paths = {'cp2k' : exe_path + '/cp2k-test.sopt' }
 
 # OPEN AND READ THE INPUT FILE
-if 'task/' in input_info:
+if input_info == 'clean':
+   os.system('rm -rf run-*')
+   os.system('rm -rf fail-*')
+   os.system('rm -rf output')
+   os.system('rm -rf initial_*')
+   os.system('rm -f analyser.py')
+   os.system('rm -rf tmp')
+   sys.exit()
+elif 'task/' in input_info:
    input = InputFile(input_info + '/input')
    input.read()
+   kind_run = 'TASK'
+elif 'progress/' in input_info:
+   input = InputFile(input_info + '/input')
+   input.read()
+   input.dict.update({'TEST' : 'YES'})
    kind_run = 'TASK'
 else:
    input = InputFile(input_name)
@@ -39,11 +52,6 @@ templates.clean()
 
 generator = Dir('generator', paths)
 generator.checkdir()
-
-do_clean = input.dict.get('CLEAN')
-if do_clean == 'YES':
-   os.system('rm -rf run-*' )
-   os.system('rm -rf fail-*' )
 
 
 if (kind_run == 'NO_METHOD'):
@@ -64,7 +72,6 @@ elif (kind_run == 'TASK'):
    task = Dir(input_info)
    paths.update( {'task' : task.path} )
    #mod = imp.load_source(   hs.get('generator') + kind_run.lower() + '.py')
-   print task.path + 'task.py'
    mod = imp.load_source('task', task.path + 'task.py')
    mod.main(input.dict, paths)
 else:
