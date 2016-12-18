@@ -29,7 +29,8 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'METHOD_ADIAB_NACV': 'FAST',
             'METHOD_REVERSAL': 'NEVER',
             'NACV_INCREMENT': 1.8872589E-3,
-            'PROPAGATION': 'FSSH'
+            'PROPAGATION': 'FSSH',
+            'PERIODIC'   : 'NONE'
             }
 
 class Dir(object):
@@ -43,7 +44,7 @@ class Dir(object):
     def clean(self):
         test = os.path.exists(self.path)
         if (test):
-            os.system('rm %s/*.temp ' % self.path)
+            os.system('rm %s/*.tmp ' % self.path)
 
     def checkdir(self):
         test = os.path.exists(self.path)
@@ -176,12 +177,18 @@ class OSCluster(object):
         self._write()
 
     def _write(self):
+        self.tmp = Dir('tmp')
+        self.tmp.rm_mkdir()
         self._create_dir()
         self._print_info()
-        os.chdir(self._templates_path)
+        self._get_templates()
+        os.chdir(self.tmp.path)
         self._my_write()
         os.system(' mv %s %s' % (self._filecrystal, self.parcel.path))
         os.chdir(self._bucket_path)
+
+    def _get_templates(self):
+        os.system('cp %s/%s %s' % (self._templates_path, self._filemol, self.tmp.path))
 
     def _my_write(self):
         self._construct_organic_crystal()
@@ -214,7 +221,6 @@ class OSCluster(object):
     def _construct_organic_crystal(self):
         molfile = open(self._filemol, 'r')
         crystalfile = open(self._filecrystal, 'w')
-        coordfile = open('COORD.temp', 'w')
         lines = molfile.readlines()
         molfile.close
         for mol0_index in range(self._sizecrystal[0]):
@@ -232,9 +238,7 @@ class OSCluster(object):
                         result = '%s  %s\n' \
                                  % (atom_label, str(atom_coord + vec_shift).strip('[]'))
                         crystalfile.write(result)
-                        coordfile.write(result)
         crystalfile.close
-        coordfile.close
 
     def _choose_atom_label(self, atom, i3d=[-1, -1, -1], i3dcharge=[-1, -1, -1], imol=-1, icharge=-1):
         if (imol == -1) and (icharge == -1):
@@ -275,16 +279,21 @@ class OSwSolvent(OSCluster):
         self._add_solvent()
 
     def _add_solvent(self):
-        filecoord = open('COORD.temp', 'a+')
+        filecoord = open(self._filecrystal, 'a+')
         self._get_grid()
         self._get_carbon_pos(filecoord)
-        grid = [[i, j, k] for i in range(1, self._grid[0] + 1)
-                    for j in range(1, self._grid[1] + 1)
-                    for k in range(1, self._grid[2] + 1)]
+        list_of_list = [list(array(range(self._grid[i])) - int(self._grid[i]/2) ) for i in range(3)]
+        grid = [[i, j, k] for i in list_of_list[0]
+                            for j in list_of_list[1]
+                            for k in list_of_list[2]]
+        print grid
+        print list_of_list
         for pos in grid:
-            dist = self._get_os_dist(pos)
-            if dist <= self._closest_dist :
-                result = "%s  %f  %f  %f \n" % (self._kind_solvent, pos[0], pos[1], pos[2])
+            realpos = array(pos) * array(self._realgrid)
+            print realpos
+            dist = self._get_os_dist(realpos)
+            if dist >= self._closest_dist :
+                result = "%s  %f  %f  %f \n" % (self._kind_solvent, realpos[0], realpos[1], realpos[2])
                 filecoord.write(result)
         filecoord.close()
 
@@ -300,6 +309,8 @@ class OSwSolvent(OSCluster):
         pre_natoms = self._density * volume
         cubic_roots = int(power(pre_natoms, 1.0/3.0))
         self._grid = [cubic_roots, cubic_roots, cubic_roots]
+        self._realgrid = array(self._sizebox)/array(self._grid)
+        print volume, pre_natoms, cubic_roots, self._grid
 
     def _get_os_dist(self, pos_solvent):
         list = []
@@ -307,6 +318,7 @@ class OSwSolvent(OSCluster):
             dist = norm(array(pos_carbon) - array(pos_solvent))
             list.append(dist)
         return min(list)
+
 
 
 class CP2KRun(object):
@@ -391,7 +403,7 @@ class CP2KRun(object):
             print 'PROBLEM IN INCLUDE FUNCTION'
             sys.exit()
         if word_list[1] == 'SPECIAL':
-            file_to_include = open(word_list[2] + '-' + str(mol) + '.temp')
+            file_to_include = open(word_list[2] + '-' + str(mol) + '.tmp')
         else:
             file_to_include = open(word_list[1])
         result = ''
@@ -411,6 +423,7 @@ class CP2KRun(object):
         return result
 
 
+
 class CP2KOS(CP2KRun):
     """
     """
@@ -420,8 +433,15 @@ class CP2KOS(CP2KRun):
         self._sizecrystal = dict.get('SIZE_CRYSTAL')
         self._coordcharge = dict.get('COORD_CHARGE')
         self._mol_name = dict.get('MOL_NAME')
+        self._my_mol_name = dict.get('MOL_NAME')
+        self._filecrystal = dict.get('FILECRYSTAL')
         self._filemol = dict.get('FILEMOL')
+        self._structure = dict.get('SYSTEM')
         self._restraint = 10E-03
+        if self._structure == 'SOLVENT':
+            self._kind_solvent = dict.get('SOLVENT')
+            self._sizebox = dict.get('SIZE_BOX')
+            self._my_mol_name = dict.get('MOL_NAME2')
 
     def print_info(self):
         print "Hey Hey"
@@ -450,21 +470,61 @@ class CP2KOS(CP2KRun):
         })
         self._natom_mol = dict.get('NATOM_MOL')
         self._norm_lattice = dict.get('NORM_LATTICE')
+        if self._structure == 'SOLVENT':
+            coordname = self.paths.get('output') + self._structure + '/' + self._filecrystal
+            dict.update({
+                'NATOMS' : sum(1 for line in open(coordname)),
+                'NSOLVENT' : open(coordname).read().count(self._kind_solvent),
+                'LBOXA': self._sizebox[0],
+                'LBOXB': self._sizebox[1],
+                'LBOXC': self._sizebox[2],
+                'RCUT' : min(self._sizebox)/2,
+                'PERIODIC' : 'XYZ'
+            })
+            self._nsolvent = dict.get('NSOLVENT')
 
     def _get_templates(self):
+        os.system('cp %s/%s/%s %s/COORD.tmp'   % (self.paths.get('output'), self._structure,
+                                                  self._filecrystal,self.tmp.path))
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/FIST* %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/%s %s'    % (self.paths.get('templates'), self._filemol, self.tmp.path))
-        os.system('cp %s/COORD.temp %s/COORD.temp' % (self.paths.get('templates'), self.tmp.path))
 
     def _write_topo(self):
+        self._forcefield()
+        self._kind()
         self._psf()
         self._colvar()
         self._constraint()
 
+    def _forcefield(self):
+        os.system('cp %s_FF.inc FORCEFIELD.tmp' % self._mol_name)
+
+    def _kind(self):
+        fileout = open('KIND.tmp','w')
+        result = """\n
+                   &KIND CP
+                        ELEMENT C
+                &END KIND
+                &KIND H
+                        ELEMENT H
+                &END KIND
+                &KIND CN
+                        ELEMENT C
+                &END KIND
+        """
+        if self._structure == 'SOLVENT':
+            result = result + """\n
+                &KIND %s
+                        ELEMENT %s
+                &END KIND
+            """ % (self._kind_solvent, self._kind_solvent)
+        fileout.write(result)
+        fileout.close()
+
     def _constraint(self):
-        fileout = open('CONSTRAINT.temp', 'w')
+        fileout = open('CONSTRAINT.tmp', 'w')
         fileout.write('        &CONSTRAINT\n')
         list_mol = [[i, j, k] for i in range(1, self._sizecrystal[0] + 1)
                     for j in range(1, self._sizecrystal[1] + 1)
@@ -497,7 +557,7 @@ class CP2KOS(CP2KRun):
         fileout.close()
 
     def _colvar(self):
-        fileout = open('COLVAR.temp', 'w')
+        fileout = open('COLVAR.tmp', 'w')
         list_mol = [[i, j, k] for i in range(1, self._sizecrystal[0] + 1)
                     for j in range(1, self._sizecrystal[1] + 1)
                     for k in range(1, self._sizecrystal[2] + 1)]
@@ -552,15 +612,15 @@ class CP2KOS(CP2KRun):
         if pos_mol == -1:
             pos_mol = self._get_pos_mol()
         if count:
-            fileout = open('PSF-%d.temp' % pos_mol, 'w')
+            fileout = open('PSF-%d.tmp' % pos_mol, 'w')
         else:
-            fileout = open('PSF.temp', 'w')
+            fileout = open('PSF.tmp', 'w')
         number_mol = prod(self._sizecrystal)
         for mol in range(int(number_mol)):
             if ((mol + 1) == pos_mol):
-                name = self._mol_name + '_CHARGE.psf'
+                name = self._my_mol_name + '_CHARGE.psf'
             else:
-                name = self._mol_name + '_NEUTRE.psf'
+                name = self._my_mol_name + '_NEUTRE.psf'
             result = """\n
                     &MOLECULE
                         NMOL              1
@@ -568,7 +628,16 @@ class CP2KOS(CP2KRun):
                         CONN_FILE_FORMAT  PSF
                    &END MOLECULE\n """ % name
             fileout.write(result)
+        if self._structure == 'SOLVENT':
+            result = """\n
+                    &MOLECULE
+                        NMOL              %s
+                        CONN_FILE_NAME    ./%s
+                        CONN_FILE_FORMAT  PSF
+                   &END MOLECULE\n """ % (self._nsolvent, self._kind_solvent + '.psf')
+            fileout.write(result)
         fileout.close()
+
 
 
 class CP2KOSFSSH(CP2KOS):
@@ -584,7 +653,7 @@ class CP2KOSFSSH(CP2KOS):
         self._mol_name = dict.get('MOL_NAME')
         self._template_file = dict.get('TEMPLATE_FILE')
         self._forcefield_file = dict.get('FORCEFIELD_FILE')
-        self._filemol = 'COORD.temp'
+        self._filemol = 'COORD.tmp'
         self._restraint = 10E-03
         self._norm_lattice = dict.get('NORM_LATTICE')
         self._initial_path = paths.get('initial')
@@ -594,19 +663,21 @@ class CP2KOSFSSH(CP2KOS):
         print "Hey"
 
     def _write_topo(self):
+        self._forcefield()
+        self._kind()
         for mol in range(1, self._nmol + 1):
             self._psf(mol, True)
         self._colvar()
         self._constraint()
         self._aom()
-        self._write_file(self._forcefield_file, 'FORCEFIELD.tmp', number = self._nmol)
+        self._write_file(self._forcefield_file, 'FORCEEVAL.tmp', number = self._nmol)
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/FSSH* %s' % (self.paths.get('templates'), self.tmp.path))
-        os.system('cp %s/pos-%d.init %s/COORD.temp' % (self._initial_path, self._init, self.tmp.path))
-        os.system('cp %s/vel-%d.init %s/VELOC.temp' % (self._initial_path, self._init, self.tmp.path))
+        os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
+        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
 
     def _complete_dict(self):
         dict = self._my_sed_dict
@@ -635,7 +706,7 @@ class CP2KOSFSSH(CP2KOS):
 
     def _aom(self):
         for mol in range(self._nmol):
-            os.system('cat %s_AOM.inc >> AOM_COEFF.temp' % self._mol_name)
+            os.system('cat %s_AOM.inc >> AOM_COEFF.tmp' % self._mol_name)
 
 
 class FSSHParcel(object):

@@ -15,7 +15,7 @@ def main(inputs, paths):
     print "1. CONSTRUCT THE ORGANIC CRYSTAL."
     system = inputs.get('SYSTEM')
     if system == 'CRYSTAL':
-       structure = OSClusterl(inputs, paths)
+       structure = OSCluster(inputs, paths)
     elif system == 'SOLVENT':
        structure = OSwSolvent(inputs, paths)
     else:

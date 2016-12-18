@@ -5,7 +5,7 @@
       			&SPLINE
         			RCUT_NB         sedRCUT
        			&END SPLINE
-INCLUDE ETHYLENE_FF.inc
+INCLUDE FORCEFIELD.tmp
 		&END FORCEFIELD	
 		&POISSON
        			&EWALD
@@ -31,7 +31,7 @@ INCLUDE ETHYLENE_FF.inc
        			PERIODIC  NONE
      		&END CELL
      		&COORD
-INCLUDE COORD.temp
+INCLUDE COORD.tmp
      		&END COORD
                 &KIND CP
                         ELEMENT C
@@ -55,6 +55,6 @@ INCLUDE SPECIAL PSF
                                 FILENAME ./input
                         &END DUMP_PSF
                 &END TOPOLOGY
-INCLUDE COLVAR.temp
+INCLUDE COLVAR.tmp
    	&END SUBSYS
 &END FORCE_EVAL

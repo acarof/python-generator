@@ -42,7 +42,7 @@
        			&END EACH
      		&END FORCES
    	&END PRINT
-INCLUDE CONSTRAINT.temp
+INCLUDE CONSTRAINT.tmp
 &END MOTION
 &FORCE_EVAL
 	METHOD  FIST
@@ -51,7 +51,7 @@ INCLUDE CONSTRAINT.temp
       			&SPLINE
         			RCUT_NB         sedRCUT
        			&END SPLINE
-INCLUDE ETHYLENE_FF.inc
+INCLUDE FORCEFIELD.tmp
 		&END FORCEFIELD	
 		&POISSON
        			&EWALD
@@ -74,25 +74,17 @@ INCLUDE ETHYLENE_FF.inc
    	&SUBSYS
      		&CELL
        			ABC                    sedLBOXA        sedLBOXB        sedLBOXC     
-       			PERIODIC  NONE
+       			PERIODIC  sedPERIODIC
      		&END CELL
      		&COORD
-INCLUDE COORD.temp
+INCLUDE COORD.tmp
      		&END COORD
-                &KIND CP
-                        ELEMENT C
-                &END KIND
-                &KIND H
-                        ELEMENT H
-                &END KIND
-                &KIND CN
-                        ELEMENT C
-                &END KIND
+INCLUDE KIND.tmp
                 &TOPOLOGY
                         NUMBER_OF_ATOMS                   sedNATOMS
                         CONN_FILE_FORMAT  MOL_SET
                         &MOL_SET
-INCLUDE PSF.temp
+INCLUDE PSF.tmp
                         &END MOL_SET
                         &DUMP_PSF
                                 &EACH
@@ -101,6 +93,6 @@ INCLUDE PSF.temp
                                 FILENAME ./input
                         &END DUMP_PSF
                 &END TOPOLOGY
-INCLUDE COLVAR.temp
+INCLUDE COLVAR.tmp
    	&END SUBSYS
 &END FORCE_EVAL
