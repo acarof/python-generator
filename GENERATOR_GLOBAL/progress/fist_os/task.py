@@ -3,7 +3,7 @@
 import string, re, struct, sys, math, os, time
 import numpy
 
-from utils import *
+from utils import Dir, FSSHParcel
 
 def main(inputs, paths):
     print """
@@ -15,18 +15,22 @@ def main(inputs, paths):
     print "1. CONSTRUCT THE ORGANIC CRYSTAL."
     system = inputs.get('SYSTEM')
     if system == 'CRYSTAL':
-       structure = OSCluster(inputs, paths)
+        from utils import OSCluster as Structure
+        from utils import CP2KOS as Config
     elif system == 'SOLVENT':
-       structure = OSwSolvent(inputs, paths)
+        from utils import OSwSolvent as Structure
+        from utils import CP2KOSwSolvent as Config
     else:
-        structure = None
- 
+        sys.exit()
+
+    structure = Structure(inputs, paths)
+
     ndir = 0
     print "2. RUN CP2K"
-    config_nvt = CP2KOS(inputs, paths, ENSEMBLE = 'NVT', STEPS = inputs.get('NEQ'))
+    config_nvt = Config(inputs, paths, ENSEMBLE = 'NVT', STEPS = inputs.get('NEQ'))
     ndir = config_nvt.run(ndir)
  
-    config_nve = CP2KOS(inputs, paths, ENSEMBLE = 'NVE', STEPS = inputs.get('NPROD'))
+    config_nve = Config(inputs, paths, ENSEMBLE = 'NVE', STEPS = inputs.get('NPROD'))
     ndir = config_nve.run(ndir)
  
  

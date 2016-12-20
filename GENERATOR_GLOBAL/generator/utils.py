@@ -438,10 +438,6 @@ class CP2KOS(CP2KRun):
         self._filemol = dict.get('FILEMOL')
         self._structure = dict.get('SYSTEM')
         self._restraint = 10E-03
-        if self._structure == 'SOLVENT':
-            self._kind_solvent = dict.get('SOLVENT')
-            self._sizebox = dict.get('SIZE_BOX')
-            self._my_mol_name = dict.get('MOL_NAME2')
 
     def print_info(self):
         print "Hey Hey"
@@ -470,18 +466,6 @@ class CP2KOS(CP2KRun):
         })
         self._natom_mol = dict.get('NATOM_MOL')
         self._norm_lattice = dict.get('NORM_LATTICE')
-        if self._structure == 'SOLVENT':
-            coordname = self.paths.get('output') + self._structure + '/' + self._filecrystal
-            dict.update({
-                'NATOMS' : sum(1 for line in open(coordname)),
-                'NSOLVENT' : open(coordname).read().count(self._kind_solvent),
-                'LBOXA': self._sizebox[0],
-                'LBOXB': self._sizebox[1],
-                'LBOXC': self._sizebox[2],
-                'RCUT' : min(self._sizebox)/2,
-                'PERIODIC' : 'XYZ'
-            })
-            self._nsolvent = dict.get('NSOLVENT')
 
     def _get_templates(self):
         os.system('cp %s/%s/%s %s/COORD.tmp'   % (self.paths.get('output'), self._structure,
@@ -514,12 +498,6 @@ class CP2KOS(CP2KRun):
                         ELEMENT C
                 &END KIND
         """
-        if self._structure == 'SOLVENT':
-            result = result + """\n
-                &KIND %s
-                        ELEMENT %s
-                &END KIND
-            """ % (self._kind_solvent, self._kind_solvent)
         fileout.write(result)
         fileout.close()
 
@@ -628,15 +606,163 @@ class CP2KOS(CP2KRun):
                         CONN_FILE_FORMAT  PSF
                    &END MOLECULE\n """ % name
             fileout.write(result)
-        if self._structure == 'SOLVENT':
+        fileout.close()
+
+
+class CP2KOSwSolvent(CP2KOS):
+
+    def __init__(self, dict, paths, **kwargs):
+        super(CP2KOSwSolvent, self).__init__(dict, paths, **kwargs)
+        self._kind_solvent = dict.get('SOLVENT')
+        self._sizebox = dict.get('SIZE_BOX')
+        self._my_mol_name = dict.get('MOL_NAME2')
+
+    def _complete_dict(self):
+        super(CP2KOSwSolvent, self)._complete_dict()
+        dict = self._my_sed_dict
+        coordname = self.paths.get('output') + self._structure + '/' + self._filecrystal
+        dict.update({
+            'NATOMS': sum(1 for line in open(coordname)),
+            'NSOLVENT': open(coordname).read().count(self._kind_solvent),
+            'LBOXA': self._sizebox[0],
+            'LBOXB': self._sizebox[1],
+            'LBOXC': self._sizebox[2],
+            'RCUT': min(self._sizebox) / 2,
+            'PERIODIC': 'XYZ'
+        })
+        self._nsolvent = dict.get('NSOLVENT')
+
+    def _kind(self):
+        fileout = open('KIND.tmp', 'w')
+        result = """\n
+                   &KIND CP
+                        ELEMENT C
+                &END KIND
+                &KIND H
+                        ELEMENT H
+                &END KIND
+                &KIND CN
+                        ELEMENT C
+                &END KIND
+                &KIND %s
+                        ELEMENT %s
+                &END KIND
+            """ % (self._kind_solvent, self._kind_solvent)
+        fileout.write(result)
+        fileout.close()
+
+    def _psf(self, pos_mol=-1, count=False):
+        if pos_mol == -1:
+            pos_mol = self._get_pos_mol()
+        if count:
+            fileout = open('PSF-%d.tmp' % pos_mol, 'w')
+        else:
+            fileout = open('PSF.tmp', 'w')
+        number_mol = prod(self._sizecrystal)
+        for mol in range(int(number_mol)):
+            if ((mol + 1) == pos_mol):
+                name = self._my_mol_name + '_CHARGE.psf'
+            else:
+                name = self._my_mol_name + '_NEUTRE.psf'
             result = """\n
+                    &MOLECULE
+                        NMOL              1
+                        CONN_FILE_NAME    ./%s
+                        CONN_FILE_FORMAT  PSF
+                   &END MOLECULE\n """ % name
+            fileout.write(result)
+        result = """\n
                     &MOLECULE
                         NMOL              %s
                         CONN_FILE_NAME    ./%s
                         CONN_FILE_FORMAT  PSF
                    &END MOLECULE\n """ % (self._nsolvent, self._kind_solvent + '.psf')
-            fileout.write(result)
+        fileout.write(result)
         fileout.close()
+
+
+
+
+
+class CP2KOSwSolventFSSH(CP2KOSwSolvent):
+    """
+    """
+    def __init__(self, dict, paths, **kwargs):
+        super(CP2KOSwSolventFSSH, self).__init__(dict, paths, **kwargs)
+        self._init = self._my_sed_dict.get('INIT')
+        self._timestep = dict.get('TIMESTEP')
+        self._printfrq = dict.get('PRINTFRQ')
+        self._sizecrystal = dict.get('SIZE_CRYSTAL')
+        self._coordcharge = dict.get('COORD_CHARGE')
+        self._mol_name = dict.get('MOL_NAME')
+        self._template_file = dict.get('TEMPLATE_FILE')
+        self._forcefield_file = dict.get('FORCEFIELD_FILE')
+        self._filemol = 'COORD.tmp'
+        self._restraint = 10E-03
+        self._norm_lattice = dict.get('NORM_LATTICE')
+        self._initial_path = paths.get('initial')
+        self._natom_mol = dict.get('NATOM_MOL')
+
+    def _write_topo(self):
+        self._forcefield()
+        self._kind()
+        for mol in range(1, self._nmol + 1):
+            self._psf(mol, True)
+        self._colvar()
+        self._constraint()
+        self._aom()
+        self._write_file(self._forcefield_file, 'FORCEEVAL.tmp', number = self._nmol)
+
+    def _complete_dict(self):
+        dict = self._my_sed_dict
+        dict = self._my_sed_dict
+        norm_a = norm(array(dict.get('VECTA')))
+        norm_b = norm(array(dict.get('VECTB')))
+        norm_c = norm(array(dict.get('VECTC')))
+        norm_max = max(norm_a, norm_b, norm_c)
+        n_a = dict.get('SIZE_CRYSTAL')[0]
+        n_b = dict.get('SIZE_CRYSTAL')[1]
+        n_c = dict.get('SIZE_CRYSTAL')[2]
+        n_max = max(n_a, n_b, n_c)
+        dict.update({
+            'NMOL': prod(dict.get('SIZE_CRYSTAL')),
+            'NORM_LATTICE': [norm_a, norm_b, norm_c],
+            'LBOXA': 10 * norm_max * n_max,
+            'LBOXB': 10 * norm_max * n_max,
+            'LBOXC': 10 * norm_max * n_max,
+            'RCUT': 5 * norm_max * n_max,
+        })
+        self._natom_mol = dict.get('NATOM_MOL')
+        self._norm_lattice = dict.get('NORM_LATTICE')
+        coordname = self.paths.get('initial') + '/pos-1.init'
+        dict.update({
+            'NSOLVENT': open(coordname).read().count(self._kind_solvent),
+            'NDIABAT': prod(dict.get('SIZE_CRYSTAL')) * dict.get('NORBITALS'),
+            'LBOXA': self._sizebox[0],
+            'LBOXB': self._sizebox[1],
+            'LBOXC': self._sizebox[2],
+            'RCUT': min(self._sizebox) / 2,
+            'PERIODIC': 'XYZ'
+        })
+        self._nsolvent = dict.get('NSOLVENT')
+        self._nmol = dict.get('NMOL')
+        dict.update({
+            'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
+        })
+
+
+    def _aom(self):
+        for mol in range(self._nmol):
+            os.system('cat %s_AOM.inc >> AOM_COEFF.tmp' % self._mol_name)
+
+    def _get_templates(self):
+        os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
+        os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
+        os.system('cp %s/FSSH* %s' % (self.paths.get('templates'), self.tmp.path))
+        os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
+        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
+
+
 
 
 

@@ -14,6 +14,15 @@ def main(inputs, paths):
     initial.checkdir()
     paths.update({'initial': initial.path})
 
+    system = inputs.get('SYSTEM')
+    if system == 'CRYSTAL':
+        from utils import OSCluster as Structure
+        from utils import CP2KOSFSSH as Config
+    elif system == 'SOLVENT':
+        from utils import OSwSolvent as Structure
+        from utils import CP2KOSwSolventFSSH as Config
+    else:
+        sys.exit()
 
     number_init = inputs.get('NUMBER_INIT', 1)
     number_random = inputs.get('NUMBER_RANDOM', 5)
@@ -21,6 +30,6 @@ def main(inputs, paths):
 
     for init in range(1, number_init + 1):
         for random in range(1, number_random + 1):
-            config = CP2KOSFSSH( inputs, paths, INIT = init)
+            config = Config( inputs, paths, INIT = init)
             ndir = config.run(ndir)
 
