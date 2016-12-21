@@ -647,7 +647,7 @@ class CP2KOSwSolvent(CP2KOS):
                 &KIND %s
                         ELEMENT %s
                 &END KIND
-            """ % (self._kind_solvent, self._kind_solvent)
+            """ % (self._kind_solvent.title(), self._kind_solvent.title())
         fileout.write(result)
         fileout.close()
 
@@ -676,7 +676,7 @@ class CP2KOSwSolvent(CP2KOS):
                         NMOL              %s
                         CONN_FILE_NAME    ./%s
                         CONN_FILE_FORMAT  PSF
-                   &END MOLECULE\n """ % (self._nsolvent, self._kind_solvent + '.psf')
+                   &END MOLECULE\n """ % (self._nsolvent, self._kind_solvent.title() + '.psf')
         fileout.write(result)
         fileout.close()
 
@@ -715,7 +715,6 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
 
     def _complete_dict(self):
         dict = self._my_sed_dict
-        dict = self._my_sed_dict
         norm_a = norm(array(dict.get('VECTA')))
         norm_b = norm(array(dict.get('VECTB')))
         norm_c = norm(array(dict.get('VECTC')))
@@ -736,7 +735,7 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         self._norm_lattice = dict.get('NORM_LATTICE')
         coordname = self.paths.get('initial') + '/pos-1.init'
         dict.update({
-            'NSOLVENT': open(coordname).read().count(self._kind_solvent),
+            'NSOLVENT': open(coordname).read().count(self._kind_solvent.title()),
             'NDIABAT': prod(dict.get('SIZE_CRYSTAL')) * dict.get('NORBITALS'),
             'LBOXA': self._sizebox[0],
             'LBOXB': self._sizebox[1],
@@ -745,6 +744,7 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
             'PERIODIC': 'XYZ'
         })
         self._nsolvent = dict.get('NSOLVENT')
+        print "NSOLVENT", self._nsolvent
         self._nmol = dict.get('NMOL')
         dict.update({
             'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
@@ -753,7 +753,12 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
 
     def _aom(self):
         for mol in range(self._nmol):
-            os.system('cat %s_AOM.inc >> AOM_COEFF.tmp' % self._mol_name)
+            os.system('cat %s_AOM.inc >> AOM_COEFF.tmp' % self._my_mol_name)
+        file = open('AOM_COEFF.tmp', 'ab+')
+        for atom in range(self._nsolvent):
+            file.write('%s    1    0   0.0   0.0\n' % self._kind_solvent)
+        file.close()
+
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
@@ -923,6 +928,7 @@ TEST         NO
         my_input.close()
 
     def gather_vel_coord(self, ndir):
+        nsolvent = sed_dict.get('NATOMS') - (self._nmol * self._natom_mol)
         os.chdir('run-%d' % ndir)
         pos_mol = (self._coordcharge[0] - 1) * (self._sizecrystal[1] * self._sizecrystal[2]) + \
                   (self._coordcharge[1] - 1) * (self._sizecrystal[2]) + \
@@ -948,6 +954,9 @@ TEST         NO
                         result = '%s  %s\n' \
                                  % (atom_label, str(atom_xyz).strip('[]'))
                         fileout.write(result)
+                for atom in range(nsolvent):
+                    index = (self._nmol * self._natom_mol) + atom + 2  #2 from the the two initial lines at each timestep
+                    fileout.write(lines[index])
                 fileout.close()
                 os.system(' mv %s %s' % (filename, self.initial.path))
         os.chdir(self._bucket_path)

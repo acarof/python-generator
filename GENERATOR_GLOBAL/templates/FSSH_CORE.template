@@ -156,15 +156,7 @@ INCLUDE AOM_COEFF.tmp
                 &COORD
 INCLUDE COORD.tmp
                 &END COORD
-                &KIND CP
-                        ELEMENT C
-                &END KIND
-                &KIND H
-                        ELEMENT H
-                &END KIND
-                &KIND CN
-                        ELEMENT C
-                &END KIND
+INCLUDE KIND.tmp
                 &TOPOLOGY
                         NUMBER_OF_ATOMS                   sedNATOMS
                         CONN_FILE_FORMAT  MOL_SET
