@@ -128,6 +128,8 @@ class InputFile(object):
         self.input = open(name, 'r')
         self.lines = self.input.readlines()
         self.input.close()
+        self.read()
+
     def read(self):
         self.dict = {}
         for line in self.lines:
@@ -147,11 +149,13 @@ class InputFile(object):
                 self.dict.update({key: value.pop(0)})
             else:
                 self.dict.update({key: value})
+
     def _convert_float(self, s):
         try:
             return float(s)
         except ValueError:
             return None
+
     def _convert_int(self, s):
         try:
             return int(s)
@@ -271,7 +275,6 @@ class OSwSolvent(OSCluster):
         self._kind_solvent = inputs.get('SOLVENT')
         self._density      = inputs.get('DENSITY')
         self._sizebox      = inputs.get('SIZE_BOX')
-        print self._sizebox
         super(OSwSolvent, self).__init__(inputs, paths)
 
     def _my_write(self):
@@ -286,11 +289,9 @@ class OSwSolvent(OSCluster):
         grid = [[i, j, k] for i in list_of_list[0]
                             for j in list_of_list[1]
                             for k in list_of_list[2]]
-        print grid
-        print list_of_list
+
         for pos in grid:
             realpos = array(pos) * array(self._realgrid)
-            print realpos
             dist = self._get_os_dist(realpos)
             if dist >= self._closest_dist :
                 result = "%s  %f  %f  %f \n" % (self._kind_solvent, realpos[0], realpos[1], realpos[2])
@@ -310,7 +311,6 @@ class OSwSolvent(OSCluster):
         cubic_roots = int(power(pre_natoms, 1.0/3.0))
         self._grid = [cubic_roots, cubic_roots, cubic_roots]
         self._realgrid = array(self._sizebox)/array(self._grid)
-        print volume, pre_natoms, cubic_roots, self._grid
 
     def _get_os_dist(self, pos_solvent):
         list = []
@@ -433,7 +433,7 @@ class CP2KOS(CP2KRun):
         self._sizecrystal = dict.get('SIZE_CRYSTAL')
         self._coordcharge = dict.get('COORD_CHARGE')
         self._mol_name = dict.get('MOL_NAME')
-        self._my_mol_name = dict.get('MOL_NAME')
+        self._name_organic = dict.get('MOL_NAME')
         self._filecrystal = dict.get('FILECRYSTAL')
         self._filemol = dict.get('FILEMOL')
         self._structure = dict.get('SYSTEM')
@@ -596,9 +596,9 @@ class CP2KOS(CP2KRun):
         number_mol = prod(self._sizecrystal)
         for mol in range(int(number_mol)):
             if ((mol + 1) == pos_mol):
-                name = self._my_mol_name + '_CHARGE.psf'
+                name = self._name_organic + '_CHARGE.psf'
             else:
-                name = self._my_mol_name + '_NEUTRE.psf'
+                name = self._name_organic + '_NEUTRE.psf'
             result = """\n
                     &MOLECULE
                         NMOL              1
@@ -615,7 +615,7 @@ class CP2KOSwSolvent(CP2KOS):
         super(CP2KOSwSolvent, self).__init__(dict, paths, **kwargs)
         self._kind_solvent = dict.get('SOLVENT')
         self._sizebox = dict.get('SIZE_BOX')
-        self._my_mol_name = dict.get('MOL_NAME2')
+        self._name_solvent = dict.get('NAME_SOLVENT')
 
     def _complete_dict(self):
         super(CP2KOSwSolvent, self)._complete_dict()
@@ -661,9 +661,9 @@ class CP2KOSwSolvent(CP2KOS):
         number_mol = prod(self._sizecrystal)
         for mol in range(int(number_mol)):
             if ((mol + 1) == pos_mol):
-                name = self._my_mol_name + '_CHARGE.psf'
+                name = self._name_organic + '_CHARGE.psf'
             else:
-                name = self._my_mol_name + '_NEUTRE.psf'
+                name = self._name_organic + '_NEUTRE.psf'
             result = """\n
                     &MOLECULE
                         NMOL              1
@@ -680,8 +680,9 @@ class CP2KOSwSolvent(CP2KOS):
         fileout.write(result)
         fileout.close()
 
-
-
+    def _forcefield(self):
+        print              self._mol_name + '_' + self._name_solvent
+        os.system('cp %s_FF.inc FORCEFIELD.tmp' % (self._mol_name + '_' + self._name_solvent) )
 
 
 class CP2KOSwSolventFSSH(CP2KOSwSolvent):
@@ -753,7 +754,7 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
 
     def _aom(self):
         for mol in range(self._nmol):
-            os.system('cat %s_AOM.inc >> AOM_COEFF.tmp' % self._my_mol_name)
+            os.system('cat %s_AOM.inc >> AOM_COEFF.tmp' % self._name_organic)
         file = open('AOM_COEFF.tmp', 'ab+')
         for atom in range(self._nsolvent):
             file.write('%s    1    0   0.0   0.0\n' % self._kind_solvent)
@@ -854,6 +855,7 @@ class FSSHParcel(object):
         self._mol_name = dict.get('MOL_NAME')
         self._template_file = dict.get('TEMPLATE_FILE')
         self._filemol = dict.get('FILEMOL')
+        self._system = dict.get('SYSTEM')
         self._restraint = 10E-04
         self._templates_path = paths.get('templates')
         self._bucket_path = paths.get('bucket')
@@ -889,15 +891,18 @@ class FSSHParcel(object):
         self._nmol = dict.get('NMOL')
 
     def gather(self, ndir):
-        self.create()
+        self._create()
         self.gather_vel_coord(ndir)
         self.gather_templates_generator()
-        self.prepare_input()
+        if (self._system == 'SOLVENT'):
+            self._prepare_input_solvent()
+        elif (self._system == 'CRYSTAL'):
+            self._prepare_input_crystal()
+        self._prepare_task()
 
-    def prepare_input(self):
-        os.chdir(self.parcel.path)
-        toname = 'TONAME'
-        my_input = open('%s.input' % toname, 'w')
+    def _prepare_input_crystal(self):
+        os.chdir(self.subtask.path)
+        my_input = open('input', 'w')
         result = """
 KIND_RUN  FSSH_OS
 TEMPLATE_FILE FSSH_CORE.template
@@ -927,6 +932,46 @@ TEST         NO
         my_input.write(result)
         my_input.close()
 
+    def _prepare_input_solvent(self):
+        os.chdir(self.subtask.path)
+        my_input = open('input', 'w')
+        result = """
+KIND_RUN  FSSH_OS
+TEMPLATE_FILE FSSH_CORE.template
+FORCEFIELD_FILE FSSH_FF.template
+FILE_INIT initial
+NUMBER_INIT %d
+SYSTEM SOLVENT
+MOL_NAME %s
+NAME_SOLVENT %s
+SOLVENT      %s
+NATOMS   %d
+NATOM_MOL   %d
+SIZE_BOX    %s
+VECTA %s
+VECTB %s
+VECTC %s
+SIZE_CRYSTAL %s
+COORD_CHARGE %s
+STEPS        1
+PRINTFRQ     1
+TEST         NO
+        """ % (
+            sed_dict.get('NCONFIG', '!!!'),
+            sed_dict.get('MOL_NAME', '!!!'),
+            sed_dict.get('NAME_SOLVENT', '!!!'),
+            sed_dict.get('SOLVENT'),
+            sed_dict.get('NATOMS', '!!!'),
+            sed_dict.get('NATOM_MOL', '!!!'),
+            '   '.join(map(str, sed_dict.get('SIZE_BOX', '!!!'))),
+            '   '.join(map(str, sed_dict.get('VECTA', '!!!'))),
+            '   '.join(map(str, sed_dict.get('VECTB', '!!!'))),
+            '   '.join(map(str, sed_dict.get('VECTC', '!!!'))),
+            '   '.join(map(str, sed_dict.get('SIZE_CRYSTAL', '!!!'))),
+            '   '.join(map(str, sed_dict.get('COORD_CHARGE', '!!!'))))
+        my_input.write(result)
+        my_input.close()
+
     def gather_vel_coord(self, ndir):
         nsolvent = sed_dict.get('NATOMS') - (self._nmol * self._natom_mol)
         os.chdir('run-%d' % ndir)
@@ -937,16 +982,20 @@ TEST         NO
             filein = open('run-' + iprop + '-1.xyz', 'r')
             lines = filein.readlines()
             iconfig = 0
+            index = -1
             for istep in range(0, self._nprod, self._printfrq):
+                index = index + 2
                 iconfig = iconfig + 1
                 filename = iprop + '-' + str(iconfig) + '.init'
                 fileout = open(filename, 'w')
                 for imol in range(self._nmol):
                     for iatom in range(self._natom_mol):
-                        index = (istep / self._printfrq) * (self._nmol * self._natom_mol + 2) \
-                                + 2 \
-                                + imol * self._natom_mol \
-                                + iatom
+                        index = index + 1
+                        #index = (istep / self._printfrq) * (self._nmol * self._natom_mol + 2) \
+                        #        + 2 \
+                        #        + imol * self._natom_mol \
+                        #        + iatom
+                        print "index = ", index, iprop, imol, iatom
                         l = string.strip(lines[index])
                         info = re.split('\s+', l)
                         atom_label = self._choose_atom_label(info[0], imol=imol, icharge=pos_mol)
@@ -955,7 +1004,9 @@ TEST         NO
                                  % (atom_label, str(atom_xyz).strip('[]'))
                         fileout.write(result)
                 for atom in range(nsolvent):
-                    index = (self._nmol * self._natom_mol) + atom + 2  #2 from the the two initial lines at each timestep
+                    #index = (self._nmol * self._natom_mol) + atom + 2  #2 from the the two initial lines at each timestep
+                    index = index + 1
+                    print "index = ", index, iprop
                     fileout.write(lines[index])
                 fileout.close()
                 os.system(' mv %s %s' % (filename, self.initial.path))
@@ -965,7 +1016,7 @@ TEST         NO
         os.system('cp %s/*  %s' % (self._templates_path, self.templates.path))
         os.system('cp %s/*  %s' % (self._generator_path, self.generator.path))
 
-    def create(self):
+    def _create(self):
         os.chdir(self._output_path)
         self.parcel = Dir('TONAME')
         self.parcel.mkdir()
@@ -974,6 +1025,12 @@ TEST         NO
         self.generator.mkdir()
         self.templates = Dir('templates')
         self.templates.mkdir()
+        self.task = Dir('task')
+        self.task.mkdir()
+        self.task.chdir()
+        self.subtask = Dir('toname')
+        self.subtask.mkdir()
+        self.subtask.chdir()
         self.initial = Dir('initial')
         self.initial.mkdir()
         os.chdir(self._bucket_path)
@@ -998,3 +1055,44 @@ TEST         NO
         else:
             print "THERE IS A PROBLEM in choose_atom_label"
         return atom_label
+
+    def _prepare_task(self):
+        os.chdir(self.subtask.path)
+        file = open('task.py', 'w')
+        result = """
+ #!/usr/bin/python
+
+import string, re, struct, sys, math, os, time
+import numpy
+
+from utils import *
+
+def main(inputs, paths):
+
+    os.system(' cp -r %s/%s %s' % (paths.get('task'), inputs.get('FILE_INIT'), paths.get('bucket')))
+    initial = Dir(inputs.get('FILE_INIT'), paths)
+    initial.checkdir()
+    paths.update({'initial': initial.path})
+
+    system = inputs.get('SYSTEM')
+    if system == 'CRYSTAL':
+        from utils import OSCluster as Structure
+        from utils import CP2KOSFSSH as Config
+    elif system == 'SOLVENT':
+        from utils import OSwSolvent as Structure
+        from utils import CP2KOSwSolventFSSH as Config
+    else:
+        sys.exit()
+
+    number_init = inputs.get('NUMBER_INIT', 1)
+    number_random = inputs.get('NUMBER_RANDOM', 5)
+    ndir= 0
+
+    for init in range(1, number_init + 1):
+        for random in range(1, number_random + 1):
+            config = Config( inputs, paths, INIT = init)
+            ndir = config.run(ndir)
+
+        """
+        file.write(result)
+        file.close()

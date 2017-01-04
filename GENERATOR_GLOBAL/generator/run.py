@@ -29,16 +29,13 @@ if input_info == 'clean':
    sys.exit()
 elif 'task/' in input_info:
    input = InputFile(input_info + '/input')
-   input.read()
    kind_run = 'TASK'
 elif 'progress/' in input_info:
    input = InputFile(input_info + '/input')
-   input.read()
    input.dict.update({'TEST' : 'YES'})
    kind_run = 'TASK'
 else:
    input = InputFile(input_name)
-   input.read()
    kind_run = input.dict.get('KIND_RUN', 'NO_METHOD')
 
 # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
