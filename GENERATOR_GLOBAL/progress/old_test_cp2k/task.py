@@ -7,20 +7,12 @@ from utils import *
 
 def main(inputs, paths):
     print """
-    """
+    """ 
 
-    lol = [
-        ['PROPAGATION', 'FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN'],
-        ['COLLAPSE', 'T', 'F'],
-        ['ANALYTICS', 'T', 'F'],
-        ['FIRST_DIABAT', 1, 2],
-        ['METHOD_RESCALING', 'SIMPLE', 'NACV'],
-        ['METHOD_ADIAB_NACV', 'TEST', 'CONTRIBUTION','TOTAL','FAST' ],
-        ['METHOD_REVERSAL', 'NEVER','ALWAYS','TRHULAR','SUBOTNIK']
-    ]
+    inputs.update({'STEPS' : 2})
 
-    list_propagation = ['FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN']
-    #list_propagation = ['FSSH']
+    #list_propagation = ['FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN']
+    list_propagation = ['FSSH']
     list_analytics   = ['T', 'F']
     #list_analytics = ['T']
     list_collapse = ['T', 'F']
@@ -51,26 +43,65 @@ def main(inputs, paths):
                   for reversal  in list_reversal
                   ] 
 
-    systems = ['dimer', 'trimer', 'dimer_solvent']
+    dict_dimer = {
+         'NATOMS' : 12,
+         'NATOM_MOL' : 6,
+         'VECTA'     : [3.527, 0.784, -0.166],
+         'VECTB'     : [0, 0, 0],
+         'VECTC'     : [0, 0, 0],
+         'SIZE_CRYSTAL' : [2, 1, 1],
+         'COORD_CHARGE' : [2, 1, 1],
+         'SYSTEM': 'CRYSTAL',
+         'FILE_INIT'    : 'initial_dimer',
+         'MOL_NAME'     : 'ETHYLENE'
+                  }
+    dict_trimer = {
+         'NATOMS' : 18,
+         'NATOM_MOL' : 6,
+         'VECTA'     : [3.527, 0.784, -0.166],
+         'VECTB'     : [0, 0, 0],
+         'VECTC'     : [0, 0, 0],
+         'SIZE_CRYSTAL' : [3, 1, 1],
+         'COORD_CHARGE' : [2, 1, 1],
+         'SYSTEM': 'CRYSTAL',
+         'FILE_INIT'    : 'initial_trimer',
+         'MOL_NAME'     : 'ETHYLENE'
+                  }
+    dict_dimer_solvent = {
+        'NATOMS': 135,
+        'NATOM_MOL': 6,
+        'SIZE_BOX'  : [30.0, 30.0, 30.0],
+        'VECTA': [3.527, 0.784, -0.166],
+        'VECTB': [0, 0, 0],
+        'VECTC': [0, 0, 0],
+        'SIZE_CRYSTAL': [2, 1, 1],
+        'COORD_CHARGE': [2, 1, 1],
+        'FILE_INIT': 'initial_dimer_solvent',
+        'SYSTEM' : 'SOLVENT',
+        'MOL_NAME': 'ETHYLENE',
+        'NAME_SOLVENT' : 'AR',
+        'SOLVENT'      : 'Ar'
+    }
+
+    #dict_list = [dict_dimer, dict_trimer, dict_dimer_solvent]
+    dict_list = [dict_dimer_solvent]
 
     ndir= 0
 
-    for system in systems:
-        system_input = InputFile( paths.get('task') + system + '/input')
-        os.system(' cp -r %s/initial/ %s' % (paths.get('task') + system, paths.get('bucket')))
-        initial = Dir( 'initial', paths)
+    for structure in dict_list:
+        os.system(' cp -r %s/%s %s' % (paths.get('task'), structure.get('FILE_INIT'), paths.get('bucket')))
+        initial = Dir( structure.get('FILE_INIT'), paths)
         initial.checkdir()     
         paths.update({'initial' :  initial.path})
-        inputs.update(system_input.dict)
-        inputs.update({'STEPS': 2})
+        inputs.update(structure)
         dict_prev = {}
         for dict in mega_list:
             if dict.get('PROPAGATION') == 'TEST_HOP':
                inputs.update({'STEPS':1})
-            if system_input.dict.get('FILE_INIT') != 'initial_dimer':
+            if structure.get('FILE_INIT') != 'initial_dimer':
                dict.update({'ANALYTICS' : 'F' })
 
-            system = system_input.dict.get('SYSTEM')
+            system = inputs.get('SYSTEM')
             if system == 'CRYSTAL':
                 from utils import CP2KOSFSSH as Config
             elif system == 'SOLVENT':
@@ -79,7 +110,6 @@ def main(inputs, paths):
                 sys.exit()
 
             config = Config( inputs, paths, INIT = 1, **dict)
-            print "GO FOR RUN %d" % ndir
             ndir = config.run(ndir)
             if os.path.exists('run-%d' % (ndir -1) ):
             #    pass

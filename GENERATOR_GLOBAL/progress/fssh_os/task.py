@@ -16,10 +16,8 @@ def main(inputs, paths):
 
     system = inputs.get('SYSTEM')
     if system == 'CRYSTAL':
-        from utils import OSCluster as Structure
         from utils import CP2KOSFSSH as Config
     elif system == 'SOLVENT':
-        from utils import OSwSolvent as Structure
         from utils import CP2KOSwSolventFSSH as Config
     else:
         sys.exit()

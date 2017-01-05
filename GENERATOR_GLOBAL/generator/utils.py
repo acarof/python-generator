@@ -995,7 +995,6 @@ TEST         NO
                         #        + 2 \
                         #        + imol * self._natom_mol \
                         #        + iatom
-                        print "index = ", index, iprop, imol, iatom
                         l = string.strip(lines[index])
                         info = re.split('\s+', l)
                         atom_label = self._choose_atom_label(info[0], imol=imol, icharge=pos_mol)
@@ -1005,8 +1004,7 @@ TEST         NO
                         fileout.write(result)
                 for atom in range(nsolvent):
                     #index = (self._nmol * self._natom_mol) + atom + 2  #2 from the the two initial lines at each timestep
-                    index = index + 1
-                    print "index = ", index, iprop
+                    index += 1
                     fileout.write(lines[index])
                 fileout.close()
                 os.system(' mv %s %s' % (filename, self.initial.path))

@@ -60,6 +60,22 @@ def main(inputs, paths):
          'MOL_NAME'     : 'ETHYLENE'
                   }
 
+    dict_dimer_solvent = {
+        'NATOMS': 135,
+        'NATOM_MOL': 6,
+        'SIZE_BOX'  : [30.0, 30.0, 30.0],
+        'VECTA': [3.527, 0.784, -0.166],
+        'VECTB': [0, 0, 0],
+        'VECTC': [0, 0, 0],
+        'SIZE_CRYSTAL': [2, 1, 1],
+        'COORD_CHARGE': [2, 1, 1],
+        'FILE_INIT': 'initial_dimer_solvent',
+        'SYSTEM' : 'SOLVENT'
+        'MOL_NAME': 'ETHYLENE',
+        'NAME_SOLVENT' : 'AR',
+        'SOLVENT'      : 'Ar'
+    }
+
     dict_list = [dict_dimer, dict_trimer]
 
 
