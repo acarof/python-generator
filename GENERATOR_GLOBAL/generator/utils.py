@@ -437,7 +437,7 @@ class CP2KOS(CP2KRun):
         self._filecrystal = dict.get('FILECRYSTAL')
         self._filemol = dict.get('FILEMOL')
         self._structure = dict.get('SYSTEM')
-        self._restraint = 10E-03
+
 
     def print_info(self):
         print "Hey Hey"
@@ -466,6 +466,8 @@ class CP2KOS(CP2KRun):
         })
         self._natom_mol = dict.get('NATOM_MOL')
         self._norm_lattice = dict.get('NORM_LATTICE')
+        self._restraint = dict.get('RESTRAINT')
+
 
     def _get_templates(self):
         os.system('cp %s/%s/%s %s/COORD.tmp'   % (self.paths.get('output'), self._structure,
@@ -699,7 +701,7 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         self._template_file = dict.get('TEMPLATE_FILE')
         self._forcefield_file = dict.get('FORCEFIELD_FILE')
         self._filemol = 'COORD.tmp'
-        self._restraint = 10E-03
+        self._restraint = dict.get('RESTRAINT')
         self._norm_lattice = dict.get('NORM_LATTICE')
         self._initial_path = paths.get('initial')
         self._natom_mol = dict.get('NATOM_MOL')
@@ -750,6 +752,7 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         dict.update({
             'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
         })
+        self._restraint = dict.get('RESTRAINT')
 
 
     def _aom(self):
@@ -786,7 +789,7 @@ class CP2KOSFSSH(CP2KOS):
         self._template_file = dict.get('TEMPLATE_FILE')
         self._forcefield_file = dict.get('FORCEFIELD_FILE')
         self._filemol = 'COORD.tmp'
-        self._restraint = 10E-03
+        self._restraint = dict.get('RESTRAINT')
         self._norm_lattice = dict.get('NORM_LATTICE')
         self._initial_path = paths.get('initial')
         self._natom_mol = dict.get('NATOM_MOL')
@@ -835,6 +838,7 @@ class CP2KOSFSSH(CP2KOS):
         })
         self._nmol = dict.get('NMOL')
         self._norm_lattice = dict.get('NORM_LATTICE')
+        self._restraint = dict.get('RESTRAINT')
 
     def _aom(self):
         for mol in range(self._nmol):
@@ -856,7 +860,7 @@ class FSSHParcel(object):
         self._template_file = dict.get('TEMPLATE_FILE')
         self._filemol = dict.get('FILEMOL')
         self._system = dict.get('SYSTEM')
-        self._restraint = 10E-04
+        self._restraint = dict.get('RESTRAINT')
         self._templates_path = paths.get('templates')
         self._bucket_path = paths.get('bucket')
         self._output_path = paths.get('output')

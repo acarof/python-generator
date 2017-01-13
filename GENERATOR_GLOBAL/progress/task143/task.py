@@ -11,14 +11,15 @@ def main(inputs, paths):
 
 #    inputs.update({'STEPS' : 2})
 
-    list_propagation = ['FSSH','BORN_OPPENHEIMER']
+    list_propagation = ['BORN_OPPENHEIMER']
     list_collapse =    ['T']
     list_first_diabat = [1]
     list_rescaling    = ['NACV']
     list_nacv         = [ 'TOTAL']
     list_reversal     = ['NEVER']
-    list_hab          = [0.0065, 0.0325, 0.0652, 0.3912, 0.9780]
-    list_timestep     = [0.05, 0.1, 0.5, 1, 2]
+    #list_hab          = [0.0065, 0.0325, 0.0652, 0.3912, 0.9780]
+    list_hab = [0.0065, 0.9780]
+    list_timestep     = [0.05, 0.1, 0.5]
 
     mega_list = [ { 'PROPAGATION' : prop,
                     'COLLAPSE'    : collapse,
@@ -37,62 +38,46 @@ def main(inputs, paths):
                   for timestep  in list_timestep
                   ] 
 
-    dict_dimer = {
-         'NATOMS' : 12,
-         'NATOM_MOL' : 6,
-         'VECTA'     : [3.527, 0.784, -0.166],
-         'VECTB'     : [0, 0, 0],
-         'VECTC'     : [0, 0, 0],
-         'SIZE_CRYSTAL' : [2, 1, 1],
-         'COORD_CHARGE' : [2, 1, 1],
-         'FILE_INIT'    : 'initial_dimer',
-         'MOL_NAME'     : 'ETHYLENE'
-                  }
-    dict_trimer = {
-         'NATOMS' : 18,
-         'NATOM_MOL' : 6,
-         'VECTA'     : [3.527, 0.784, -0.166],
-         'VECTB'     : [0, 0, 0],
-         'VECTC'     : [0, 0, 0],
-         'SIZE_CRYSTAL' : [3, 1, 1],
-         'COORD_CHARGE' : [2, 1, 1],
-         'FILE_INIT'    : 'initial_trimer',
-         'MOL_NAME'     : 'ETHYLENE'
-                  }
-
-    dict_dimer_solvent = {
-        'NATOMS': 135,
-        'NATOM_MOL': 6,
-        'SIZE_BOX'  : [30.0, 30.0, 30.0],
-        'VECTA': [3.527, 0.784, -0.166],
-        'VECTB': [0, 0, 0],
-        'VECTC': [0, 0, 0],
-        'SIZE_CRYSTAL': [2, 1, 1],
-        'COORD_CHARGE': [2, 1, 1],
-        'FILE_INIT': 'initial_dimer_solvent',
-        'SYSTEM' : 'SOLVENT'
-        'MOL_NAME': 'ETHYLENE',
-        'NAME_SOLVENT' : 'AR',
-        'SOLVENT'      : 'Ar'
-    }
-
-    dict_list = [dict_dimer, dict_trimer]
-
+    systems = ['dimer', 'trimer', 'dimer_solvent']
 
     ndir= 0
 
-    for structure in dict_list:
-        os.system(' cp -r %s/%s %s' % ( paths.get('task'), structure.get('FILE_INIT'), paths.get('bucket')) )
-        initial = Dir( structure.get('FILE_INIT'), paths)
-        initial.checkdir()     
+    for system in systems:
+        system_input = InputFile( paths.get('task') + system + '/input')
+        os.system(' cp -r %s/initial/ %s' % (paths.get('task') + system, paths.get('bucket')))
+        initial = Dir( 'initial', paths)
+        initial.checkdir()
         paths.update({'initial' :  initial.path})
-        inputs.update(structure)
+        inputs.update(system_input.dict)
+        #inputs.update({'STEPS': 1000})
+        dict_prev = {}
         for dict in mega_list:
-            config = CP2KOSFSSH( inputs, paths, INIT = 1, **dict)
+            if dict.get('PROPAGATION') == 'TEST_HOP':
+               inputs.update({'STEPS':1})
+            if system_input.dict.get('FILE_INIT') != 'initial_dimer':
+               dict.update({'ANALYTICS' : 'F' })
+
+            system = system_input.dict.get('SYSTEM')
+            if system == 'CRYSTAL':
+                from utils import CP2KOSFSSH as Config
+            elif system == 'SOLVENT':
+                from utils import CP2KOSwSolventFSSH as Config
+            else:
+                sys.exit()
+
+            config = Config( inputs, paths, INIT = 1, **dict)
+            print "GO FOR RUN %d" % ndir
             ndir = config.run(ndir)
-            if ndir < 0:
-               print " ERROR IN CP2K FOR THOSE PARAMETERS:"
-               print dict
+            if os.path.exists('run-%d' % (ndir -1) ):
+                pass
+            #    os.system('rm -rf run-%d' % (ndir - 1))
+            else:
+                print " ERROR IN CP2K FOR THOSE PARAMETERS:"
+                print dict
+                print " TO BE COMPARED WITH:"
+                print dict_prev
+                sys.exit()
+            dict_prev = dict
 
     
     os.system('cp %sanalyser.py %s' % (paths.get('task'), paths.get('bucket')))
