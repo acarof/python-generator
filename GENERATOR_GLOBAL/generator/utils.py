@@ -30,7 +30,8 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'METHOD_REVERSAL': 'NEVER',
             'NACV_INCREMENT': 1.8872589E-3,
             'PROPAGATION': 'FSSH',
-            'PERIODIC'   : 'NONE'
+            'PERIODIC'   : 'NONE',
+            'CENTER_OF_MASS' : 'T'
             }
 
 class Dir(object):

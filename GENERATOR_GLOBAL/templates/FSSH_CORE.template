@@ -70,6 +70,7 @@ INCLUDE CONSTRAINT.tmp
                              ELECTRONIC_PARTIAL_STEP               sedELECTRONIC_STEPS
                              COLLAPSE                              sedCOLLAPSE
                              ANALYTICS                             sedANALYTICS
+                             CENTER_OF_MASS                        sedCENTER_OF_MASS
                              METHOD_RESCALING                      sedMETHOD_RESCALING
                              METHOD_ADIABATIC_NACV                 sedMETHOD_ADIAB_NACV
                              METHOD_REVERSAL                       sedMETHOD_REVERSAL

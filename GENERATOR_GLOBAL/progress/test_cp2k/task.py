@@ -24,6 +24,8 @@ def main(inputs, paths):
     list_analytics   = ['T', 'F']
     #list_analytics = ['T']
     list_collapse = ['T', 'F']
+    #list_analytics = ['T']
+    list_com = ['T', 'F']
     #list_collapse = ['T']
     list_first_diabat = [1, 2]
     #list_first_diabat = [1]
@@ -40,7 +42,8 @@ def main(inputs, paths):
                     'FIRST_DIABAT': diabat,
                     'METHOD_RESCALING' : rescaling,
                     'METHOD_ADIAB_NACV' : nacv,
-                    'METHOD_REVERSAL'   : reversal
+                    'METHOD_REVERSAL'   : reversal,
+                    'CENTER_OF_MASS'    : com
                    } 
                   for prop in list_propagation
                   for collapse in list_collapse 
@@ -49,6 +52,7 @@ def main(inputs, paths):
                   for rescaling in list_rescaling
                   for nacv      in list_nacv
                   for reversal  in list_reversal
+                  for com       in list_com
                   ] 
 
     systems = ['dimer', 'trimer', 'dimer_solvent']
