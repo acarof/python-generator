@@ -751,7 +751,8 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         print "NSOLVENT", self._nsolvent
         self._nmol = dict.get('NMOL')
         dict.update({
-            'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
+            #            'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
+            'FORCE_EVAL_ORDER': '1..%d' % (dict.get('NDIABAT') + 1)
         })
         self._restraint = dict.get('RESTRAINT')
 
@@ -835,7 +836,8 @@ class CP2KOSFSSH(CP2KOS):
             'RCUT': 5 * norm_max * n_max
         })
         dict.update({
-            'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
+#            'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
+            'FORCE_EVAL_ORDER': '1..%d' %(dict.get('NDIABAT') + 1)
         })
         self._nmol = dict.get('NMOL')
         self._norm_lattice = dict.get('NORM_LATTICE')
@@ -912,6 +914,8 @@ class FSSHParcel(object):
 KIND_RUN  FSSH_OS
 TEMPLATE_FILE FSSH_CORE.template
 FORCEFIELD_FILE FSSH_FF.template
+FILE_INIT initial
+SYSTEM CRYSTAL
 NUMBER_INIT %d
 MOL_NAME %s
 NATOMS   %d
@@ -1088,7 +1092,7 @@ def main(inputs, paths):
         sys.exit()
 
     number_init = inputs.get('NUMBER_INIT', 1)
-    number_random = inputs.get('NUMBER_RANDOM', 5)
+    number_random = inputs.get('NUMBER_RANDOM', 1)
     ndir= 0
 
     for init in range(1, number_init + 1):
