@@ -29,8 +29,9 @@ def main(inputs, paths):
     print "2. RUN CP2K"
     config_nvt = Config(inputs, paths, ENSEMBLE = 'NVT', STEPS = inputs.get('NEQ'))
     ndir = config_nvt.run(ndir)
+
  
-    config_nve = Config(inputs, paths, ENSEMBLE = 'NVE', STEPS = inputs.get('NPROD'))
+    config_nve = Config(inputs, paths, ENSEMBLE = 'NVE', STEPS = inputs.get('NPROD'), RESTART = config_nvt.ndir)
     ndir = config_nve.run(ndir)
  
  

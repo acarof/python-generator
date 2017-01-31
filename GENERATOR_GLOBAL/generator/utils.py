@@ -267,6 +267,8 @@ class OSCluster(object):
             print "THERE IS A PROBLEM in choose_atom_label"
         return atom_label
 
+
+
 class OSwSolvent(OSCluster):
     """
     """
@@ -332,6 +334,12 @@ class CP2KRun(object):
         self._my_sed_dict.update(dict)
         self._template_file = dict.get('TEMPLATE_FILE')
         self._timestep = dict.get('TIMESTEP')
+        if self._my_sed_dict.get('RESTART') is not None:
+            self._use_restart(self._my_sed_dict.get('RESTART'))
+
+    def _use_restart(self, ndir):
+        print "SHOULD RESTART"
+
 
     def print_info(self):
         pass

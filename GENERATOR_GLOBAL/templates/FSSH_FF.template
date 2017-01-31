@@ -28,7 +28,7 @@ INCLUDE FORCEFIELD.tmp
    	&SUBSYS
      		&CELL
        			ABC                    sedLBOXA        sedLBOXB        sedLBOXC     
-       			PERIODIC  NONE
+       			PERIODIC               sedPERIODIC
      		&END CELL
      		&COORD
 INCLUDE COORD.tmp
