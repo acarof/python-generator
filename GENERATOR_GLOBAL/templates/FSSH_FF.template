@@ -9,10 +9,11 @@ INCLUDE FORCEFIELD.tmp
 		&END FORCEFIELD	
 		&POISSON
        			&EWALD
-         			EWALD_TYPE  EWALD
-         			ALPHA        sedALPHA
-         			GMAX         sedGMAX
-         			O_SPLINE     sedOSPLINE
+         			EWALD_TYPE  NONE
+         			#EWALD_TYPE  EWALD
+         			#ALPHA        sedALPHA
+         			#GMAX         sedGMAX
+         			#O_SPLINE     sedOSPLINE
        			&END EWALD
      		&END POISSON
      		&PRINT

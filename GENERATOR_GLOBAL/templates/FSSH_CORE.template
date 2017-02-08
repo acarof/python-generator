@@ -41,6 +41,8 @@
          			MD          sedPRINT
        			&END EACH
      		&END FORCES
+                &RESTART_HISTORY OFF
+                &END RESTART_HISTORY
    	&END PRINT
 INCLUDE CONSTRAINT.tmp
 &END MOTION
@@ -131,7 +133,7 @@ INCLUDE AOM_COEFF.tmp
                             &END ACTIVE_STATE_INFO
                             &SH_INFO
                                &EACH
-                                   MD          sedPRINT
+                                   MD          1
                                &END EACH
                             &END SH_INFO
                             &ADIABAT_ENERGIES

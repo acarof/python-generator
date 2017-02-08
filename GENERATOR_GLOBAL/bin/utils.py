@@ -124,16 +124,19 @@ class Bucket(object):
 class InputFile(object):
     """
     """
-    def __init__(self, name):
+    def __init__(self, name, presence):
         self.name = name
-        self.input = open(name, 'r')
-        self.lines = self.input.readlines()
-        self.input.close()
-        self.read()
+        if presence:
+            self._input = open(name, 'r')
+            self._lines = self._input.readlines()
+            self._input.close()
+            self._read()
+        else:
+            self.dict = {}
 
-    def read(self):
+    def _read(self):
         self.dict = {}
-        for line in self.lines:
+        for line in self._lines:
             l = string.strip(line.rstrip('\r\n'))
             info = re.split('\s+', l)
             key = info.pop(0)
@@ -875,7 +878,7 @@ class FSSHParcel(object):
         self._templates_path = paths.get('templates')
         self._bucket_path = paths.get('bucket')
         self._output_path = paths.get('output')
-        self._generator_path = paths.get('generator')
+        self._bin_path = paths.get('bin')
         self._complete_dict()
 
     def _complete_dict(self):
@@ -908,7 +911,7 @@ class FSSHParcel(object):
     def gather(self, ndir):
         self._create()
         self.gather_vel_coord(ndir)
-        self.gather_templates_generator()
+        self.gather_templates_bin()
         if (self._system == 'SOLVENT'):
             self._prepare_input_solvent()
         elif (self._system == 'CRYSTAL'):
@@ -957,6 +960,7 @@ KIND_RUN  FSSH_OS
 TEMPLATE_FILE FSSH_CORE.template
 FORCEFIELD_FILE FSSH_FF.template
 FILE_INIT initial
+PERIODIC XYZ
 NUMBER_INIT %d
 SYSTEM SOLVENT
 MOL_NAME %s
@@ -1027,17 +1031,17 @@ TEST         NO
                 os.system(' mv %s %s' % (filename, self.initial.path))
         os.chdir(self._bucket_path)
 
-    def gather_templates_generator(self):
+    def gather_templates_bin(self):
         os.system('cp %s/*  %s' % (self._templates_path, self.templates.path))
-        os.system('cp %s/*  %s' % (self._generator_path, self.generator.path))
+        os.system('cp %s/*  %s' % (self._bin_path, self.bin.path))
 
     def _create(self):
         os.chdir(self._output_path)
         self.parcel = Dir('TONAME')
         self.parcel.mkdir()
         self.parcel.chdir()
-        self.generator = Dir('generator')
-        self.generator.mkdir()
+        self.bin = Dir('bin')
+        self.bin.mkdir()
         self.templates = Dir('templates')
         self.templates.mkdir()
         self.task = Dir('task')

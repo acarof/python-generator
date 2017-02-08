@@ -11,24 +11,19 @@ from utils import *
 try:
          input_info = sys.argv[1]
 except:
-          print "AN INPUT FILE IS REQUIRED!"
+          print "A INPUT DIRECTORY IS REQUIRED!"
           raise SystemExit
 
 # DEFINE PATH/EXE VARIABLES
 exe_path = '/scratch/grudorff/antoine/bin'
-paths = {'cp2k' : exe_path + '/cp2k-test.sopt' }
+paths = {'cp2k' : exe_path + '/cp2k.sopt' }
 
 # OPEN AND READ THE INPUT FILE
-if input_info == 'clean':
-   os.system('rm -rf run-*')
-   os.system('rm -rf fail-*')
-   os.system('rm -rf output')
-   os.system('rm -rf initial_*')
-   os.system('rm -f analyser.py')
-   os.system('rm -rf tmp')
-   sys.exit()
-elif 'task/' in input_info:
-   input = InputFile(input_info + '/input')
+if 'task/' in input_info:
+   if os.path.isfile(input_info + '/input'):
+      input = InputFile(input_info + '/input')
+   else:
+      input = {}
    kind_run = 'TASK'
 elif 'progress/' in input_info:
    input = InputFile(input_info + '/input')
@@ -47,13 +42,13 @@ templates = Dir('templates', paths)
 templates.checkdir()
 templates.clean()
 
-generator = Dir('generator', paths)
-generator.checkdir()
+bin = Dir('bin', paths)
+bin.checkdir()
 
 
 if (kind_run == 'NO_METHOD'):
    print "A METHOD IS REQUIRED!"
-if (kind_run == 'FIST_OS'):
+elif (kind_run == 'FIST_OS'):
    output = Dir('output', paths)
    output.rm_mkdir()
    fist_os.main(input.dict, paths)   

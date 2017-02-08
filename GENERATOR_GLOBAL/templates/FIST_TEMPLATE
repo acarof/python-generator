@@ -41,6 +41,8 @@
          			MD          sedPRINT
        			&END EACH
      		&END FORCES
+                #&RESTART_HISTORY OFF
+                #&END RESTART_HISTORY
    	&END PRINT
 INCLUDE CONSTRAINT.tmp
 &END MOTION
@@ -55,10 +57,10 @@ INCLUDE FORCEFIELD.tmp
 		&END FORCEFIELD	
 		&POISSON
        			&EWALD
-         			EWALD_TYPE  EWALD
-         			ALPHA        sedALPHA
-         			GMAX         sedGMAX
-         			O_SPLINE     sedOSPLINE
+         			EWALD_TYPE   NONE
+         			#ALPHA        sedALPHA
+         			#GMAX         sedGMAX
+         			#O_SPLINE     sedOSPLINE
        			&END EWALD
      		&END POISSON
      		&PRINT
