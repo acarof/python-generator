@@ -124,15 +124,16 @@ class Bucket(object):
 class InputFile(object):
     """
     """
-    def __init__(self, name, presence):
-        self.name = name
-        if presence:
+    def __init__(self, name):
+        self._name = name
+        if self._name == 'NONE':
+            self.dict = {}
+        else:
             self._input = open(name, 'r')
             self._lines = self._input.readlines()
             self._input.close()
             self._read()
-        else:
-            self.dict = {}
+
 
     def _read(self):
         self.dict = {}

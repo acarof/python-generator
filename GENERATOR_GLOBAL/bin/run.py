@@ -17,20 +17,20 @@ except:
 # OPEN AND READ THE INPUT FILE
 if 'task/' in input_info:
    if os.path.isfile(input_info + '/input'):
-      input = InputFile(input_info + '/input', True)
+      input = InputFile(input_info + '/input')
    else:
-      input = InputFile(input_info + '/input', False)
+      input = InputFile('NONE')
    input.dict.update({'TEST': 'NO'})
    kind_run = 'TASK'
 elif 'progress/' in input_info:
    if os.path.isfile(input_info + '/input'):
-      input = InputFile(input_info + '/input', True)
+      input = InputFile(input_info + '/input')
    else:
-      input = InputFile(input_info + '/input', False)
+      input = InputFile('NONE')
    input.dict.update({'TEST' : 'YES'})
    kind_run = 'TASK'
 else:
-   input = InputFile(input_name)
+   input = InputFile(input_info)
    kind_run = input.dict.get('KIND_RUN', 'NO_METHOD')
 
 # SELECT THE METHOD TO RUN

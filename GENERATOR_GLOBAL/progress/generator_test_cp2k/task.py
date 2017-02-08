@@ -8,6 +8,35 @@ from utils import *
 def main(inputs, paths):
     print """
     """
+    # DEFINE PATH/EXE VARIABLES
+    exe_path = '/scratch/grudorff/antoine/bin'
+    paths = {'cp2k': exe_path + '/cp2k.sopt'}
+
+    task = {
+        'KIND_RUN' : 'TEST_CP2K',
+        'TEMPLATE_FILE' : 'FSSH_CORE.template',
+        'FORCEFIELD_FILE' : 'FSSH_FF.template',
+         'TEST' : 'YES'
+    }
+
+    inputs.update(task)
+
+
+    # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
+    bucket = Bucket(inputs)
+    bucket.name()
+    paths.update({'bucket': bucket.path})
+
+    task = Dir(inputs.get('INPUT_INFO'))
+    paths.update( {'task' : task.path} )
+
+    templates = Dir('templates', paths)
+    templates.checkdir()
+    templates.clean()
+
+    bin = Dir('bin', paths)
+    bin.checkdir()
+
 
     lol = [
         ['PROPAGATION', 'FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN'],
