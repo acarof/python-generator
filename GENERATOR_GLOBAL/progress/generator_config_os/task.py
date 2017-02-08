@@ -3,12 +3,29 @@
 import string, re, struct, sys, math, os, time
 import numpy
 
-from utils import Dir, FSSHParcel
+from utils import Dir, FSSHParcel, Bucket
 
 def main(inputs, paths):
     print """
     START THE DIABAT OF SAMPLING OF AN ORGANIC CRYSTAL 
     """
+
+    # DEFINE PATH/EXE VARIABLES
+    exe_path = '/scratch/grudorff/antoine/bin'
+    paths = {'cp2k': exe_path + '/cp2k.sopt'}
+
+    # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
+    bucket = Bucket(inputs)
+    bucket.name()
+    paths.update({'bucket': bucket.path})
+
+    templates = Dir('templates', paths)
+    templates.checkdir()
+    templates.clean()
+
+    bin = Dir('bin', paths)
+    bin.checkdir()
+
     output = Dir('output', paths)
     output.rm_mkdir()
 

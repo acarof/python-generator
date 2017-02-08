@@ -919,64 +919,65 @@ class FSSHParcel(object):
         self._prepare_task()
 
     def _prepare_input_crystal(self):
-        os.chdir(self.subtask.path)
-        my_input = open('input', 'w')
-        result = """
-KIND_RUN  FSSH_OS
-TEMPLATE_FILE FSSH_CORE.template
-FORCEFIELD_FILE FSSH_FF.template
-FILE_INIT initial
-SYSTEM CRYSTAL
-NUMBER_INIT %d
-MOL_NAME %s
-NATOMS   %d
-NATOM_MOL   %d
-VECTA %s
-VECTB %s
-VECTC %s
-SIZE_CRYSTAL %s
-COORD_CHARGE %s
-STEPS        1
-PRINTFRQ     1
-TEST         NO
+        self.task = """
+        task = {
+            'KIND_RUN'  : 'FSSH_OS',
+            'TEMPLATE_FILE' : 'FSSH_CORE.template',
+            'FORCEFIELD_FILE' : 'FSSH_FF.template',
+            'FILE_INIT' : 'initial',
+            'PERIODIC' : 'XYZ',
+            'NUMBER_INIT' : %d,
+            'SYSTEM' : 'CRYSTAL',
+            'MOL_NAME' : '%s',
+            'NATOMS'       : %d,
+            'NATOM_MOL'    : %d,
+            'VECTA'        : %s,
+            'VECTB'        : %s,
+            'VECTC'        : %s,
+            'SIZE_CRYSTAL' : %s,
+            'COORD_CHARGE' : %s,
+            'STEPS'        : 1,
+            'PRINTFRQ'     : 1,
+            'TEST'      :   'NO'
+            }
         """ % (
             sed_dict.get('NCONFIG', '!!!'),
             sed_dict.get('MOL_NAME', '!!!'),
             sed_dict.get('NATOMS', '!!!'),
             sed_dict.get('NATOM_MOL', '!!!'),
-            '   '.join(map(str, sed_dict.get('VECTA', '!!!'))),
-            '   '.join(map(str, sed_dict.get('VECTB', '!!!'))),
-            '   '.join(map(str, sed_dict.get('VECTC', '!!!'))),
-            '   '.join(map(str, sed_dict.get('SIZE_CRYSTAL', '!!!'))),
-            '   '.join(map(str, sed_dict.get('COORD_CHARGE', '!!!'))))
-        my_input.write(result)
-        my_input.close()
+            sed_dict.get('VECTA', '!!!'),
+            sed_dict.get('VECTB', '!!!'),
+            sed_dict.get('VECTC', '!!!'),
+            sed_dict.get('SIZE_CRYSTAL', '!!!'),
+            sed_dict.get('COORD_CHARGE', '!!!')
+        )
+
 
     def _prepare_input_solvent(self):
-        os.chdir(self.subtask.path)
-        my_input = open('input', 'w')
-        result = """
-KIND_RUN  FSSH_OS
-TEMPLATE_FILE FSSH_CORE.template
-FORCEFIELD_FILE FSSH_FF.template
-FILE_INIT initial
-PERIODIC XYZ
-NUMBER_INIT %d
-SYSTEM SOLVENT
-MOL_NAME %s
-NAME_SOLVENT %s
-SOLVENT      %s
-NATOMS   %d
-NATOM_MOL   %d
-SIZE_BOX    %s
-VECTA %s
-VECTB %s
-VECTC %s
-SIZE_CRYSTAL %s
-COORD_CHARGE %s
-STEPS        1
-PRINTFRQ     1
-TEST         NO
+        self.task = """
+    task = {
+        'KIND_RUN'  : 'FSSH_OS',
+        'TEMPLATE_FILE' : 'FSSH_CORE.template',
+        'FORCEFIELD_FILE' : 'FSSH_FF.template',
+        'FILE_INIT' : 'initial',
+        'PERIODIC' : 'XYZ',
+        'NUMBER_INIT' : %d,
+        'SYSTEM' : 'SOLVENT',
+        'MOL_NAME' :     '%s',
+        'NAME_SOLVENT' : '%s',
+        'SOLVENT'      : '%s',
+        'NATOMS'       : %d,
+        'NATOM_MOL'    : %d,
+        'SIZE_BOX'     : %s,
+        'VECTA'        : %s,
+        'VECTB'        : %s,
+        'VECTC'        : %s,
+        'SIZE_CRYSTAL' : %s,
+        'COORD_CHARGE' : %s,
+        'STEPS'        : 1,
+        'PRINTFRQ'     : 1,
+        'TEST'      :   'NO'
+            }
         """ % (
             sed_dict.get('NCONFIG', '!!!'),
             sed_dict.get('MOL_NAME', '!!!'),
@@ -984,14 +985,13 @@ TEST         NO
             sed_dict.get('SOLVENT'),
             sed_dict.get('NATOMS', '!!!'),
             sed_dict.get('NATOM_MOL', '!!!'),
-            '   '.join(map(str, sed_dict.get('SIZE_BOX', '!!!'))),
-            '   '.join(map(str, sed_dict.get('VECTA', '!!!'))),
-            '   '.join(map(str, sed_dict.get('VECTB', '!!!'))),
-            '   '.join(map(str, sed_dict.get('VECTC', '!!!'))),
-            '   '.join(map(str, sed_dict.get('SIZE_CRYSTAL', '!!!'))),
-            '   '.join(map(str, sed_dict.get('COORD_CHARGE', '!!!'))))
-        my_input.write(result)
-        my_input.close()
+            sed_dict.get('SIZE_BOX', '!!!'),
+            sed_dict.get('VECTA', '!!!'),
+            sed_dict.get('VECTB', '!!!'),
+            sed_dict.get('VECTC', '!!!'),
+            sed_dict.get('SIZE_CRYSTAL', '!!!'),
+            sed_dict.get('COORD_CHARGE', '!!!')
+        )
 
     def gather_vel_coord(self, ndir):
         nsolvent = sed_dict.get('NATOMS') - (self._nmol * self._natom_mol)
@@ -1047,7 +1047,7 @@ TEST         NO
         self.task = Dir('task')
         self.task.mkdir()
         self.task.chdir()
-        self.subtask = Dir('toname')
+        self.subtask = Dir('fssh_os')
         self.subtask.mkdir()
         self.subtask.chdir()
         self.initial = Dir('initial')
@@ -1088,7 +1088,30 @@ from utils import *
 
 def main(inputs, paths):
 
-    os.system(' cp -r %s/%s %s' % (paths.get('task'), inputs.get('FILE_INIT'), paths.get('bucket')))
+    # DEFINE PATH/EXE VARIABLES
+    exe_path = '/scratch/grudorff/antoine/bin'
+    paths = {'cp2k': exe_path + '/cp2k.sopt'}
+
+    %s
+
+    inputs.update(task)
+
+    # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
+    bucket = Bucket(inputs)
+    bucket.name()
+    paths.update({'bucket': bucket.path})
+
+    task = Dir(inputs.get('INPUT_INFO'))
+    paths.update( {'task' : task.path} )
+
+    templates = Dir('templates', paths)
+    templates.checkdir()
+    templates.clean()
+
+    bin = Dir('bin', paths)
+    bin.checkdir()
+
+    os.system(' cp -r %%s/%%s %%s' %% (paths.get('task'), inputs.get('FILE_INIT'), paths.get('bucket')))
     initial = Dir(inputs.get('FILE_INIT'), paths)
     initial.checkdir()
     paths.update({'initial': initial.path})
@@ -1112,6 +1135,6 @@ def main(inputs, paths):
             config = Config( inputs, paths, INIT = init)
             ndir = config.run(ndir)
 
-        """
+        """ % self.task
         file.write(result)
         file.close()

@@ -14,38 +14,27 @@ except:
           print "A INPUT DIRECTORY IS REQUIRED!"
           raise SystemExit
 
-# DEFINE PATH/EXE VARIABLES
-exe_path = '/scratch/grudorff/antoine/bin'
-paths = {'cp2k' : exe_path + '/cp2k.sopt' }
-
 # OPEN AND READ THE INPUT FILE
 if 'task/' in input_info:
    if os.path.isfile(input_info + '/input'):
-      input = InputFile(input_info + '/input')
+      input = InputFile(input_info + '/input', True)
    else:
-      input = {}
+      input = InputFile(input_info + '/input', False)
+   input.dict.update({'TEST': 'NO'})
    kind_run = 'TASK'
 elif 'progress/' in input_info:
-   input = InputFile(input_info + '/input')
+   if os.path.isfile(input_info + '/input'):
+      input = InputFile(input_info + '/input', True)
+   else:
+      input = InputFile(input_info + '/input', False)
    input.dict.update({'TEST' : 'YES'})
    kind_run = 'TASK'
 else:
    input = InputFile(input_name)
    kind_run = input.dict.get('KIND_RUN', 'NO_METHOD')
 
-# SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
-bucket = Bucket(input.dict)
-bucket.name()
-paths.update( {'bucket' : bucket.path} )
-
-templates = Dir('templates', paths)
-templates.checkdir()
-templates.clean()
-
-bin = Dir('bin', paths)
-bin.checkdir()
-
-
+# SELECT THE METHOD TO RUN
+paths = {}
 if (kind_run == 'NO_METHOD'):
    print "A METHOD IS REQUIRED!"
 elif (kind_run == 'FIST_OS'):
@@ -63,7 +52,7 @@ elif (kind_run == 'ENERGETICS'):
 elif (kind_run == 'TASK'):
    task = Dir(input_info)
    paths.update( {'task' : task.path} )
-   #mod = imp.load_source(   hs.get('generator') + kind_run.lower() + '.py')
+   input.dict.update({'INPUT_INFO': input_info})
    mod = imp.load_source('task', task.path + 'task.py')
    mod.main(input.dict, paths)
 else:
