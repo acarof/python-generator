@@ -9,6 +9,26 @@ def main(inputs, paths):
     print """
     """
 
+    # DEFINE PATH/EXE VARIABLES
+    exe_path = '/scratch/grudorff/antoine/bin'
+    paths = {'cp2k': exe_path + '/cp2k.sopt'}
+
+    # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
+    bucket = Bucket(inputs)
+    bucket.name()
+    paths.update({'bucket': bucket.path})
+
+    task = Dir(inputs.get('INPUT_INFO'))
+    paths.update( {'task' : task.path} )
+
+    templates = Dir('templates', paths)
+    templates.checkdir()
+    templates.clean()
+
+    bin = Dir('bin', paths)
+    bin.checkdir()
+
+
     os.system(' cp -r %s/%s %s' % (paths.get('task'), inputs.get('FILE_INIT'), paths.get('bucket')))
     initial = Dir(inputs.get('FILE_INIT'), paths)
     initial.checkdir()

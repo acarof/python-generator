@@ -1,7 +1,7 @@
 import string, re, struct, sys, math, os, time
 import hashlib
 import subprocess
-from numpy import dot, array, prod, power
+from numpy import dot, array, prod
 from numpy.linalg import norm
 from shutil import copyfile
 sed_dict = {'ENSEMBLE': 'NVE',
