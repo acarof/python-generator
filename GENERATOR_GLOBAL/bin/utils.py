@@ -1,9 +1,10 @@
 import string, re, struct, sys, math, os, time
 import hashlib
 import subprocess
-from numpy import dot, array, prod
+from numpy import dot, array, prod, power
 from numpy.linalg import norm
 from shutil import copyfile
+
 sed_dict = {'ENSEMBLE': 'NVE',
             'TIMESTEP': 0.5,
             'TEMPERATURE': 298,
@@ -30,13 +31,15 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'METHOD_REVERSAL': 'NEVER',
             'NACV_INCREMENT': 1.8872589E-3,
             'PROPAGATION': 'FSSH',
-            'PERIODIC'   : 'NONE',
-            'CENTER_OF_MASS' : 'T'
+            'PERIODIC': 'NONE',
+            'CENTER_OF_MASS': 'T'
             }
+
 
 class Dir(object):
     """
     """
+
     def __init__(self, name, paths={}):
         self._name = name
         self.path = os.getcwd() + '/' + self._name + '/'
@@ -75,6 +78,7 @@ class Dir(object):
 class Bucket(object):
     """
         """
+
     def __init__(self, bucket_dict):
         self._method = bucket_dict.get('KIND_RUN')
         if bucket_dict.get('MOL_NAME') is not None:
@@ -91,12 +95,14 @@ class Bucket(object):
         else:
             print "TEST must be YES or NO."
             sys.exit()
+
     def _get_md5name(self):
         complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
         md5 = hashlib.md5()
         md5.update(complete_time)
         md5name = md5.hexdigest()
         return md5name
+
     def name(self):
         if not self.is_test:
             md5name = self._get_md5name()
@@ -110,11 +116,13 @@ class Bucket(object):
                 os.system('mv %s %s' % (old_name, bucket_name))
                 os.chdir(bucket_name)
         self.path = os.getcwd()
+
     def checkdir(self, adir):
         test = os.path.exists(adir)
         if (not test):
             print "THE DIRECTORY %s DOES NOT EXIST!" % adir
             sys.exit()
+
     def mkdir(self, adir):
         test = os.path.exists(adir)
         if (not test):
@@ -124,6 +132,7 @@ class Bucket(object):
 class InputFile(object):
     """
     """
+
     def __init__(self, name):
         self._name = name
         if self._name == 'NONE':
@@ -133,7 +142,6 @@ class InputFile(object):
             self._lines = self._input.readlines()
             self._input.close()
             self._read()
-
 
     def _read(self):
         self.dict = {}
@@ -171,6 +179,7 @@ class InputFile(object):
 class OSCluster(object):
     """
         """
+
     def __init__(self, structure_dict, paths):
         self._structure = structure_dict.get('SYSTEM')
         self._filemol = structure_dict.get('FILEMOL')
@@ -272,7 +281,6 @@ class OSCluster(object):
         return atom_label
 
 
-
 class OSwSolvent(OSCluster):
     """
     """
@@ -280,8 +288,8 @@ class OSwSolvent(OSCluster):
     def __init__(self, inputs, paths):
         self._closest_dist = inputs.get('CLOSEST_DIST')
         self._kind_solvent = inputs.get('SOLVENT')
-        self._density      = inputs.get('DENSITY')
-        self._sizebox      = inputs.get('SIZE_BOX')
+        self._density = inputs.get('DENSITY')
+        self._sizebox = inputs.get('SIZE_BOX')
         super(OSwSolvent, self).__init__(inputs, paths)
 
     def _my_write(self):
@@ -292,15 +300,15 @@ class OSwSolvent(OSCluster):
         filecoord = open(self._filecrystal, 'a+')
         self._get_grid()
         self._get_carbon_pos(filecoord)
-        list_of_list = [list(array(range(self._grid[i])) - int(self._grid[i]/2) ) for i in range(3)]
+        list_of_list = [list(array(range(self._grid[i])) - int(self._grid[i] / 2)) for i in range(3)]
         grid = [[i, j, k] for i in list_of_list[0]
-                            for j in list_of_list[1]
-                            for k in list_of_list[2]]
+                for j in list_of_list[1]
+                for k in list_of_list[2]]
 
         for pos in grid:
             realpos = array(pos) * array(self._realgrid)
             dist = self._get_os_dist(realpos)
-            if dist >= self._closest_dist :
+            if dist >= self._closest_dist:
                 result = "%s  %f  %f  %f \n" % (self._kind_solvent, realpos[0], realpos[1], realpos[2])
                 filecoord.write(result)
         filecoord.close()
@@ -315,9 +323,9 @@ class OSwSolvent(OSCluster):
     def _get_grid(self):
         volume = prod(self._sizebox)
         pre_natoms = self._density * volume
-        cubic_roots = int(power(pre_natoms, 1.0/3.0))
+        cubic_roots = int(power(pre_natoms, 1.0 / 3.0))
         self._grid = [cubic_roots, cubic_roots, cubic_roots]
-        self._realgrid = array(self._sizebox)/array(self._grid)
+        self._realgrid = array(self._sizebox) / array(self._grid)
 
     def _get_os_dist(self, pos_solvent):
         list = []
@@ -327,10 +335,10 @@ class OSwSolvent(OSCluster):
         return min(list)
 
 
-
 class CP2KRun(object):
     """
     """
+
     def __init__(self, dict, paths, **kwargs):
         self.paths = paths
         self._my_sed_dict = sed_dict
@@ -338,17 +346,23 @@ class CP2KRun(object):
         self._my_sed_dict.update(dict)
         self._template_file = dict.get('TEMPLATE_FILE')
         self._timestep = dict.get('TIMESTEP')
-        if self._my_sed_dict.get('RESTART') is not None:
-            self._use_restart(self._my_sed_dict.get('RESTART'))
-
-    def _use_restart(self, ndir):
-        print "SHOULD RESTART"
-
 
     def print_info(self):
         pass
 
     def _get_templates(self):
+        pass
+
+    def _get_coord(self):
+        if self._my_sed_dict.get('RESTART') is not None:
+            self._use_restart(self._my_sed_dict.get('RESTART'))
+        else:
+            self._get_new_coord()
+
+    def _get_new_coord(self):
+        pass
+
+    def _use_restart(self, ndir):
         pass
 
     def run(self, ndir):
@@ -378,12 +392,13 @@ class CP2KRun(object):
         self.tmp = Dir('tmp')
         self.tmp.rm_mkdir()
         self._get_templates()
+        self._get_coord()
         os.chdir(self.tmp.path)
         self._write_topo()
         self._write_file(self._template_file, 'run.inp')
         os.chdir(self.paths.get('bucket'))
 
-    def _write_file(self, namein, nameout, number = 1):
+    def _write_file(self, namein, nameout, number=1):
         filein = open(namein)
         fileout = open(nameout, 'w')
         result = self._amend(filein, number)
@@ -436,10 +451,10 @@ class CP2KRun(object):
         return result
 
 
-
 class CP2KOS(CP2KRun):
     """
     """
+
     def __init__(self, dict, paths, **kwargs):
         super(CP2KOS, self).__init__(dict, paths, **kwargs)
         self._dict = dict
@@ -450,7 +465,6 @@ class CP2KOS(CP2KRun):
         self._filecrystal = dict.get('FILECRYSTAL')
         self._filemol = dict.get('FILEMOL')
         self._structure = dict.get('SYSTEM')
-
 
     def print_info(self):
         print "Hey Hey"
@@ -481,14 +495,19 @@ class CP2KOS(CP2KRun):
         self._norm_lattice = dict.get('NORM_LATTICE')
         self._restraint = dict.get('RESTRAINT')
 
+    def _use_restart(self, ndir):
+        os.system('tail -%d run-%d/run-pos-1.xyz > COORD.tmp' % (self._my_sed_dict.get('NATOMS'), ndir) )
+        os.system('mv COORD.tmp %s' % self.tmp.path)
+
+    def _get_new_coord(self):
+        os.system('cp %s/%s/%s %s/COORD.tmp' % (self.paths.get('output'), self._structure,
+                                                self._filecrystal, self.tmp.path))
 
     def _get_templates(self):
-        os.system('cp %s/%s/%s %s/COORD.tmp'   % (self.paths.get('output'), self._structure,
-                                                  self._filecrystal,self.tmp.path))
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/FIST* %s' % (self.paths.get('templates'), self.tmp.path))
-        os.system('cp %s/%s %s'    % (self.paths.get('templates'), self._filemol, self.tmp.path))
+        os.system('cp %s/%s %s' % (self.paths.get('templates'), self._filemol, self.tmp.path))
 
     def _write_topo(self):
         self._forcefield()
@@ -501,7 +520,7 @@ class CP2KOS(CP2KRun):
         os.system('cp %s_FF.inc FORCEFIELD.tmp' % self._mol_name)
 
     def _kind(self):
-        fileout = open('KIND.tmp','w')
+        fileout = open('KIND.tmp', 'w')
         result = """\n
                    &KIND CP
                         ELEMENT C
@@ -625,7 +644,6 @@ class CP2KOS(CP2KRun):
 
 
 class CP2KOSwSolvent(CP2KOS):
-
     def __init__(self, dict, paths, **kwargs):
         super(CP2KOSwSolvent, self).__init__(dict, paths, **kwargs)
         self._kind_solvent = dict.get('SOLVENT')
@@ -697,12 +715,13 @@ class CP2KOSwSolvent(CP2KOS):
 
     def _forcefield(self):
         print              self._mol_name + '_' + self._name_solvent
-        os.system('cp %s_FF.inc FORCEFIELD.tmp' % (self._mol_name + '_' + self._name_solvent) )
+        os.system('cp %s_FF.inc FORCEFIELD.tmp' % (self._mol_name + '_' + self._name_solvent))
 
 
 class CP2KOSwSolventFSSH(CP2KOSwSolvent):
     """
     """
+
     def __init__(self, dict, paths, **kwargs):
         super(CP2KOSwSolventFSSH, self).__init__(dict, paths, **kwargs)
         self._init = self._my_sed_dict.get('INIT')
@@ -727,7 +746,7 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         self._colvar()
         self._constraint()
         self._aom()
-        self._write_file(self._forcefield_file, 'FORCEEVAL.tmp', number = self._nmol)
+        self._write_file(self._forcefield_file, 'FORCEEVAL.tmp', number=self._nmol)
 
     def _complete_dict(self):
         dict = self._my_sed_dict
@@ -768,7 +787,6 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         })
         self._restraint = dict.get('RESTRAINT')
 
-
     def _aom(self):
         for mol in range(self._nmol):
             os.system('cat %s_AOM.inc >> AOM_COEFF.tmp' % self._name_organic)
@@ -776,7 +794,6 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         for atom in range(self._nsolvent):
             file.write('%s    1    0   0.0   0.0\n' % self._kind_solvent)
         file.close()
-
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
@@ -786,12 +803,10 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
 
 
-
-
-
 class CP2KOSFSSH(CP2KOS):
     """
     """
+
     def __init__(self, dict, paths, **kwargs):
         super(CP2KOSFSSH, self).__init__(dict, paths, **kwargs)
         self._init = self._my_sed_dict.get('INIT')
@@ -819,7 +834,7 @@ class CP2KOSFSSH(CP2KOS):
         self._colvar()
         self._constraint()
         self._aom()
-        self._write_file(self._forcefield_file, 'FORCEEVAL.tmp', number = self._nmol)
+        self._write_file(self._forcefield_file, 'FORCEEVAL.tmp', number=self._nmol)
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
@@ -848,8 +863,8 @@ class CP2KOSFSSH(CP2KOS):
             'RCUT': 5 * norm_max * n_max
         })
         dict.update({
-#            'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
-            'FORCE_EVAL_ORDER': '1..%d' %(dict.get('NDIABAT') + 1)
+            #            'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
+            'FORCE_EVAL_ORDER': '1..%d' % (dict.get('NDIABAT') + 1)
         })
         self._nmol = dict.get('NMOL')
         self._norm_lattice = dict.get('NORM_LATTICE')
@@ -863,6 +878,7 @@ class CP2KOSFSSH(CP2KOS):
 class FSSHParcel(object):
     """
     """
+
     def __init__(self, dict, paths):
         self._dict = dict
         self.paths = paths
@@ -953,7 +969,6 @@ class FSSHParcel(object):
             sed_dict.get('COORD_CHARGE', '!!!')
         )
 
-
     def _prepare_input_solvent(self):
         self.task = """
     task = {
@@ -1013,7 +1028,7 @@ class FSSHParcel(object):
                 for imol in range(self._nmol):
                     for iatom in range(self._natom_mol):
                         index = index + 1
-                        #index = (istep / self._printfrq) * (self._nmol * self._natom_mol + 2) \
+                        # index = (istep / self._printfrq) * (self._nmol * self._natom_mol + 2) \
                         #        + 2 \
                         #        + imol * self._natom_mol \
                         #        + iatom
@@ -1025,7 +1040,7 @@ class FSSHParcel(object):
                                  % (atom_label, str(atom_xyz).strip('[]'))
                         fileout.write(result)
                 for atom in range(nsolvent):
-                    #index = (self._nmol * self._natom_mol) + atom + 2  #2 from the the two initial lines at each timestep
+                    # index = (self._nmol * self._natom_mol) + atom + 2  #2 from the the two initial lines at each timestep
                     index += 1
                     fileout.write(lines[index])
                 fileout.close()
