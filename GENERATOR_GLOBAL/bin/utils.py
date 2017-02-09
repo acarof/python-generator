@@ -795,12 +795,14 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
             file.write('%s    1    0   0.0   0.0\n' % self._kind_solvent)
         file.close()
 
+    def _get_new_coord(self):
+        os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
+        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
+
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/FSSH* %s' % (self.paths.get('templates'), self.tmp.path))
-        os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
-        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
 
 
 class CP2KOSFSSH(CP2KOS):
@@ -836,12 +838,15 @@ class CP2KOSFSSH(CP2KOS):
         self._aom()
         self._write_file(self._forcefield_file, 'FORCEEVAL.tmp', number=self._nmol)
 
+    def _get_new_coord(self):
+        os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
+        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
+
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/FSSH* %s' % (self.paths.get('templates'), self.tmp.path))
-        os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
-        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
+
 
     def _complete_dict(self):
         dict = self._my_sed_dict
@@ -937,26 +942,26 @@ class FSSHParcel(object):
 
     def _prepare_input_crystal(self):
         self.task = """
-        task = {
-            'KIND_RUN'  : 'FSSH_OS',
-            'TEMPLATE_FILE' : 'FSSH_CORE.template',
-            'FORCEFIELD_FILE' : 'FSSH_FF.template',
-            'FILE_INIT' : 'initial',
-            'PERIODIC' : 'XYZ',
-            'NUMBER_INIT' : %d,
-            'SYSTEM' : 'CRYSTAL',
-            'MOL_NAME' : '%s',
-            'NATOMS'       : %d,
-            'NATOM_MOL'    : %d,
-            'VECTA'        : %s,
-            'VECTB'        : %s,
-            'VECTC'        : %s,
-            'SIZE_CRYSTAL' : %s,
-            'COORD_CHARGE' : %s,
-            'STEPS'        : 1,
-            'PRINTFRQ'     : 1,
-            'TEST'      :   'NO'
-            }
+    task = {
+        'KIND_RUN'  : 'FSSH_OS',
+        'TEMPLATE_FILE' : 'FSSH_CORE.template',
+        'FORCEFIELD_FILE' : 'FSSH_FF.template',
+        'FILE_INIT' : 'initial',
+        'PERIODIC' : 'XYZ',
+        'NUMBER_INIT' : %d,
+        'SYSTEM' : 'CRYSTAL',
+        'MOL_NAME' : '%s',
+        'NATOMS'       : %d,
+        'NATOM_MOL'    : %d,
+        'VECTA'        : %s,
+        'VECTB'        : %s,
+        'VECTC'        : %s,
+        'SIZE_CRYSTAL' : %s,
+        'COORD_CHARGE' : %s,
+        'STEPS'        : 1,
+        'PRINTFRQ'     : 1,
+        'TEST'      :   'NO'
+        }
         """ % (
             sed_dict.get('NCONFIG', '!!!'),
             sed_dict.get('MOL_NAME', '!!!'),

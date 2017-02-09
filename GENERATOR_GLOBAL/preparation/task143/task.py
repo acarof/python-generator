@@ -7,7 +7,38 @@ from utils import *
 
 def main(inputs, paths):
     print """
-    """ 
+    """
+
+    # DEFINE PATH/EXE VARIABLES
+    exe_path = '/scratch/grudorff/antoine/bin'
+    paths = {'cp2k': exe_path + '/cp2k.sopt'}
+
+    task = {
+        'KIND_RUN' : 'ENERGETICS_TASK143',
+        'TEMPLATE_FILE' : 'FSSH_CORE.template',
+        'FORCEFIELD_FILE' : 'FSSH_FF.template',
+        'STEPS' : 1,
+         'TEST' : 'YES'
+    }
+    inputs.update(task)
+
+
+
+    # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
+    bucket = Bucket(inputs)
+    bucket.name()
+    paths.update({'bucket': bucket.path})
+
+    task = Dir(inputs.get('INPUT_INFO'))
+    paths.update( {'task' : task.path} )
+
+    templates = Dir('templates', paths)
+    templates.checkdir()
+    templates.clean()
+
+    bin = Dir('bin', paths)
+    bin.checkdir()
+
 
 #    inputs.update({'STEPS' : 2})
 

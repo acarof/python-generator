@@ -22,7 +22,14 @@ if 'task/' in input_info:
       input = InputFile('NONE')
    input.dict.update({'TEST': 'NO'})
    kind_run = 'TASK'
-elif 'progress/' in input_info:
+elif 'generator/' in input_info:
+   if os.path.isfile(input_info + '/input'):
+      input = InputFile(input_info + '/input')
+   else:
+      input = InputFile('NONE')
+   input.dict.update({'TEST' : 'YES'})
+   kind_run = 'TASK'
+elif 'preparation/' in input_info:
    if os.path.isfile(input_info + '/input'):
       input = InputFile(input_info + '/input')
    else:

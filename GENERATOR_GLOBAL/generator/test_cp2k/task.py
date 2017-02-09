@@ -18,7 +18,6 @@ def main(inputs, paths):
         'FORCEFIELD_FILE' : 'FSSH_FF.template',
          'TEST' : 'YES'
     }
-
     inputs.update(task)
 
 
