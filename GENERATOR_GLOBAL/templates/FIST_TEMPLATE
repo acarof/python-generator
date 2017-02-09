@@ -41,8 +41,8 @@
          			MD          sedPRINT
        			&END EACH
      		&END FORCES
-                #&RESTART_HISTORY OFF
-                #&END RESTART_HISTORY
+                &RESTART_HISTORY OFF
+                &END RESTART_HISTORY
    	&END PRINT
 INCLUDE CONSTRAINT.tmp
 &END MOTION
