@@ -342,10 +342,10 @@ class CP2KRun(object):
     def __init__(self, dict, paths, **kwargs):
         self.paths = paths
         self._my_sed_dict = sed_dict
-        self._my_sed_dict.update(**kwargs)
         self._my_sed_dict.update(dict)
-        self._template_file = dict.get('TEMPLATE_FILE')
-        self._timestep = dict.get('TIMESTEP')
+        self._my_sed_dict.update(**kwargs)
+        self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
+        self._timestep = self._my_sed_dict.get('TIMESTEP')
 
     def print_info(self):
         pass
@@ -488,9 +488,10 @@ class CP2KOS(CP2KRun):
             'LBOXA': 10 * norm_max * n_max,
             'LBOXB': 10 * norm_max * n_max,
             'LBOXC': 10 * norm_max * n_max,
-            'RCUT': 5 * norm_max * n_max,
             'PRINT': int(dict.get('NPROD') / dict.get('NCONFIG'))
         })
+        if dict.get('RCUT') is None:
+            dict.update( { 'RCUT': 5 * norm_max * n_max })
         self._natom_mol = dict.get('NATOM_MOL')
         self._norm_lattice = dict.get('NORM_LATTICE')
         self._restraint = dict.get('RESTRAINT')
@@ -660,9 +661,10 @@ class CP2KOSwSolvent(CP2KOS):
             'LBOXA': self._sizebox[0],
             'LBOXB': self._sizebox[1],
             'LBOXC': self._sizebox[2],
-            'RCUT': min(self._sizebox) / 2,
             'PERIODIC': 'XYZ'
         })
+        if dict.get('RCUT') is None:
+            dict.update( { 'RCUT': min(self._sizebox) / 2 })
         self._nsolvent = dict.get('NSOLVENT')
 
     def _kind(self):
@@ -725,7 +727,6 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
     def __init__(self, dict, paths, **kwargs):
         super(CP2KOSwSolventFSSH, self).__init__(dict, paths, **kwargs)
         self._init = self._my_sed_dict.get('INIT')
-        self._timestep = dict.get('TIMESTEP')
         self._printfrq = dict.get('PRINTFRQ')
         self._sizecrystal = dict.get('SIZE_CRYSTAL')
         self._coordcharge = dict.get('COORD_CHARGE')
@@ -763,8 +764,7 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
             'NORM_LATTICE': [norm_a, norm_b, norm_c],
             'LBOXA': 10 * norm_max * n_max,
             'LBOXB': 10 * norm_max * n_max,
-            'LBOXC': 10 * norm_max * n_max,
-            'RCUT': 5 * norm_max * n_max,
+            'LBOXC': 10 * norm_max * n_max
         })
         self._natom_mol = dict.get('NATOM_MOL')
         self._norm_lattice = dict.get('NORM_LATTICE')
@@ -775,9 +775,10 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
             'LBOXA': self._sizebox[0],
             'LBOXB': self._sizebox[1],
             'LBOXC': self._sizebox[2],
-            'RCUT': min(self._sizebox) / 2,
             'PERIODIC': 'XYZ'
         })
+        if dict.get('RCUT') is None:
+            dict.update( { 'RCUT': min(self._sizebox) / 2 })
         self._nsolvent = dict.get('NSOLVENT')
         print "NSOLVENT", self._nsolvent
         self._nmol = dict.get('NMOL')
@@ -812,7 +813,6 @@ class CP2KOSFSSH(CP2KOS):
     def __init__(self, dict, paths, **kwargs):
         super(CP2KOSFSSH, self).__init__(dict, paths, **kwargs)
         self._init = self._my_sed_dict.get('INIT')
-        self._timestep = dict.get('TIMESTEP')
         self._printfrq = dict.get('PRINTFRQ')
         self._sizecrystal = dict.get('SIZE_CRYSTAL')
         self._coordcharge = dict.get('COORD_CHARGE')
@@ -864,9 +864,10 @@ class CP2KOSFSSH(CP2KOS):
             'NORM_LATTICE': [norm_a, norm_b, norm_c],
             'LBOXA': 10 * norm_max * n_max,
             'LBOXB': 10 * norm_max * n_max,
-            'LBOXC': 10 * norm_max * n_max,
-            'RCUT': 5 * norm_max * n_max
+            'LBOXC': 10 * norm_max * n_max
         })
+        if dict.get('RCUT') is None:
+            dict.update( { 'RCUT': 5 * norm_max * n_max })
         dict.update({
             #            'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
             'FORCE_EVAL_ORDER': '1..%d' % (dict.get('NDIABAT') + 1)
@@ -922,9 +923,10 @@ class FSSHParcel(object):
             'LBOXA': 10 * norm_max * n_max,
             'LBOXB': 10 * norm_max * n_max,
             'LBOXC': 10 * norm_max * n_max,
-            'RCUT': 5 * norm_max * n_max,
             'PRINT': int(dict.get('NPROD') / dict.get('NCONFIG'))
         })
+        if dict.get('RCUT') is None:
+            dict.update( { 'RCUT': 5 * norm_max * n_max })
         self._natom_mol = dict.get('NATOM_MOL')
         self._norm_lattice = dict.get('NORM_LATTICE')
         self._printfrq = dict.get('PRINT')
@@ -1159,3 +1161,4 @@ def main(inputs, paths):
         """ % self.task
         file.write(result)
         file.close()
+        os.chdir(self._bucket_path)
