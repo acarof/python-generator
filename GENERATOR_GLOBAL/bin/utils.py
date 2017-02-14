@@ -12,7 +12,6 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'ALPHA': 17,
             'OSPLINE': 6,
             'GMAX': 17,
-            'RCUT': 50,
             'LBOX': 100,
             'RESTRAINT': 1E-4,
             'NORBITALS': 1,
@@ -999,7 +998,8 @@ class FSSHParcel(object):
         'COORD_CHARGE' : %s,
         'STEPS'        : 1,
         'PRINTFRQ'     : 1,
-        'TEST'      :   'NO'
+        'TEST'      :   'NO',
+        'RCUT'      :    %s
             }
         """ % (
             sed_dict.get('NCONFIG', '!!!'),
@@ -1013,7 +1013,8 @@ class FSSHParcel(object):
             sed_dict.get('VECTB', '!!!'),
             sed_dict.get('VECTC', '!!!'),
             sed_dict.get('SIZE_CRYSTAL', '!!!'),
-            sed_dict.get('COORD_CHARGE', '!!!')
+            sed_dict.get('COORD_CHARGE', '!!!'),
+            sed_dict.get('RCUT')
         )
 
     def gather_vel_coord(self, ndir):
