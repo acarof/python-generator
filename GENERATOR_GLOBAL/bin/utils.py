@@ -901,6 +901,7 @@ class FSSHParcel(object):
         self._bucket_path = paths.get('bucket')
         self._output_path = paths.get('output')
         self._bin_path = paths.get('bin')
+        self._local_path = paths.get('local_paths')
         self._complete_dict()
 
     def _complete_dict(self):
@@ -1058,6 +1059,7 @@ class FSSHParcel(object):
     def gather_templates_bin(self):
         os.system('cp %s/*  %s' % (self._templates_path, self.templates.path))
         os.system('cp %s/*  %s' % (self._bin_path, self.bin.path))
+        os.system('cp %s/*  %s' % (self._local_path, self.local.path))
 
     def _create(self):
         os.chdir(self._output_path)
@@ -1068,6 +1070,8 @@ class FSSHParcel(object):
         self.bin.mkdir()
         self.templates = Dir('templates')
         self.templates.mkdir()
+        self.local = Dir('local_paths')
+        self.local.mkdir()
         self.task = Dir('task')
         self.task.mkdir()
         self.task.chdir()
@@ -1112,10 +1116,6 @@ from utils import *
 
 def main(inputs, paths):
 
-    # DEFINE PATH/EXE VARIABLES
-    exe_path = '/scratch/grudorff/antoine/bin'
-    paths = {'cp2k': exe_path + '/cp2k.sopt'}
-
     %s
 
     inputs.update(task)
@@ -1134,6 +1134,18 @@ def main(inputs, paths):
 
     bin = Dir('bin', paths)
     bin.checkdir()
+
+    # FIND CP2K PATHS
+    try:
+        local_paths = Dir('local_paths', paths)
+        local_paths.checkdir()
+        cp2k_file = open(paths.get('local_paths') + 'cp2k.path', 'r')
+        paths.update({'cp2k': cp2k_file.read().rstrip()})
+        if not os.path.isfile(paths.get('cp2k')):
+            raise SystemExit('WARNING: check path for CP2K executable in local_paths/cp2k.path')
+    except:
+        raise SystemExit("WARINING: please provide the path for CP2K executable in local_paths/cp2k.path")
+
 
     os.system(' cp -r %%s/%%s %%s' %% (paths.get('task'), inputs.get('FILE_INIT'), paths.get('bucket')))
     initial = Dir(inputs.get('FILE_INIT'), paths)

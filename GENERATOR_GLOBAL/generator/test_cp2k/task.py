@@ -8,9 +8,6 @@ from utils import *
 def main(inputs, paths):
     print """
     """
-    # DEFINE PATH/EXE VARIABLES
-    exe_path = '/scratch/grudorff/antoine/bin'
-    paths = {'cp2k': exe_path + '/cp2k.sopt'}
 
     task = {
         'KIND_RUN' : 'TEST_CP2K',
@@ -20,32 +17,6 @@ def main(inputs, paths):
     }
     inputs.update(task)
 
-
-    # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
-    bucket = Bucket(inputs)
-    bucket.name()
-    paths.update({'bucket': bucket.path})
-
-    task = Dir(inputs.get('INPUT_INFO'))
-    paths.update( {'task' : task.path} )
-
-    templates = Dir('templates', paths)
-    templates.checkdir()
-    templates.clean()
-
-    bin = Dir('bin', paths)
-    bin.checkdir()
-
-
-    lol = [
-        ['PROPAGATION', 'FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN'],
-        ['COLLAPSE', 'T', 'F'],
-        ['ANALYTICS', 'T', 'F'],
-        ['FIRST_DIABAT', 1, 2],
-        ['METHOD_RESCALING', 'SIMPLE', 'NACV'],
-        ['METHOD_ADIAB_NACV', 'TEST', 'CONTRIBUTION','TOTAL','FAST' ],
-        ['METHOD_REVERSAL', 'NEVER','ALWAYS','TRHULAR','SUBOTNIK']
-    ]
 
     list_propagation = ['FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN']
     #list_propagation = ['FSSH']
@@ -72,18 +43,57 @@ def main(inputs, paths):
                     'METHOD_ADIAB_NACV' : nacv,
                     'METHOD_REVERSAL'   : reversal,
                     'CENTER_OF_MASS'    : com
-                   } 
+                   }
                   for prop in list_propagation
-                  for collapse in list_collapse 
+                  for collapse in list_collapse
                   for analytics in list_analytics
                   for diabat    in list_first_diabat
                   for rescaling in list_rescaling
                   for nacv      in list_nacv
                   for reversal  in list_reversal
                   for com       in list_com
-                  ] 
+                  ]
 
     systems = ['dimer', 'trimer', 'dimer_solvent']
+
+
+
+    # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
+    bucket = Bucket(inputs)
+    bucket.name()
+    paths.update({'bucket': bucket.path})
+
+    task = Dir(inputs.get('INPUT_INFO'))
+    paths.update( {'task' : task.path} )
+
+    templates = Dir('templates', paths)
+    templates.checkdir()
+    templates.clean()
+
+    bin = Dir('bin', paths)
+    bin.checkdir()
+
+    # FIND CP2K PATHS
+    try:
+        local_paths = Dir('local_paths', paths)
+        local_paths.checkdir()
+        cp2k_file = open(paths.get('local_paths') + 'cp2k.path', 'r')
+        paths.update({'cp2k': cp2k_file.read().rstrip()})
+        if not os.path.isfile(paths.get('cp2k')):
+            raise SystemExit('WARNING: check path for CP2K executable in local_paths/cp2k.path')
+    except:
+        raise SystemExit("WARINING: please provide the path for CP2K executable in local_paths/cp2k.path")
+
+
+    lol = [
+        ['PROPAGATION', 'FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN'],
+        ['COLLAPSE', 'T', 'F'],
+        ['ANALYTICS', 'T', 'F'],
+        ['FIRST_DIABAT', 1, 2],
+        ['METHOD_RESCALING', 'SIMPLE', 'NACV'],
+        ['METHOD_ADIAB_NACV', 'TEST', 'CONTRIBUTION','TOTAL','FAST' ],
+        ['METHOD_REVERSAL', 'NEVER','ALWAYS','TRHULAR','SUBOTNIK']
+    ]
 
     ndir= 0
 

@@ -9,10 +9,6 @@ def main(inputs, paths):
     print """
     """
 
-    # DEFINE PATH/EXE VARIABLES
-    exe_path = '/scratch/grudorff/antoine/bin'
-    paths = {'cp2k': exe_path + '/cp2k.sopt'}
-
     # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
     bucket = Bucket(inputs)
     bucket.name()
@@ -27,6 +23,18 @@ def main(inputs, paths):
 
     bin = Dir('bin', paths)
     bin.checkdir()
+
+    # FIND CP2K PATHS
+    try:
+        local_paths = Dir('local_paths', paths)
+        local_paths.checkdir()
+        cp2k_file = open(paths.get('local_paths') + 'cp2k.path', 'r')
+        paths.update({'cp2k': cp2k_file.read().rstrip()})
+        if not os.path.isfile(paths.get('cp2k')):
+            raise SystemExit('WARNING: check path for CP2K executable in local_paths/cp2k.path')
+    except:
+        raise SystemExit("WARINING: please provide the path for CP2K executable in local_paths/cp2k.path")
+
 
 
     os.system(' cp -r %s/%s %s' % (paths.get('task'), inputs.get('FILE_INIT'), paths.get('bucket')))
