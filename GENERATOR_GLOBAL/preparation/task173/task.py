@@ -35,7 +35,7 @@ def main(inputs, paths):
     }
     inputs.update(task)
 
-    list_density     = [0.04]
+    list_density     = [0.03, 0.04]
     mega_list = [ {
                     'DENSITY'          : density
                    }

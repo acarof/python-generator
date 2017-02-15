@@ -456,44 +456,42 @@ class CP2KOS(CP2KRun):
 
     def __init__(self, dict, paths, **kwargs):
         super(CP2KOS, self).__init__(dict, paths, **kwargs)
-        self._dict = dict
-        self._sizecrystal = dict.get('SIZE_CRYSTAL')
-        self._coordcharge = dict.get('COORD_CHARGE')
-        self._mol_name = dict.get('MOL_NAME')
-        self._name_organic = dict.get('MOL_NAME')
-        self._filecrystal = dict.get('FILECRYSTAL')
-        self._filemol = dict.get('FILEMOL')
-        self._structure = dict.get('SYSTEM')
+        self._sizecrystal = self._my_sed_dict.get('SIZE_CRYSTAL')
+        self._coordcharge = self._my_sed_dict.get('COORD_CHARGE')
+        self._mol_name = self._my_sed_dict.get('MOL_NAME')
+        self._name_organic = self._my_sed_dict.get('MOL_NAME')
+        self._filecrystal = self._my_sed_dict.get('FILECRYSTAL')
+        self._filemol = self._my_sed_dict.get('FILEMOL')
+        self._structure = self._my_sed_dict.get('SYSTEM')
 
     def print_info(self):
         print "Hey Hey"
 
     def _complete_dict(self):
-        dict = self._my_sed_dict
-        norm_a = norm(array(dict.get('VECTA')))
-        norm_b = norm(array(dict.get('VECTB')))
-        norm_c = norm(array(dict.get('VECTC')))
+        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
+        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
+        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
         norm_max = max(norm_a, norm_b, norm_c)
-        n_a = dict.get('SIZE_CRYSTAL')[0]
-        n_b = dict.get('SIZE_CRYSTAL')[1]
-        n_c = dict.get('SIZE_CRYSTAL')[2]
+        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
+        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
+        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
         n_max = max(n_a, n_b, n_c)
-        dict.update({
-            'NMOL': prod(dict.get('SIZE_CRYSTAL')),
-            'NATOM_MOL': sum(1 for line in open(self.paths.get('templates') + dict.get('FILEMOL'))),
-            'NATOMS': prod(dict.get('SIZE_CRYSTAL')) * \
-                      sum(1 for line in open(self.paths.get('templates') + dict.get('FILEMOL'))),
+        self._my_sed_dict.update({
+            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
+            'NATOM_MOL': sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
+            'NATOMS': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * \
+                      sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
             'NORM_LATTICE': [norm_a, norm_b, norm_c],
             'LBOXA': 10 * norm_max * n_max,
             'LBOXB': 10 * norm_max * n_max,
             'LBOXC': 10 * norm_max * n_max,
-            'PRINT': int(dict.get('NPROD') / dict.get('NCONFIG'))
+            'PRINT': int(self._my_sed_dict.get('NPROD') / self._my_sed_dict.get('NCONFIG'))
         })
-        if dict.get('RCUT') is None:
-            dict.update( { 'RCUT': 5 * norm_max * n_max })
-        self._natom_mol = dict.get('NATOM_MOL')
-        self._norm_lattice = dict.get('NORM_LATTICE')
-        self._restraint = dict.get('RESTRAINT')
+        if self._my_sed_dict.get('RCUT') is None:
+            self._my_sed_dict.update( { 'RCUT': 5 * norm_max * n_max })
+        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
+        self._restraint = self._my_sed_dict.get('RESTRAINT')
 
     def _use_restart(self, ndir):
         os.system('tail -%d run-%d/run-pos-1.xyz > COORD.tmp' % (self._my_sed_dict.get('NATOMS'), ndir) )
@@ -646,15 +644,14 @@ class CP2KOS(CP2KRun):
 class CP2KOSwSolvent(CP2KOS):
     def __init__(self, dict, paths, **kwargs):
         super(CP2KOSwSolvent, self).__init__(dict, paths, **kwargs)
-        self._kind_solvent = dict.get('SOLVENT')
-        self._sizebox = dict.get('SIZE_BOX')
-        self._name_solvent = dict.get('NAME_SOLVENT')
+        self._kind_solvent = self._my_sed_dict.get('SOLVENT')
+        self._sizebox = self._my_sed_dict.get('SIZE_BOX')
+        self._name_solvent = self._my_sed_dict.get('NAME_SOLVENT')
 
     def _complete_dict(self):
         super(CP2KOSwSolvent, self)._complete_dict()
-        dict = self._my_sed_dict
         coordname = self.paths.get('output') + self._structure + '/' + self._filecrystal
-        dict.update({
+        self._my_sed_dict.update({
             'NATOMS': sum(1 for line in open(coordname)),
             'NSOLVENT': open(coordname).read().count(self._kind_solvent),
             'LBOXA': self._sizebox[0],
@@ -662,9 +659,9 @@ class CP2KOSwSolvent(CP2KOS):
             'LBOXC': self._sizebox[2],
             'PERIODIC': 'XYZ'
         })
-        if dict.get('RCUT') is None:
-            dict.update( { 'RCUT': min(self._sizebox) / 2 })
-        self._nsolvent = dict.get('NSOLVENT')
+        if self._my_sed_dict.get('RCUT') is None:
+            self._my_sed_dict.update( { 'RCUT': min(self._sizebox) / 2 })
+        self._nsolvent = self._my_sed_dict.get('NSOLVENT')
 
     def _kind(self):
         fileout = open('KIND.tmp', 'w')
@@ -726,17 +723,17 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
     def __init__(self, dict, paths, **kwargs):
         super(CP2KOSwSolventFSSH, self).__init__(dict, paths, **kwargs)
         self._init = self._my_sed_dict.get('INIT')
-        self._printfrq = dict.get('PRINTFRQ')
-        self._sizecrystal = dict.get('SIZE_CRYSTAL')
-        self._coordcharge = dict.get('COORD_CHARGE')
-        self._mol_name = dict.get('MOL_NAME')
-        self._template_file = dict.get('TEMPLATE_FILE')
-        self._forcefield_file = dict.get('FORCEFIELD_FILE')
+        self._printfrq = self._my_sed_dict.get('PRINTFRQ')
+        self._sizecrystal = self._my_sed_dict.get('SIZE_CRYSTAL')
+        self._coordcharge = self._my_sed_dict.get('COORD_CHARGE')
+        self._mol_name = self._my_sed_dict.get('MOL_NAME')
+        self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
+        self._forcefield_file = self._my_sed_dict.get('FORCEFIELD_FILE')
         self._filemol = 'COORD.tmp'
-        self._restraint = dict.get('RESTRAINT')
-        self._norm_lattice = dict.get('NORM_LATTICE')
+        self._restraint = self._my_sed_dict.get('RESTRAINT')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
         self._initial_path = paths.get('initial')
-        self._natom_mol = dict.get('NATOM_MOL')
+        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
 
     def _write_topo(self):
         self._forcefield()
@@ -749,43 +746,42 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         self._write_file(self._forcefield_file, 'FORCEEVAL.tmp', number=self._nmol)
 
     def _complete_dict(self):
-        dict = self._my_sed_dict
-        norm_a = norm(array(dict.get('VECTA')))
-        norm_b = norm(array(dict.get('VECTB')))
-        norm_c = norm(array(dict.get('VECTC')))
+        self._my_sed_dict = self._my_sed_dict
+        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
+        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
+        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
         norm_max = max(norm_a, norm_b, norm_c)
-        n_a = dict.get('SIZE_CRYSTAL')[0]
-        n_b = dict.get('SIZE_CRYSTAL')[1]
-        n_c = dict.get('SIZE_CRYSTAL')[2]
+        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
+        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
+        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
         n_max = max(n_a, n_b, n_c)
-        dict.update({
-            'NMOL': prod(dict.get('SIZE_CRYSTAL')),
+        self._my_sed_dict.update({
+            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
             'NORM_LATTICE': [norm_a, norm_b, norm_c],
             'LBOXA': 10 * norm_max * n_max,
             'LBOXB': 10 * norm_max * n_max,
             'LBOXC': 10 * norm_max * n_max
         })
-        self._natom_mol = dict.get('NATOM_MOL')
-        self._norm_lattice = dict.get('NORM_LATTICE')
+        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
         coordname = self.paths.get('initial') + '/pos-1.init'
-        dict.update({
+        self._my_sed_dict.update({
             'NSOLVENT': open(coordname).read().count(self._kind_solvent.title()),
-            'NDIABAT': prod(dict.get('SIZE_CRYSTAL')) * dict.get('NORBITALS'),
+            'NDIABAT': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * self._my_sed_dict.get('NORBITALS'),
             'LBOXA': self._sizebox[0],
             'LBOXB': self._sizebox[1],
             'LBOXC': self._sizebox[2],
             'PERIODIC': 'XYZ'
         })
-        if dict.get('RCUT') is None:
-            dict.update( { 'RCUT': min(self._sizebox) / 2 })
-        self._nsolvent = dict.get('NSOLVENT')
+        if self._my_sed_dict.get('RCUT') is None:
+            self._my_sed_dict.update( { 'RCUT': min(self._sizebox) / 2 })
+        self._nsolvent = self._my_sed_dict.get('NSOLVENT')
         print "NSOLVENT", self._nsolvent
-        self._nmol = dict.get('NMOL')
-        dict.update({
-            #            'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
-            'FORCE_EVAL_ORDER': '1..%d' % (dict.get('NDIABAT') + 1)
+        self._nmol = self._my_sed_dict.get('NMOL')
+        self._my_sed_dict.update({
+            'FORCE_EVAL_ORDER': '1..%d' % (self._my_sed_dict.get('NDIABAT') + 1)
         })
-        self._restraint = dict.get('RESTRAINT')
+        self._restraint = self._my_sed_dict.get('RESTRAINT')
 
     def _aom(self):
         for mol in range(self._nmol):
@@ -812,17 +808,17 @@ class CP2KOSFSSH(CP2KOS):
     def __init__(self, dict, paths, **kwargs):
         super(CP2KOSFSSH, self).__init__(dict, paths, **kwargs)
         self._init = self._my_sed_dict.get('INIT')
-        self._printfrq = dict.get('PRINTFRQ')
-        self._sizecrystal = dict.get('SIZE_CRYSTAL')
-        self._coordcharge = dict.get('COORD_CHARGE')
-        self._mol_name = dict.get('MOL_NAME')
-        self._template_file = dict.get('TEMPLATE_FILE')
-        self._forcefield_file = dict.get('FORCEFIELD_FILE')
+        self._printfrq = self._my_sed_dict.get('PRINTFRQ')
+        self._sizecrystal = self._my_sed_dict.get('SIZE_CRYSTAL')
+        self._coordcharge = self._my_sed_dict.get('COORD_CHARGE')
+        self._mol_name = self._my_sed_dict.get('MOL_NAME')
+        self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
+        self._forcefield_file = self._my_sed_dict.get('FORCEFIELD_FILE')
         self._filemol = 'COORD.tmp'
-        self._restraint = dict.get('RESTRAINT')
-        self._norm_lattice = dict.get('NORM_LATTICE')
+        self._restraint = self._my_sed_dict.get('RESTRAINT')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
         self._initial_path = paths.get('initial')
-        self._natom_mol = dict.get('NATOM_MOL')
+        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
 
     def print_info(self):
         print "Hey"
@@ -848,32 +844,30 @@ class CP2KOSFSSH(CP2KOS):
 
 
     def _complete_dict(self):
-        dict = self._my_sed_dict
-        norm_a = norm(array(dict.get('VECTA')))
-        norm_b = norm(array(dict.get('VECTB')))
-        norm_c = norm(array(dict.get('VECTC')))
-        n_a = dict.get('SIZE_CRYSTAL')[0]
-        n_b = dict.get('SIZE_CRYSTAL')[1]
-        n_c = dict.get('SIZE_CRYSTAL')[2]
+        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
+        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
+        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
+        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
+        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
+        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
         n_max = max(n_a, n_b, n_c)
         norm_max = max(norm_a, norm_b, norm_c)
-        dict.update({
-            'NMOL': prod(dict.get('SIZE_CRYSTAL')),
-            'NDIABAT': prod(dict.get('SIZE_CRYSTAL')) * dict.get('NORBITALS'),
+        self._my_sed_dict.update({
+            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
+            'NDIABAT': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * self._my_sed_dict.get('NORBITALS'),
             'NORM_LATTICE': [norm_a, norm_b, norm_c],
             'LBOXA': 10 * norm_max * n_max,
             'LBOXB': 10 * norm_max * n_max,
             'LBOXC': 10 * norm_max * n_max
         })
-        if dict.get('RCUT') is None:
-            dict.update( { 'RCUT': 5 * norm_max * n_max })
-        dict.update({
-            #            'FORCE_EVAL_ORDER': '  '.join(map(str, range(1, dict.get('NDIABAT') + 2)))
-            'FORCE_EVAL_ORDER': '1..%d' % (dict.get('NDIABAT') + 1)
+        if self._my_sed_dict.get('RCUT') is None:
+            self._my_sed_dict.update( { 'RCUT': 5 * norm_max * n_max })
+        self._my_sed_dict.update({
+            'FORCE_EVAL_ORDER': '1..%d' % (self._my_sed_dict.get('NDIABAT') + 1)
         })
-        self._nmol = dict.get('NMOL')
-        self._norm_lattice = dict.get('NORM_LATTICE')
-        self._restraint = dict.get('RESTRAINT')
+        self._nmol = self._my_sed_dict.get('NMOL')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
+        self._restraint = self._my_sed_dict.get('RESTRAINT')
 
     def _aom(self):
         for mol in range(self._nmol):
@@ -885,18 +879,18 @@ class FSSHParcel(object):
     """
 
     def __init__(self, dict, paths):
-        self._dict = dict
+        self._my_sed_dict = dict
         self.paths = paths
-        self._timestep = dict.get('TIMESTEP')
-        self._lengtheq = dict.get('NEQ')
-        self._nprod = dict.get('NPROD')
-        self._sizecrystal = dict.get('SIZE_CRYSTAL')
-        self._coordcharge = dict.get('COORD_CHARGE')
-        self._mol_name = dict.get('MOL_NAME')
-        self._template_file = dict.get('TEMPLATE_FILE')
-        self._filemol = dict.get('FILEMOL')
-        self._system = dict.get('SYSTEM')
-        self._restraint = dict.get('RESTRAINT')
+        self._timestep = self._my_sed_dict.get('TIMESTEP')
+        self._lengtheq = self._my_sed_dict.get('NEQ')
+        self._nprod = self._my_sed_dict.get('NPROD')
+        self._sizecrystal = self._my_sed_dict.get('SIZE_CRYSTAL')
+        self._coordcharge = self._my_sed_dict.get('COORD_CHARGE')
+        self._mol_name = self._my_sed_dict.get('MOL_NAME')
+        self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
+        self._filemol = self._my_sed_dict.get('FILEMOL')
+        self._system = self._my_sed_dict.get('SYSTEM')
+        self._restraint = self._my_sed_dict.get('RESTRAINT')
         self._templates_path = paths.get('templates')
         self._bucket_path = paths.get('bucket')
         self._output_path = paths.get('output')
@@ -905,32 +899,31 @@ class FSSHParcel(object):
         self._complete_dict()
 
     def _complete_dict(self):
-        dict = self._dict
-        norm_a = norm(array(dict.get('VECTA')))
-        norm_b = norm(array(dict.get('VECTB')))
-        norm_c = norm(array(dict.get('VECTC')))
+        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
+        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
+        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
         norm_max = max(norm_a, norm_b, norm_c)
-        n_a = dict.get('SIZE_CRYSTAL')[0]
-        n_b = dict.get('SIZE_CRYSTAL')[1]
-        n_c = dict.get('SIZE_CRYSTAL')[2]
+        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
+        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
+        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
         n_max = max(n_a, n_b, n_c)
-        dict.update({
-            'NMOL': prod(dict.get('SIZE_CRYSTAL')),
-            'NATOM_MOL': sum(1 for line in open(self.paths.get('templates') + dict.get('FILEMOL'))),
-            'NATOMS': prod(dict.get('SIZE_CRYSTAL')) * \
-                      sum(1 for line in open(self.paths.get('templates') + dict.get('FILEMOL'))),
+        self._my_sed_dict.update({
+            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
+            'NATOM_MOL': sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
+            'NATOMS': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * \
+                      sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
             'NORM_LATTICE': [norm_a, norm_b, norm_c],
             'LBOXA': 10 * norm_max * n_max,
             'LBOXB': 10 * norm_max * n_max,
             'LBOXC': 10 * norm_max * n_max,
-            'PRINT': int(dict.get('NPROD') / dict.get('NCONFIG'))
+            'PRINT': int(self._my_sed_dict.get('NPROD') / self._my_sed_dict.get('NCONFIG'))
         })
-        if dict.get('RCUT') is None:
-            dict.update( { 'RCUT': 5 * norm_max * n_max })
-        self._natom_mol = dict.get('NATOM_MOL')
-        self._norm_lattice = dict.get('NORM_LATTICE')
-        self._printfrq = dict.get('PRINT')
-        self._nmol = dict.get('NMOL')
+        if self._my_sed_dict.get('RCUT') is None:
+            self._my_sed_dict.update( { 'RCUT': 5 * norm_max * n_max })
+        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
+        self._printfrq = self._my_sed_dict.get('PRINT')
+        self._nmol = self._my_sed_dict.get('NMOL')
 
     def gather(self, ndir):
         self._create()
