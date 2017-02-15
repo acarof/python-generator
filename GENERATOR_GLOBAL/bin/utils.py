@@ -911,13 +911,7 @@ class FSSHParcel(object):
         self._my_sed_dict.update({
             'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
             'NATOM_MOL': sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
-            'NATOMS': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * \
-                      sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
-            'NORM_LATTICE': [norm_a, norm_b, norm_c],
-            'LBOXA': 10 * norm_max * n_max,
-            'LBOXB': 10 * norm_max * n_max,
-            'LBOXC': 10 * norm_max * n_max,
-            'PRINT': int(self._my_sed_dict.get('NPROD') / self._my_sed_dict.get('NCONFIG'))
+            'NORM_LATTICE': [norm_a, norm_b, norm_c]
         })
         if self._my_sed_dict.get('RCUT') is None:
             self._my_sed_dict.update( { 'RCUT': 5 * norm_max * n_max })
@@ -937,6 +931,10 @@ class FSSHParcel(object):
         self._prepare_task()
 
     def _prepare_input_crystal(self):
+        self._my_sed_dict.update({
+            'NATOMS': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * \
+                      sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL')))
+        })
         self.task = """
     task = {
         'KIND_RUN'  : 'FSSH_OS',
@@ -971,6 +969,12 @@ class FSSHParcel(object):
         )
 
     def _prepare_input_solvent(self):
+        self._filecrystal = self._my_sed_dict.get('FILECRYSTAL')
+        self._structure = self._my_sed_dict.get('SYSTEM')
+        coordname = self.paths.get('output') + self._structure + '/' + self._filecrystal
+        self._my_sed_dict.update({
+            'NATOMS': sum(1 for line in open(coordname))
+        })
         self.task = """
     task = {
         'KIND_RUN'  : 'FSSH_OS',
