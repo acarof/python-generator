@@ -879,7 +879,8 @@ class FSSHParcel(object):
     """
 
     def __init__(self, dict, paths):
-        self._my_sed_dict = dict
+        self._my_sed_dict = sed_dict
+        self._my_sed_dict.update(dict)
         self.paths = paths
         self._timestep = self._my_sed_dict.get('TIMESTEP')
         self._lengtheq = self._my_sed_dict.get('NEQ')
@@ -958,15 +959,15 @@ class FSSHParcel(object):
         'TEST'      :   'NO'
         }
         """ % (
-            sed_dict.get('NCONFIG', '!!!'),
-            sed_dict.get('MOL_NAME', '!!!'),
-            sed_dict.get('NATOMS', '!!!'),
-            sed_dict.get('NATOM_MOL', '!!!'),
-            sed_dict.get('VECTA', '!!!'),
-            sed_dict.get('VECTB', '!!!'),
-            sed_dict.get('VECTC', '!!!'),
-            sed_dict.get('SIZE_CRYSTAL', '!!!'),
-            sed_dict.get('COORD_CHARGE', '!!!')
+            self._my_sed_dict.get('NCONFIG', '!!!'),
+            self._my_sed_dict.get('MOL_NAME', '!!!'),
+            self._my_sed_dict.get('NATOMS', '!!!'),
+            self._my_sed_dict.get('NATOM_MOL', '!!!'),
+            self._my_sed_dict.get('VECTA', '!!!'),
+            self._my_sed_dict.get('VECTB', '!!!'),
+            self._my_sed_dict.get('VECTC', '!!!'),
+            self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'),
+            self._my_sed_dict.get('COORD_CHARGE', '!!!')
         )
 
     def _prepare_input_solvent(self):
@@ -996,23 +997,23 @@ class FSSHParcel(object):
         'RCUT'      :    %s
             }
         """ % (
-            sed_dict.get('NCONFIG', '!!!'),
-            sed_dict.get('MOL_NAME', '!!!'),
-            sed_dict.get('NAME_SOLVENT', '!!!'),
-            sed_dict.get('SOLVENT'),
-            sed_dict.get('NATOMS', '!!!'),
-            sed_dict.get('NATOM_MOL', '!!!'),
-            sed_dict.get('SIZE_BOX', '!!!'),
-            sed_dict.get('VECTA', '!!!'),
-            sed_dict.get('VECTB', '!!!'),
-            sed_dict.get('VECTC', '!!!'),
-            sed_dict.get('SIZE_CRYSTAL', '!!!'),
-            sed_dict.get('COORD_CHARGE', '!!!'),
-            sed_dict.get('RCUT')
+            self._my_sed_dict.get('NCONFIG', '!!!'),
+            self._my_sed_dict.get('MOL_NAME', '!!!'),
+            self._my_sed_dict.get('NAME_SOLVENT', '!!!'),
+            self._my_sed_dict.get('SOLVENT'),
+            self._my_sed_dict.get('NATOMS', '!!!'),
+            self._my_sed_dict.get('NATOM_MOL', '!!!'),
+            self._my_sed_dict.get('SIZE_BOX', '!!!'),
+            self._my_sed_dict.get('VECTA', '!!!'),
+            self._my_sed_dict.get('VECTB', '!!!'),
+            self._my_sed_dict.get('VECTC', '!!!'),
+            self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'),
+            self._my_sed_dict.get('COORD_CHARGE', '!!!'),
+            self._my_sed_dict.get('RCUT')
         )
 
     def gather_vel_coord(self, ndir):
-        nsolvent = sed_dict.get('NATOMS') - (self._nmol * self._natom_mol)
+        nsolvent = self._my_sed_dict.get('NATOMS') - (self._nmol * self._natom_mol)
         os.chdir('run-%d' % ndir)
         pos_mol = (self._coordcharge[0] - 1) * (self._sizecrystal[1] * self._sizecrystal[2]) + \
                   (self._coordcharge[1] - 1) * (self._sizecrystal[2]) + \
