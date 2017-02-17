@@ -82,7 +82,7 @@ INCLUDE AOM_COEFF.tmp
                         &PRINT
                             &COEFFICIENTS  LOW
                                &EACH
-                                   MD          sedPRINT
+                                   MD          1
                                &END EACH
                             &END COEFFICIENTS
                             &POPULATIONS  LOW
