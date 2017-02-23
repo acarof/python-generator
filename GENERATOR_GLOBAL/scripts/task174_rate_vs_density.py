@@ -95,7 +95,9 @@ scoupling_dict = {
 
 nadiab = 2
 os.system('cd ..')
-for directory in os.listdir('.'):
+for i, directory in enumerate(os.listdir('.')):
+    if i % 100 == 0:
+        print time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
     if 'run' in directory:
         print "Do %s" % directory
         os.chdir(directory)
@@ -138,7 +140,7 @@ reorganization = 0.300
 free_energy = 0.00
 temperature = 300
 
-plt.figure(1)
+plt.figure(1, figsize=(6,5))
 rates=[]
 marcus_rates = []
 for density in list_density:
@@ -146,24 +148,28 @@ for density in list_density:
     scoupling = np.array(scoupling_dict.get(density))
     pop = mean_over_run(spop)
     for adiab in range(1, nadiab):
-        plt.plot(pop[0], pop[adiab], label = adiab)
+        ax =plt.gca()
+        previous, = ax.plot(pop[0], pop[adiab], label = r'%s (atoms/$\AA^3$)' % density)
         try:
             popt, pcov = curve_fit(func, pop[0], pop[adiab])
         except:
             popt = 0.0, 0.0, 0.0
         rate = popt[1] / 2
         rates.append( rate)
-        plt.plot( pop[0], [ func( x, *popt) for x in pop[0] ], label = 'Fitted curve')
+        plt.plot( pop[0], [ func( x, *popt) for x in pop[0] ], color = previous.get_color(), linestyle = '--' )
         print "The decay rate for state %d is %f fs-1" %(adiab, rate)
     mean_coupling =  np.mean( scoupling )
     print "The average coupling is %f meV " %  mean_coupling
     marcus_rate = calculate_marcus_na_rate(mean_coupling / 1000, reorganization, free_energy, temperature)
     marcus_rates.append( marcus_rate)
     print "The Marcus rate is  %f fs-1" % marcus_rate
-plt.title('Population evolution')
+plt.title('Population evolution for different solvent density')
 plt.xlabel('Time (fs)')
 plt.locator_params(axis='x', nbins=5)
 plt.ylabel('Population')
+plt.legend()
+plt.legend(bbox_to_anchor=(1.6, 1))
+plt.savefig('population_vs_time_task174.png' , bbox_inches='tight')
 #plt.ylim([5, 36])
 plt.legend(bbox_to_anchor=(2.01, 1))
 
@@ -172,14 +178,18 @@ plt.legend(bbox_to_anchor=(2.01, 1))
 
 
 
-plt.figure(2)
-plt.plot(list_density, rates)
-plt.plot(list_density, marcus_rates)
+plt.figure(2, figsize=(6,5))
+plt.title('FSSH and Marcus rates vs density')
+plt.plot(list_density, rates, label = 'FSSH rates', marker = 'o')
+plt.plot(list_density, marcus_rates, label = 'Marcus rate', marker = 'v')
 plt.xlabel(r'Density (atoms/$\AA^3$)')
 plt.yscale('log')
 plt.ylabel(r'Rate (fs$^{-1}$)')
+plt.legend()
+plt.legend(bbox_to_anchor=(1.6, 1))
+plt.savefig('rate_vs_density_task174.png' , bbox_inches='tight')
 
-plt.show()
+#plt.show()
 plt.close()
 
 print "End of the analysis"
