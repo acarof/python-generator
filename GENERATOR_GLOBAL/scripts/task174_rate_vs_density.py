@@ -25,6 +25,8 @@ density_dict = {
     979 : 0.04
 }
 
+bin = 2
+
 class PropDict(object):
     def __init__(self, property):
         self.prop = property
@@ -84,39 +86,62 @@ for property in (specific_properties):
 
 
 plt.figure(1, figsize=(6,5))
-rates=[]
-marcus_rates = []
+mean_rates=[]
+mean_marcus_rates = []
+error_rates=[]
+error_marcus_rates = []
 final = ''
 for density in densities:
-    pop = mean_over_run( properties_.get('Populations').dict.get(density) )
+    pops = mean_over_run( properties_.get('Populations').dict.get(density), bin  )
+    rates = []
+    marcus_rates = []
+    for i in range(bin):
+        pop = pops[i]
 
-    for adiab in range(1, nadiab):
-        ax =plt.gca()
-        previous, = ax.plot(pop[0], pop[adiab], label = r'%s (atoms/$\AA^3$)' % density)
-        try:
-            popt, pcov = curve_fit(expo, pop[0], pop[adiab])
-        except:
-            popt = 0.0, 0.0, 0.0
-        rate = popt[1] / 2
-        rates.append( rate)
-        plt.plot( pop[0], [ expo( x, *popt) for x in pop[0] ], color = previous.get_color(), linestyle = '--' )
-        print "The decay rate for state %d is %f fs-1" %(adiab, rate)
+        for adiab in range(1, nadiab):
+            try:
+                popt, pcov = curve_fit(expo, pop[0], pop[adiab])
+            except:
+                popt = 0.0, 0.0, 0.0
+            rate = popt[1] / 2
+            rates.append( rate)
+
+            #print "The decay rate for state %d is %f fs-1" %(adiab, rate)
+
+    ax = plt.gca()
+    ave_pop = np.mean(pops, axis = 0)
+    previous, = ax.plot( ave_pop[0], ave_pop[1], label=r'%s (atoms/$\AA^3$)' % density)
+
+    print rates
+    rate = np.mean(rates)
+    print rate
+    mean_rates.append(rate)
+    error_rates.append(np.std(rates, ddof=1))
+
+
+    plt.plot(ave_pop[0], [expo(x, b = rate) for x in ave_pop[0] ], color=previous.get_color(), linestyle='--')
 
     couplings = np.array( properties_.get('Couplings').dict.get(density)).transpose()[3] * 27.211399 * 1000
-    print "Couplings values (meV): "
-    print couplings
-    mean_coupling =  np.mean( couplings )
-    print "The average coupling is %f meV " %  mean_coupling
+    temperatures = np.array(properties_.get('Temperature').dict.get(density)).transpose()[0]
+    n = int(len(couplings) / bin)
+    lcouplings = [couplings[i:i + n] for i in xrange(0, len(couplings), n)]
+    ltemperatures = [temperatures[i:i  + n] for i in xrange(0, len(temperatures), n)]
+    for i in range(bin):
+        mean_coupling = np.mean(lcouplings[i])
+        #print "Couplings values (meV): ", lcouplings[i]
+        #print "The average coupling is %f meV " % mean_coupling
 
-    temperatures = np.array( properties_.get('Temperature').dict.get(density)).transpose()[0]
-    print "Temperature values (K): "
-    print temperatures
-    mean_temperature =  np.mean( temperatures )
-    print "The average temperature is %f K " %  mean_temperature
+        mean_temperature = np.mean(ltemperatures[i])
+        #print "Temperature values (K): ", ltemperatures[i]
+        #print "The average temperature is %f K " % mean_temperature
 
-    marcus_rate = calculate_marcus_na_rate(mean_coupling / 1000, reorganization, free_energy, mean_temperature)
-    marcus_rates.append( marcus_rate)
-    print "The Marcus rate is  %f fs-1" % marcus_rate
+        marcus_rate = calculate_marcus_na_rate(mean_coupling / 1000, reorganization, free_energy, mean_temperature)
+        marcus_rates.append( marcus_rate)
+        #print "The Marcus rate is  %f fs-1" % marcus_rate
+
+    marcus_rate = np.mean( marcus_rates)
+    mean_marcus_rates.append(marcus_rate)
+    error_marcus_rates.append( np.std(marcus_rates, ddof=1))
 
     final += '%20.10f  %20.10f %20.10f %20.10f %20.10f \n' % \
              (density, rate, marcus_rate, mean_coupling, mean_temperature)
@@ -141,8 +166,8 @@ plt.legend(bbox_to_anchor=(2.01, 1))
 
 plt.figure(2, figsize=(6,5))
 plt.title('FSSH and Marcus rates vs density')
-plt.plot(densities, rates, label = 'FSSH rates', marker = 'o')
-plt.plot(densities, marcus_rates, label = 'Marcus rate', marker = 'v')
+plt.errorbar(densities, mean_rates, yerr = error_rates, label = 'FSSH rates', marker = 'o')
+plt.errorbar(densities, mean_marcus_rates, yerr = error_marcus_rates, label = 'Marcus rate', marker = 'v')
 plt.xlabel(r'Density (atoms/$\AA^3$)')
 plt.yscale('log')
 plt.ylabel(r'Rate (fs$^{-1}$)')

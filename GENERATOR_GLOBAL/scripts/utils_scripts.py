@@ -173,19 +173,24 @@ def histogram(prop):
     return np.histogram(props, normed=True)
 
 
-def mean_over_run(list_of_dict):
-    means = []
-    for time in list_of_dict[0]:
-        mean = [0] * len(list_of_dict[0].get(time))
-        counter = 0
-        for dict_ in list_of_dict:
-            mean = mean + np.array(dict_.get(time))
-            counter = counter + 1
-        mean = mean / counter
-        mean = np.insert(mean, 0, time)
-        means.append(mean)
-    means = sorted(means, key=itemgetter(0))
-    means = map(list, zip(*means))
+def mean_over_run(list_of_dict, bin =1):
+    n = int( len(list_of_dict) / bin )
+    llod = [list_of_dict[i:i + n ] for i in xrange(0, len(list_of_dict), n)]
+    means = [[] for x in xrange(bin)]
+    for i in range(bin):
+        submeans = []
+        for time in llod[i][0]:
+            mean = [0] * len(llod[i][0].get(time))
+            counter = 0
+            for dict_ in llod[i]:
+                mean = mean + np.array(dict_.get(time))
+                counter = counter + 1
+            mean = mean / counter
+            mean = np.insert(mean, 0, time)
+            submeans.append(mean)
+        submeans = sorted(submeans, key=itemgetter(0))
+        submeans = map(list, zip(*submeans))
+        means[i] = submeans
     return means
 
 
@@ -207,7 +212,7 @@ def calculate_marcus_na_rate(coupling, reorganization, free_energy, temperature)
     rate = rate / 0.024188
     return rate
 
-def expo(x, a, b, c):
+def expo(x, b, a = 0.5,  c = 0.5):
     return a*np.exp(- b*x) + c
 
 def create_file(property, bucket, text, label = 'None'):
