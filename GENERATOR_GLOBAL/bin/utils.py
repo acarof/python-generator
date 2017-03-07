@@ -17,7 +17,7 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'NORBITALS': 1,
             'CUTOFF_SITES': 12.0,
             'CUTOFF_CONN': 3.50,
-            'SCALING': 0.1,
+            'SCALING': 0.0195,
             'FIRST_DIABAT': 1,
             'DECO_CRIT': 1E-06,
             'CBAR': 0.50820,
@@ -31,7 +31,9 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'NACV_INCREMENT': 1.8872589E-3,
             'PROPAGATION': 'FSSH',
             'PERIODIC': 'NONE',
-            'CENTER_OF_MASS': 'T'
+            'CENTER_OF_MASS': 'T',
+            'FIRST_ADIABAT' : 1,
+            'SELECT_FIRST_ADIABAT' : 'F'
             }
 
 
@@ -911,7 +913,8 @@ class FSSHParcel(object):
         self._my_sed_dict.update({
             'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
             'NATOM_MOL': sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
-            'NORM_LATTICE': [norm_a, norm_b, norm_c]
+            'NORM_LATTICE': [norm_a, norm_b, norm_c],
+            'FIRST_DIABAT' : int(self._get_pos_mol())
         })
         if self._my_sed_dict.get('RCUT') is None:
             self._my_sed_dict.update( { 'RCUT': 5 * norm_max * n_max })
@@ -919,6 +922,12 @@ class FSSHParcel(object):
         self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
         self._printfrq = self._my_sed_dict.get('PRINT')
         self._nmol = self._my_sed_dict.get('NMOL')
+
+
+    def _get_pos_mol(self):
+        return (float(self._coordcharge[0]) - 1) * float(self._sizecrystal[1] * self._sizecrystal[2]) + \
+               (float(self._coordcharge[1]) - 1) * float(self._sizecrystal[2]) + \
+               float(self._coordcharge[2])
 
     def gather(self, ndir):
         self._create()
@@ -941,8 +950,8 @@ class FSSHParcel(object):
         'TEMPLATE_FILE' : 'FSSH_CORE.template',
         'FORCEFIELD_FILE' : 'FSSH_FF.template',
         'FILE_INIT' : 'initial',
-        'PERIODIC' : 'XYZ',
         'NUMBER_INIT' : %d,
+        'NUMBER_RANDOM' : 1,
         'SYSTEM' : 'CRYSTAL',
         'MOL_NAME' : '%s',
         'NATOMS'       : %d,
@@ -954,7 +963,8 @@ class FSSHParcel(object):
         'COORD_CHARGE' : %s,
         'STEPS'        : 1,
         'PRINTFRQ'     : 1,
-        'TEST'      :   'NO'
+        'TEST'      :   'NO',
+        'FIRST_DIABAT' : %s
         }
         """ % (
             self._my_sed_dict.get('NCONFIG', '!!!'),
@@ -965,7 +975,8 @@ class FSSHParcel(object):
             self._my_sed_dict.get('VECTB', '!!!'),
             self._my_sed_dict.get('VECTC', '!!!'),
             self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'),
-            self._my_sed_dict.get('COORD_CHARGE', '!!!')
+            self._my_sed_dict.get('COORD_CHARGE', '!!!'),
+            self._my_sed_dict.get('FIRST_DIABAT', '!!!')
         )
 
     def _prepare_input_solvent(self):
@@ -983,6 +994,7 @@ class FSSHParcel(object):
         'FILE_INIT' : 'initial',
         'PERIODIC' : 'XYZ',
         'NUMBER_INIT' : %d,
+        'NUMBER_RANDOM' : 1,
         'SYSTEM' : 'SOLVENT',
         'MOL_NAME' :     '%s',
         'NAME_SOLVENT' : '%s',
@@ -998,7 +1010,8 @@ class FSSHParcel(object):
         'STEPS'        : 1,
         'PRINTFRQ'     : 1,
         'TEST'      :   'NO',
-        'RCUT'      :    %s
+        'RCUT'      :    %s,
+        'FIRST_DIABAT' : %s
             }
         """ % (
             self._my_sed_dict.get('NCONFIG', '!!!'),
@@ -1013,7 +1026,8 @@ class FSSHParcel(object):
             self._my_sed_dict.get('VECTC', '!!!'),
             self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'),
             self._my_sed_dict.get('COORD_CHARGE', '!!!'),
-            self._my_sed_dict.get('RCUT')
+            self._my_sed_dict.get('RCUT'),
+            self._my_sed_dict.get('FIRST_DIABAT', '!!!')
         )
 
     def gather_vel_coord(self, ndir):

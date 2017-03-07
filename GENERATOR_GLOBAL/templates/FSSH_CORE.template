@@ -65,6 +65,8 @@ INCLUDE CONSTRAINT.tmp
                              CUT_OFF_CONNECTIVITY                  sedCUTOFF_CONN
                              SCALING_FACTOR   [hartree]            sedSCALING
                              FIRST_DIABAT                          sedFIRST_DIABAT
+                             SELECT_FIRST_ADIABAT                  sedSELECT
+                             FIRST_ADIABAT                         sedFIRST_ADIABAT
                              DECOHERENCE_CRITERION                 sedDECO_CRIT
                              CBAR                                  sedCBAR
                              ATOMIC_OVERLAP_CUTOFF                 sedCUTOFF_OVERLAP
@@ -85,25 +87,25 @@ INCLUDE AOM_COEFF.tmp
                                    MD          1
                                &END EACH
                             &END COEFFICIENTS
-                            &POPULATIONS  LOW
-                               &EACH
-                                   MD          sedPRINT
-                               &END EACH
-                            &END POPULATIONS
+                            #&POPULATIONS  LOW
+                            #   &EACH
+                            #       MD          sedPRINT
+                            #   &END EACH
+                            #&END POPULATIONS
                             &HAMILTONIAN
                                UNIT     hartree
                                &EACH
-                                   MD          sedPRINT
+                                   MD          1
                                &END EACH
                             &END HAMILTONIAN
-                            &DENSITY_MATRIX
-                               &EACH
-                                   MD          sedPRINT
-                               &END EACH
-                            &END DENSITY_MATRIX
+                            #&DENSITY_MATRIX
+                            #   &EACH
+                            #       MD          sedPRINT
+                            #   &END EACH
+                            #&END DENSITY_MATRIX
                             &HOP_NACV
                                &EACH
-                                   MD          sedPRINT
+                                   MD          1
                                &END EACH
                             &END HOP_NACV
                             &NACV
@@ -116,11 +118,11 @@ INCLUDE AOM_COEFF.tmp
                                    MD          sedPRINT
                                &END EACH
                             &END NACE
-                            &STATE
-                               &EACH
-                                   MD          sedPRINT
-                               &END EACH
-                            &END STATE
+                            #&STATE
+                            #   &EACH
+                            #       MD          sedPRINT
+                            #   &END EACH
+                            #&END STATE
                             &EXACT_FORCES
                                &EACH
                                    MD          sedPRINT

@@ -31,6 +31,8 @@ class FSSHRun(object):
             return self._extract_fssh()
         if ( property == 'Delta_E'):
             return self._extract_delta_e()
+        if ( property == 'State'):
+            return self._extract_state()
 
 
     def detailed_print(self, prop, propname):
@@ -52,6 +54,21 @@ class FSSHRun(object):
             line = '%20.10f %20.10f ' % (bin, value)
             file.write(line + '\n')
         file.close()
+
+
+    def _extract_state(self, filename = 'run-sh-1.log' ):
+        file = open(filename, 'r')
+        results = {}
+        for line in file.readlines():
+            if 'time' in line:
+                time = float(line.split()[5])
+                results.update({time : []})
+            elif 'Final' in line:
+                state = int( line.split()[3] )
+                results.get(time).append(state)
+        file.close()
+        return results
+
 
 
     def _extract_fssh(self, filename = 'run-sh-1.log'):
@@ -172,6 +189,81 @@ def histogram(prop):
         props.append(prop.get(time))
     return np.histogram(props, normed=True)
 
+def histo_print(list_of_dict, propname, title, bin = 1, bin_histo = 10, list_state = None, nadiab = 2):
+    if list_state is not None:
+        histo_print_per_state(list_of_dict, propname, bin, bin_histo, list_state, nadiab)
+    else:
+        filename = '%s-histo-%.dat' % (propname, title)
+        file = open(filename, 'w')
+        file.write('# %s(%s) Density_of_probability  Error\n' % (propname, units.get(propname)))
+        n = int( len(list_of_dict) / bin )
+        llod = [list_of_dict[i:i + n ] for i in xrange(0, len(list_of_dict), n)]
+        slist = [[] for x in xrange(bin)]
+        for i in range(bin):
+            slist[i] = []
+            for dict in llod[i]:
+                for value in dict.values():
+                    slist[i] += value
+        max_ =  max([sublist[-1] for sublist in slist])
+        min_ =  min([sublist[-1] for sublist in slist])
+        histos = []
+        bins = []
+        for i in range(bin):
+            bins.append( np.histogram(slist[i], bins = bin_histo, range=(min_, max_), normed = True) [1] )
+            histos.append( np.histogram(slist[i], bins = bin_histo, range=(min_, max_), normed = True) [0] )
+        for binh, value, error in zip( np.mean( bins, axis = 0),
+                                       np.append( np.mean( histos, axis = 0), [0]),
+                                       np.append( np.std( histos, axis=0, ddof=1 ), [0] )):
+            line = '%20.10f %20.10f %20.10f ' % (binh, value, error)
+            file.write(line + '\n')
+        file.close()
+        os.system('mv %s data/' % filename)
+
+
+def histo_print_per_state(list_of_dict, propname, bin = 1, bin_histo = 10, list_state = None, nadiab = 2):
+    n = int( len(list_of_dict) / bin )
+    llod = [list_of_dict[i:i + n ] for i in xrange(0, len(list_of_dict), n)]
+    llos = [list_state[i:i + n ] for i in xrange(0, len(list_state), n)]#
+
+    states_dict = { i :  [[] for x in xrange(bin)] for i in range(1, nadiab+1)}
+
+    for i in range(bin):
+        for dict, states in zip(llod[i], llos[i]):
+            for time in dict:
+                if states.get(time) is not None:
+                    states_dict[  states.get(time)[0] ][i] += dict.get(time)
+
+    for state in range(1, nadiab+1):
+        filename = '%s-histo-state-%d.dat' % (propname, state)
+        file = open(filename, 'w')
+        file.write('# %s(%s) Density_of_probability  Error\n' % (propname, units.get(propname)))
+        slist = states_dict[ state ]
+        maxlist = []
+        minlist = []
+        for sublist in slist:
+            try:
+                maxlist.append(max(sublist))
+                minlist.append(min(sublist))
+            except:
+                pass
+        max_ = max(maxlist)
+        min_ = min(minlist)
+        histos = []
+        bins = []
+        for i in range(bin):
+            if slist[i]:
+                bins.append( np.histogram(slist[i], bins = bin_histo, range=(min_, max_), normed = True) [1] )
+                histos.append( np.histogram(slist[i], bins = bin_histo, range=(min_, max_), normed = True) [0] )
+        for binh, value, error in zip( np.mean( bins, axis = 0),
+                                       np.append( np.mean( histos, axis = 0), [0]),
+                                       np.append( np.std( histos, axis=0, ddof=1 ), [0] )):
+            line = '%20.10f %20.10f %20.10f ' % (binh, value, error)
+            file.write(line + '\n')
+        file.close()
+        os.system('mv %s data/' % filename)
+
+
+
 
 def mean_over_run(list_of_dict, bin =1):
     n = int( len(list_of_dict) / bin )
@@ -212,8 +304,17 @@ def calculate_marcus_na_rate(coupling, reorganization, free_energy, temperature)
     rate = rate / 0.024188
     return rate
 
-def expo(x, b, a = 0.5,  c = 0.5):
+def expo_constraint(x, b):
+    return 0.5*np.exp(- b*x) + 0.5
+
+def expo_free(x, b, a, c):
     return a*np.exp(- b*x) + c
+
+def log_constraint(x, b):
+    return -b*x
+
+def log_free(x, b, a, c):
+    return np.log( a*np.exp(- b*x) + c )
 
 def create_file(property, bucket, text, label = 'None'):
     filename = '%s-%s.dat' % (property, bucket)
@@ -221,7 +322,7 @@ def create_file(property, bucket, text, label = 'None'):
     unit = units.get(property)
     if (label == 'Mean'):
         replace = (unit,) * 4
-        header = '# Run  Mean (%s)   Drift (%s/fs)  Std (%s)  QMean (%s) \n' %  replace
+        header = '# Run  Mean (%s)  Std (%s)  Drift (%s/fs)   QMean (%s) \n' %  replace
     elif (label == 'Spec'):
         header = headers.get(property)
     else:
@@ -231,3 +332,14 @@ def create_file(property, bucket, text, label = 'None'):
     file.write(text)
     file.close()
     os.system('mv %s data/' % filename)
+
+def print_dat(array, label):
+    new = map(list, zip(*array))
+    filename = label + '.dat'
+    file = open(filename, 'w')
+    for line in new:
+        file.write('    '.join(map(str, line )) + '\n')
+    file.close()
+    os.system('mv %s data/' % filename)
+
+
