@@ -189,11 +189,11 @@ def histogram(prop):
         props.append(prop.get(time))
     return np.histogram(props, normed=True)
 
-def histo_print(list_of_dict, propname, title, bin = 1, bin_histo = 10, list_state = None, nadiab = 2):
+def histo_print(list_of_dict, propname, title, bin = 1, bin_histo = 10, list_state = None, nadiab = 2, graph = False):
     if list_state is not None:
         histo_print_per_state(list_of_dict, propname, title, bin, bin_histo, list_state, nadiab)
     else:
-        filename = '%s-histo-%.dat' % (propname, title)
+        filename = '%s-histo-%s.dat' % (propname, title)
         file = open(filename, 'w')
         file.write('# %s(%s) Density_of_probability  Error\n' % (propname, units.get(propname)))
         n = int( len(list_of_dict) / bin )
@@ -211,13 +211,21 @@ def histo_print(list_of_dict, propname, title, bin = 1, bin_histo = 10, list_sta
         for i in range(bin):
             bins.append( np.histogram(slist[i], bins = bin_histo, range=(min_, max_), normed = True) [1] )
             histos.append( np.histogram(slist[i], bins = bin_histo, range=(min_, max_), normed = True) [0] )
+        binhs = []
+        values = []
+        errors = []
         for binh, value, error in zip( np.mean( bins, axis = 0),
                                        np.append( np.mean( histos, axis = 0), [0]),
                                        np.append( np.std( histos, axis=0, ddof=1 ), [0] )):
             line = '%20.10f %20.10f %20.10f ' % (binh, value, error)
+            binhs.append(binh)
+            values.append(value)
+            errors.append(error)
             file.write(line + '\n')
         file.close()
         os.system('mv %s data-%s' %  (filename, title))
+        if graph:
+            return  binhs, values, errors
 
 
 def histo_print_per_state(list_of_dict, propname, title, bin = 1, bin_histo = 10, list_state = None, nadiab = 2):
