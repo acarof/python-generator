@@ -134,7 +134,7 @@ class FSSHRun(object):
         energies = self._read_ener_file()
         prop = {}
         for time in energies:
-            prop[time] = energies.get(time)[column]
+            prop[time] = [energies.get(time)[column]]
             #prop.append( energies.get(time)[column] )
         return prop
 
@@ -153,7 +153,7 @@ class FSSHRun(object):
         hamiltonians = self._read_xyz_file(filename)
         couplings = {}
         for time in hamiltonians:
-            couplings[time] = hamiltonians.get(time)[0][3]
+            couplings[time] = [hamiltonians.get(time)[0][3]]
             #couplings.append(hamiltonians.get(time)[0][3])
         return couplings
 
@@ -179,7 +179,7 @@ def statistics(prop):
         props.append(prop.get(time))
     mean = np.mean(props)
     std = np.std(props)
-    drift = np.polyfit(times, props, 1)[0]
+    drift = np.polyfit(times, props, 1)[0][0]
     qmean = np.sqrt(np.mean(np.square(props)))
     return [mean, std, drift, qmean]
 
@@ -191,7 +191,7 @@ def histogram(prop):
 
 def histo_print(list_of_dict, propname, title, bin = 1, bin_histo = 10, list_state = None, nadiab = 2):
     if list_state is not None:
-        histo_print_per_state(list_of_dict, propname, bin, bin_histo, list_state, nadiab)
+        histo_print_per_state(list_of_dict, propname, title, bin, bin_histo, list_state, nadiab)
     else:
         filename = '%s-histo-%.dat' % (propname, title)
         file = open(filename, 'w')
@@ -217,10 +217,10 @@ def histo_print(list_of_dict, propname, title, bin = 1, bin_histo = 10, list_sta
             line = '%20.10f %20.10f %20.10f ' % (binh, value, error)
             file.write(line + '\n')
         file.close()
-        os.system('mv %s data/' % filename)
+        os.system('mv %s data-%s' %  (filename, title))
 
 
-def histo_print_per_state(list_of_dict, propname, bin = 1, bin_histo = 10, list_state = None, nadiab = 2):
+def histo_print_per_state(list_of_dict, propname, title, bin = 1, bin_histo = 10, list_state = None, nadiab = 2):
     n = int( len(list_of_dict) / bin )
     llod = [list_of_dict[i:i + n ] for i in xrange(0, len(list_of_dict), n)]
     llos = [list_state[i:i + n ] for i in xrange(0, len(list_state), n)]#
@@ -234,7 +234,7 @@ def histo_print_per_state(list_of_dict, propname, bin = 1, bin_histo = 10, list_
                     states_dict[  states.get(time)[0] ][i] += dict.get(time)
 
     for state in range(1, nadiab+1):
-        filename = '%s-histo-state-%d.dat' % (propname, state)
+        filename = '%s-histo-state-%d-%s.dat' % (propname, state, title)
         file = open(filename, 'w')
         file.write('# %s(%s) Density_of_probability  Error\n' % (propname, units.get(propname)))
         slist = states_dict[ state ]
@@ -260,7 +260,7 @@ def histo_print_per_state(list_of_dict, propname, bin = 1, bin_histo = 10, list_
             line = '%20.10f %20.10f %20.10f ' % (binh, value, error)
             file.write(line + '\n')
         file.close()
-        os.system('mv %s data/' % filename)
+        os.system('mv %s data-%s' %  (filename, title))
 
 
 
@@ -316,8 +316,8 @@ def log_constraint(x, b):
 def log_free(x, b, a, c):
     return np.log( a*np.exp(- b*x) + c )
 
-def create_file(property, bucket, text, label = 'None'):
-    filename = '%s-%s.dat' % (property, bucket)
+def create_file(property, title, text, label = 'None'):
+    filename = '%s-%s.dat' % (property, title)
     file = open(filename, 'w')
     unit = units.get(property)
     if (label == 'Mean'):
@@ -331,15 +331,15 @@ def create_file(property, bucket, text, label = 'None'):
         file.write(header)
     file.write(text)
     file.close()
-    os.system('mv %s data/' % filename)
+    os.system('mv %s data-%s' % (filename, title))
 
-def print_dat(array, label):
+def print_dat(array, label, title):
     new = map(list, zip(*array))
     filename = label + '.dat'
     file = open(filename, 'w')
     for line in new:
         file.write('    '.join(map(str, line )) + '\n')
     file.close()
-    os.system('mv %s data/' % filename)
+    os.system('mv %s data-%s' % (filename, title))
 
 

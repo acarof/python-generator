@@ -21,24 +21,53 @@ if test:
 else:
     dirlist = os.listdir('.')
 
-
+bin = 5
+bin_histo = 10
 
 reorganization = 0.300
 free_energy = 0.00
 
-density_dict = {
-     12 : 0.00,
-    218 : 0.01,
-    506 : 0.02,
-    712 : 0.03,
-    979 : 0.04
+dict_natoms = {
+    0.00: 12,
+    0.0001: 19,
+    0.0005: 75,
+    0.001: 136,
+    0.005: 1010,
+    0.01: 218,
+    0.02: 506,
+    0.03: 712,
+    0.04: 979,
+    0.06: 317,
+    0.08: 462,
+    0.10: 651
+}
+density_dict =  {v: k for k, v in dict_natoms.iteritems()}
+#density_dict = {
+#     12 : 0.00,
+#    218 : 0.01,
+#    506 : 0.02,
+#    712 : 0.03,
+#    979 : 0.04
+#}
+dict_sizebox = {
+    0.00: [60.0, 60.0, 60.0],
+    0.0001: [60.0, 60.0, 60.0],
+    0.0005: [60.0, 60.0, 60.0],
+    0.001: [60.0, 60.0, 60.0],
+    0.005: [60.0, 60.0, 60.0],
+    0.01: [30.0, 30.0, 30.0],
+    0.02: [30.0, 30.0, 30.0],
+    0.03: [30.0, 30.0, 30.0],
+    0.04: [30.0, 30.0, 30.0],
+    0.06: [20.0, 20.0, 20.0],
+    0.08: [20.0, 20.0, 20.0],
+    0.10: [20.0, 20.0, 20.0]
 }
 
 densities = density_dict.values()
 my_densities = []
 
-bin = 2
-bin_histo = 10
+
 
 class PropDict(object):
     def __init__(self, property):
@@ -52,23 +81,26 @@ properties_  = {}
 for property in (total_properties) :
     properties_.update( {property :  PropDict(property)})
 
-
-if not os.path.isdir('data'):
-    os.mkdir('data')
-
-if not os.path.isdir('data/per-run'):
-    os.mkdir('data/per-run')
-
 name_bucket = os.getcwd().split('/')[-1]
 short_time = time.strftime("%y%m%d%H%M", time.localtime())
-title = '%s-%s' % (short_time, name_bucket)
+title = '%s-%s' % (name_bucket, short_time, )
+
+dataname = 'data-%s' % title
+if not os.path.isdir(dataname):
+    os.mkdir(dataname)
+
+if not os.path.isdir('per-run'):
+    os.mkdir('per-run')
+
+
+
 
 nadiab = 2
 os.system('cd ..')
 for i, directory in enumerate(dirlist):
     if i % 100 == 0:
         print time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-    if 'run' in directory:
+    if 'run-' in directory:
         print "Do %s" % directory
         os.chdir(directory)
         dir = FSSHRun(directory)
@@ -95,8 +127,9 @@ for i, directory in enumerate(dirlist):
                 properties_.get(property).dict.get(density).append(prop)
                 dir.detailed_print(prop, property)
                 #dir.histo_print(histo, property)
-        os.system('mv *run*.dat ../data/per-run')
+        os.system('mv *run*.dat ../per-run/')
         os.chdir('..')
+
 
 for property in (mean_properties):
     create_file(property, title, properties_.get(property).info, 'Mean')
@@ -116,7 +149,11 @@ final_c = ''
 final_marcus = ''
 my_densities.sort()
 for density in my_densities:
-    print "Start density: %f" % density
+    natoms = dict_natoms.get(density)
+    sizebox = dict_sizebox.get(density)
+    volume = np.prod( sizebox)
+    real_density = natoms/volume
+    print "Start density: %f, real density %f" % (density, real_density)
     for property in histo_properties:
         histo_print(properties_.get(property).dict.get(density), property, title, bin, bin_histo, properties_.get('State').dict.get(density))
 
@@ -129,7 +166,7 @@ for density in my_densities:
     for i in range(bin):
         print "Start the bin %i" % i
         pop = pops[i]
-        print_dat(pop, 'Populations-bin-%d-%s' % (i, title) )
+        print_dat(pop, 'Populations-bin-%d-%s' % (i, title), title )
 
         for adiab in range(1, nadiab):
             #print "LogPop"
@@ -165,19 +202,22 @@ for density in my_densities:
     mean_rates.append(rate)
     error_rates.append(np.std(rates, ddof=1))
     final += '%.3e  %.3e %.3e  %f  %f \n' % \
-             (density, rate, np.std(rates, ddof=1),  np.mean(A), np.mean(B))
+             (real_density, rate, np.std(rates, ddof=1),  np.mean(A), np.mean(B))
 
     rate_c = np.mean(rates_c)
     mean_rates_c.append(rate_c)
     error_rates_c.append(np.std(rates_c, ddof=1))
     final_c += '%.3e  %.3e %.3e  \n' % \
-             (density, rate_c, np.std(rates_c, ddof=1))
+             (real_density, rate_c, np.std(rates_c, ddof=1))
 
     ax = plt.gca()
     ave_pop = np.mean(pops, axis = 0)
     previous, = ax.plot( ave_pop[0], ave_pop[1], label=r'%s (atoms/$\AA^3$)' % density)
-    plt.plot(ave_pop[0], [expo_free(x, rate, np.mean(A), np.mean(B) ) for x in ave_pop[0] ], color=previous.get_color(), linestyle='--')
-    plt.plot(ave_pop[0], [expo_constraint(x, rate_c) for x in ave_pop[0]], color=previous.get_color(), linestyle=':')
+    #print rate, np.mean(A), np.mean(B)
+    #print [expo_free(x, rate* 2 / 1E15, np.mean(A), np.mean(B) ) for x in ave_pop[0] ]
+    #sys.exit()
+    plt.plot(ave_pop[0], [expo_free(x, rate* 2 / 1E15, np.mean(A), np.mean(B) ) for x in ave_pop[0] ], color=previous.get_color(), linestyle='--')
+    plt.plot(ave_pop[0], [expo_constraint(x, rate_c* 2 / 1E15) for x in ave_pop[0]], color=previous.get_color(), linestyle=':')
 
 
     couplings = np.array( properties_.get('Couplings').dict.get(density)).transpose()[3] * 27.211399 * 1000
@@ -205,7 +245,7 @@ for density in my_densities:
     error_marcus_rates.append( np.std(marcus_rates, ddof=1))
 
     final_marcus += '%.3e  %.3e %.3e  %f %f %f\n' % \
-             (density,
+             (real_density,
               marcus_rate, np.std(marcus_rates, ddof=1), mean_coupling, mean_temperature, np.mean(std_temperatures))
 
 
@@ -244,7 +284,7 @@ plt.legend(bbox_to_anchor=(1.6, 1))
 plt.savefig('rate_vs_density_%s.png' % title, bbox_inches='tight')
 
 
-os.system('mv *.png data/')
+os.system('mv *.png %s' % dataname)
 
 #plt.show()
 plt.close()
