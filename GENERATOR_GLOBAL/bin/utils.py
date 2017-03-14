@@ -23,7 +23,7 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'CBAR': 0.50820,
             'CUTOFF_OVERLAP': 1.0E-17,
             'ELECTRONIC_STEPS': 5,
-            'COLLAPSE': 'T',
+           # 'COLLAPSE': 'T',
             'ANALYTICS': 'F',
             'METHOD_RESCALING': 'NACV',
             'METHOD_ADIAB_NACV': 'FAST',
@@ -33,7 +33,10 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'PERIODIC': 'NONE',
             'CENTER_OF_MASS': 'T',
             'FIRST_ADIABAT' : 1,
-            'SELECT_FIRST_ADIABAT' : 'F'
+            'SELECT_FIRST_ADIABAT' : 'F',
+            'DECO': 'NO_DECO_CORR',
+            'EDC_C': 1.0,
+            'EDC_E0': 0.1
             }
 
 

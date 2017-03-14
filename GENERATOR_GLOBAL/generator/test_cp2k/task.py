@@ -20,9 +20,12 @@ def main(inputs, paths):
 
     list_propagation = ['FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN']
     #list_propagation = ['FSSH']
+    list_decoherences = ['NO_DECO_CORR', 'INSTANT_COLLAPSE', 'DAMPING', 'TRESH_ONLY_COLLAPSE']
+
     list_analytics   = ['T', 'F']
     #list_analytics = ['T']
-    list_collapse = ['T', 'F']
+
+#    list_collapse = ['T', 'F']
     #list_analytics = ['T']
     list_com = ['T', 'F']
     #list_collapse = ['T']
@@ -36,7 +39,8 @@ def main(inputs, paths):
     #list_reversal = ['ALWAYS']
 
     mega_list = [ { 'PROPAGATION' : prop,
-                    'COLLAPSE'    : collapse,
+                   # 'COLLAPSE'    : collapse,
+                    'DECOHERENCES': deco,
                     'ANALYTICS'   : analytics,
                     'FIRST_DIABAT': diabat,
                     'METHOD_RESCALING' : rescaling,
@@ -45,7 +49,8 @@ def main(inputs, paths):
                     'CENTER_OF_MASS'    : com
                    }
                   for prop in list_propagation
-                  for collapse in list_collapse
+                 # for collapse in list_collapse
+                  for deco in list_decoherences
                   for analytics in list_analytics
                   for diabat    in list_first_diabat
                   for rescaling in list_rescaling
@@ -84,16 +89,6 @@ def main(inputs, paths):
     except:
         raise SystemExit("WARINING: please provide the path for CP2K executable in local_paths/cp2k.path")
 
-
-    lol = [
-        ['PROPAGATION', 'FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN'],
-        ['COLLAPSE', 'T', 'F'],
-        ['ANALYTICS', 'T', 'F'],
-        ['FIRST_DIABAT', 1, 2],
-        ['METHOD_RESCALING', 'SIMPLE', 'NACV'],
-        ['METHOD_ADIAB_NACV', 'TEST', 'CONTRIBUTION','TOTAL','FAST' ],
-        ['METHOD_REVERSAL', 'NEVER','ALWAYS','TRHULAR','SUBOTNIK']
-    ]
 
     ndir= 0
 

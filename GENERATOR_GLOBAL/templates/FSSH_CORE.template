@@ -57,6 +57,9 @@ INCLUDE CONSTRAINT.tmp
                 &ADIABATIC
                         METHOD_PROPAGATION sedPROPAGATION
                         METHOD_COUPLING    AOM
+                        DECOHERENCE_CORRECTIONS sedDECO
+                        EDC_C sedEDC_C
+                        EDC_E0 sedEDC_E0
                         &AOM
                              NUMBER_DIABATIC_STATES                sedNDIABAT
                              NUMBER_ATOMS_PER_SITE                 sedNATOM_MOL
@@ -72,13 +75,13 @@ INCLUDE CONSTRAINT.tmp
                              ATOMIC_OVERLAP_CUTOFF                 sedCUTOFF_OVERLAP
                              NUCLEAR_TIMESTEP  [fs]                sedTIMESTEP
                              ELECTRONIC_PARTIAL_STEP               sedELECTRONIC_STEPS
-                             COLLAPSE                              sedCOLLAPSE
                              ANALYTICS                             sedANALYTICS
                              CENTER_OF_MASS                        sedCENTER_OF_MASS
                              METHOD_RESCALING                      sedMETHOD_RESCALING
                              METHOD_ADIABATIC_NACV                 sedMETHOD_ADIAB_NACV
                              METHOD_REVERSAL                       sedMETHOD_REVERSAL
                              NACV_INCREMENT   [bohr]               sedNACV_INCREMENT
+
 INCLUDE AOM_COEFF.tmp
                         &END AOM
                         &PRINT
