@@ -803,6 +803,76 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         os.system('cp %s/FSSH* %s' % (self.paths.get('templates'), self.tmp.path))
 
 
+class CP2KOSFIST(CP2KOS):
+    """
+    """
+
+    def __init__(self, dict, paths, **kwargs):
+        super(CP2KOSFIST, self).__init__(dict, paths, **kwargs)
+        self._init = self._my_sed_dict.get('INIT')
+        self._printfrq = self._my_sed_dict.get('PRINTFRQ')
+        self._sizecrystal = self._my_sed_dict.get('SIZE_CRYSTAL')
+        self._coordcharge = self._my_sed_dict.get('COORD_CHARGE')
+        self._mol_name = self._my_sed_dict.get('MOL_NAME')
+        self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
+        self._forcefield_file = self._my_sed_dict.get('FORCEFIELD_FILE')
+        self._filemol = 'COORD.tmp'
+        self._restraint = self._my_sed_dict.get('RESTRAINT')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
+        self._initial_path = paths.get('initial')
+        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
+
+    def print_info(self):
+        print "Hey"
+
+    def _write_topo(self):
+        self._forcefield()
+        self._kind()
+        self._psf()
+        self._colvar()
+        self._constraint()
+
+
+    def _get_new_coord(self):
+        os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
+        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
+
+    def _get_templates(self):
+        os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
+        os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
+        os.system('cp %s/FIST* %s' % (self.paths.get('templates'), self.tmp.path))
+
+
+    def _complete_dict(self):
+        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
+        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
+        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
+        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
+        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
+        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
+        n_max = max(n_a, n_b, n_c)
+        norm_max = max(norm_a, norm_b, norm_c)
+        self._my_sed_dict.update({
+            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
+            'NDIABAT': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * self._my_sed_dict.get('NORBITALS'),
+            'NORM_LATTICE': [norm_a, norm_b, norm_c],
+            'LBOXA': 10 * norm_max * n_max,
+            'LBOXB': 10 * norm_max * n_max,
+            'LBOXC': 10 * norm_max * n_max
+        })
+        if self._my_sed_dict.get('RCUT') is None:
+            self._my_sed_dict.update( { 'RCUT': 5 * norm_max * n_max })
+        self._my_sed_dict.update({
+            'FORCE_EVAL_ORDER': '1..%d' % (self._my_sed_dict.get('NDIABAT') + 1)
+        })
+        self._nmol = self._my_sed_dict.get('NMOL')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
+        self._restraint = self._my_sed_dict.get('RESTRAINT')
+
+
+
+
+
 class CP2KOSFSSH(CP2KOS):
     """
     """

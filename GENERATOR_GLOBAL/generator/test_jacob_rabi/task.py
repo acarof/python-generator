@@ -3,6 +3,7 @@
 import string, re, struct, sys, math, os, time
 import numpy as np
 import imp
+import subprocess
 
 from utils import *
 
@@ -60,6 +61,7 @@ def main(inputs, paths):
     system = inputs.get('SYSTEM')
     if system == 'CRYSTAL':
         from utils import CP2KOSFSSH as Config
+        from utils import CP2KOSFIST as ConfigFIST
     elif system == 'SOLVENT':
         from utils import CP2KOSwSolventFSSH as Config
     else:
@@ -83,6 +85,13 @@ def main(inputs, paths):
         file.write(results)
         file.close()
     ndir = 0
+    final = "\n\n\n\n"
+    final += " RESULTS OF TESTS JACOB_RABI\n\n"
+    final += " Date: %s \n\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+    final += "CP2K Version:\n"
+    version = subprocess.check_output([ paths.get('cp2k'), '--version'])
+    final += version
+    final += "\n\n"
 
 
 
@@ -145,10 +154,25 @@ def main(inputs, paths):
     laura_nacv = [float(line)  for line in file.readlines()]
 
 
-    print scripts.rmse( delta_e, laura_delta_e)
-    print scripts.rmse( couplings, laura_coupling )
-    print scripts.rmse( nace, laura_nace)
-    print scripts. rmse( nacv, laura_nacv)
+    final += "1. CHECK HAMITLONIAN, NACE AND NACV\n"
+
+    final += "Number of config: %s\n " % subtask.get('NUMBER_INIT')
+    final += "Number of steps:  %s\n\n" % subtask.get('STEPS')
+
+
+    final += "RMSE between CP2K couplings and NAMD-FSSH couplings " \
+          " is: %s eV \n" \
+          % (scripts.rmse( couplings, laura_coupling ))
+    final += "RMSE between CP2K Delta_E and NAMD-FSSH Delta_E " \
+          " is: %s eV \n" \
+          % (scripts.rmse( delta_e, laura_delta_e))
+    final += "RMSE between CP2K NACE and NAMD-FSSH NACE " \
+          " is: %s atomic unit \n" \
+          % (scripts.rmse( nace, laura_nace ))
+    final += "RMSE between CP2K NACV and NAMD-FSSH NACV " \
+          " is: %s atomic unit \n" \
+          % (scripts.rmse( nacv, laura_nacv ))
+    final += "\n\n"
 
 
 
@@ -164,6 +188,7 @@ def main(inputs, paths):
         'SCALING': 0.0065190,
         'PROPAGATION': 'FROZEN_HAMILTONIAN'
     }
+    rmse = []
     for init in range(subtask.get('NUMBER_INIT')):
         populations = []
         config = Config(inputs, paths, INIT=init, **subtask)
@@ -183,59 +208,89 @@ def main(inputs, paths):
         os.chdir('run-%d' % (ndir -1))
 
         pop = dir.extract('Populations')
-        for time in sorted(pop):
-            populations.append( pop.get(time)[1] )
+        for times in sorted(pop):
+            populations.append( pop.get(times)[1] )
         populations = populations[4:]
         coupling = dir.extract('Couplings').get( 0 )[0]
         delta_e = dir.extract('Delta_E').get( 0 )[0]
 
         rabi = scripts.rabi_oscillation( coupling, delta_e, 0.1, subtask.get('STEPS')*5  )
 
-        print scripts.rmse(populations, rabi)
+        rmse.append(scripts.rmse(populations, rabi))
         os.chdir('..')
 
-#    # CHECK DIAGONAL FORCES
-#
-#    subtask = {
-#        'NUMBER_INIT': 100,
-#        'STEPS': 3,
-#        'PRINT': 1,
-#        'SCALING': 0.0
-#    }
-#
-#    dict_list = [
-#        {
-#            'TEMPLATE_FILE': 'FSSH_CORE.template',
-#            'FORCEFIELD_FILE': 'FSSH_FF.template',
-#            'PROPAGATION': 'BORN_OPPENHEIMER'
-#        },
-#        {
-#            'TEMPLATE_FILE': 'FIST_TEMPLATE'
-#        }
-#    ]
-#
-#    for dict_ in dict_list:
-#        for init in range(subtask.get('NUMBER_INIT')):
-#            forces = []
-#            subsubtask = subtask.update(dict_)
-#            config = Config(inputs, paths, INIT=init, **subsubtask)
-#            print "GO FOR RUN %d" % ndir
-#            dir = scripts.FSSHRun('run-%d' % ndir)
-#            ndir = config.run(ndir)
-#            if os.path.exists('run-%d' % (ndir - 1)):
-#                pass
-#                # os.system('rm -rf run-%d' % (ndir - 1))
-#            else:
-#                print " ERROR IN CP2K FOR THOSE PARAMETERS:"
-#                print dict
-#                print " TO BE COMPARED WITH:"
-#                print dict_prev
-#                sys.exit()
-#            dict_prev = dict
-#            os.chdir('run-%d' % (ndir - 1))
-#
-#            os.chdir('..')
-#
+    final += "2. CHECK RABI OSCILLATION\n"
+
+    final += "Number of config: %s\n " % subtask.get('NUMBER_INIT')
+    final += "Number of steps:  %s\n\n" % subtask.get('STEPS')
+    rmse_mean = np.mean( rmse)
+    final += "RMSE between CP2K Population and Rabi Oscillation " \
+          " is: %s\n" \
+          % rmse_mean
+    final += "\n\n"
+
+
+    # CHECK DIAGONAL FORCES
+
+    subtask = {
+        'NUMBER_INIT': 100,
+        'STEPS': 2,
+        'PRINT': 1,
+        'SCALING': 0.0
+    }
+
+    dict_list = [
+        {
+            'TEMPLATE_FILE': 'FSSH_CORE.template',
+            'FORCEFIELD_FILE': 'FSSH_FF.template',
+            'PROPAGATION': 'BORN_OPPENHEIMER'
+        },
+        {
+            'TEMPLATE_FILE': 'FIST_TEMPLATE',
+            'PROPAGATION'  : 'FIST'
+        }
+    ]
+
+    forces = [ [], []]
+    ind = 0
+    for dict_ in dict_list:
+        for init in range(subtask.get('NUMBER_INIT')):
+            subsubtask = subtask
+            subsubtask.update(dict_)
+            if subsubtask.get('PROPAGATION') == 'FIST':
+                config = ConfigFIST(inputs, paths, INIT=init, **subsubtask)
+            else:
+                config = Config(inputs, paths, INIT=init, **subsubtask)
+            print "GO FOR RUN %d" % ndir
+            dir = scripts.FSSHRun('run-%d' % ndir)
+            ndir = config.run(ndir)
+            if os.path.exists('run-%d' % (ndir - 1)):
+                pass
+                # os.system('rm -rf run-%d' % (ndir - 1))
+            else:
+                print " ERROR IN CP2K FOR THOSE PARAMETERS:"
+                print dict
+                print " TO BE COMPARED WITH:"
+                print dict_prev
+                sys.exit()
+            dict_prev = dict
+            os.chdir('run-%d' % (ndir - 1))
+            frc = dir.extract('Forces')
+            for times in sorted(frc):
+                for i in range(len(frc.get(times))):
+                    for element in frc.get(times)[i]:
+                        forces[ind].append(element)
+            os.chdir('..')
+        ind += 1
+
+    final += "3. CHECK DIAGONAL FORCES\n"
+
+    final += "Number of config: %s\n " % subtask.get('NUMBER_INIT')
+    final += "Number of steps:  %s\n\n" % subtask.get('STEPS')
+    final += "RMSE between diagonal forces (BO) and FIST forces " \
+          " is: %s atomic unit \n" \
+          % (scripts.rmse( forces[0], forces[1]) )
+    final += "\n\n"
 
 
     # CHECK FORCES ANALYTICS
@@ -274,24 +329,32 @@ def main(inputs, paths):
                    os.chdir('run-%d' % (ndir - 1))
 
                    frc = dir.extract('Forces')
-                   for time in sorted(frc):
-                       for i in range(len(frc.get(time))):
+                   for times in sorted(frc):
+                       for i in range(len(frc.get(times))):
                            if i%3 != 0:
-                               for element in frc.get(time)[i]:
+                               for element in frc.get(times)[i]:
                                     forces.append( element)
 
                    frc = dir.extract('Forces', filename = 'run-exfrc-1.xyz')
-                   for time in sorted(frc):
-                       for i in range(len(frc.get(time))):
+                   for times in sorted(frc):
+                       for i in range(len(frc.get(times))):
                            if i%3 != 0:
-                               for element in frc.get(time)[i]:
+                               for element in frc.get(times)[i]:
                                     forces.append( element)
 
 
                    os.chdir('..')
 
-    print scripts.rmse(forces, exforces)
+    final += "2. CHECK FORCES FORMULA\n"
 
+    final += "Number of config: %s\n " % subtask.get('NUMBER_INIT')
+    final += "Number of steps:  %s\n\n" % subtask.get('STEPS')
+    final += "RMSE between FSSH forces (BO) and exact forces " \
+          " is: %s atomic unit \n" \
+          % scripts.rmse(forces, exforces)
+    final += "\n\n"
+
+    print final
 
 
 
