@@ -164,6 +164,9 @@ INCLUDE AOM_COEFF.tmp
                 &COORD
 INCLUDE COORD.tmp
                 &END COORD
+                &VELOCITY
+INCLUDE VELOC.tmp
+                &END VELOCITY
 INCLUDE KIND.tmp
                 &TOPOLOGY
                         NUMBER_OF_ATOMS                   sedNATOMS
