@@ -31,7 +31,7 @@ def main(inputs, paths):
     #list_collapse = ['T']
     list_first_diabat = [1, 2]
     #list_first_diabat = [1]
-    list_rescaling    = ['SIMPLE', 'NACV']
+    list_rescaling    = ['SIMPLE', 'SIMPLE_QSYS','NACV']
     #list_rescaling = ['NACV']
     list_nacv         = ['TEST', 'CONTRIBUTION','TOTAL','FAST']
     #list_nacv         = ['TOTAL']
