@@ -109,7 +109,7 @@ def main(inputs, paths):
     }
     final_step = subtask.get('STEPS')*subtask.get('TIMESTEP')
     couplings = []
-    nace = []
+    #nace = []
     delta_e = []
     nacv = []
     for init in range(subtask.get('NUMBER_INIT')):
@@ -129,7 +129,7 @@ def main(inputs, paths):
         dict_prev = dict
         os.chdir('run-%d' % (ndir -1))
         couplings.append( dir.extract('Couplings').get( final_step )[0] * 27.211399 ) # Coupling in ev (from Ha)
-        nace.append( dir.extract('NACE').get( final_step)[0] )
+        #nace.append( dir.extract('NACE').get( final_step)[0] )
         for atom in range(1,1+inputs.get('NATOMS')):
             for dim in range(1,4):
                 nacv.append( dir.extract('NACV').get(final_step).get(atom).get(dim)[0][1] )
@@ -148,8 +148,8 @@ def main(inputs, paths):
     laura_delta_e = [ ( - float(line1.split()[1]) + float(line2.split()[1]) )*0.04336412
                       for line1, line2 in zip(file1.readlines(), file2.readlines())
                       ]
-    file = open( paths.get('task') + 'DATA_COMPARE/' + 'nace-laura-160708.dat')
-    laura_nace = [float(line)  for line in file.readlines()]
+    #file = open( paths.get('task') + 'DATA_COMPARE/' + 'nace-laura-160708.dat')
+    #laura_nace = [float(line)  for line in file.readlines()]
     file = open( paths.get('task') + 'DATA_COMPARE/' + 'nacv-laura-160708.dat')
     laura_nacv = [float(line)  for line in file.readlines()]
 
@@ -166,9 +166,9 @@ def main(inputs, paths):
     final += "RMSE between CP2K Delta_E and NAMD-FSSH Delta_E " \
           " is: %s eV \n" \
           % (scripts.rmse( delta_e, laura_delta_e))
-    final += "RMSE between CP2K NACE and NAMD-FSSH NACE " \
-          " is: %s atomic unit \n" \
-          % (scripts.rmse( nace, laura_nace ))
+    #final += "RMSE between CP2K NACE and NAMD-FSSH NACE " \
+    #      " is: %s atomic unit \n" \
+    #      % (scripts.rmse( nace, laura_nace ))
     final += "RMSE between CP2K NACV and NAMD-FSSH NACV " \
           " is: %s atomic unit \n" \
           % (scripts.rmse( nacv, laura_nacv ))

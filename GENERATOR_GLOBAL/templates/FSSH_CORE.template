@@ -68,7 +68,7 @@ INCLUDE CONSTRAINT.tmp
                              CUT_OFF_CONNECTIVITY                  sedCUTOFF_CONN
                              SCALING_FACTOR   [hartree]            sedSCALING
                              FIRST_DIABAT                          sedFIRST_DIABAT
-                             SELECT_FIRST_ADIABAT                  sedSELECT
+                             SELECT_FIRST_ADIABAT                  sedSELECT_FIRST_ADIABAT
                              FIRST_ADIABAT                         sedFIRST_ADIABAT
                              DECOHERENCE_CRITERION                 sedDECO_CRIT
                              CBAR                                  sedCBAR

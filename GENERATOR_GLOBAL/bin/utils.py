@@ -1128,7 +1128,10 @@ class FSSHParcel(object):
                         #        + iatom
                         l = string.strip(lines[index])
                         info = re.split('\s+', l)
-                        atom_label = self._choose_atom_label(info[0], imol=imol, icharge=pos_mol)
+                        if iprop == 'pos':
+                            atom_label = self._choose_atom_label(info[0], imol=imol, icharge=pos_mol)
+                        else:
+                            atom_label = '   '
                         atom_xyz = [float(info[1]), float(info[2]), float(info[3])]
                         result = '%s  %s\n' \
                                  % (atom_label, str(atom_xyz).strip('[]'))
