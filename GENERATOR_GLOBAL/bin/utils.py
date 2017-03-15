@@ -369,6 +369,22 @@ class CP2KRun(object):
     def _use_restart(self, ndir):
         pass
 
+    def _clean_velocities(self, fileinname, fileoutname):
+        filein = open(fileinname)
+        fileout = open(fileoutname, 'w')
+        for line in filein.readlines():
+            fileout.write( '\t'.join(map(str, line.split()[1:])) + '\n')
+        filein.close()
+        fileout.close()
+
+    def _create_velocities(self, filevelname, filecoordname):
+        filevel = open(filevelname, 'w')
+        filecoord = open(filecoordname)
+        for line in filecoord.readlines():
+            filevel.write(' 0.000   0.000  0.000\n')
+        filecoord.close()
+        filevel.close()
+
     def run(self, ndir):
         self._complete_dict()
         self._write_input()
@@ -500,11 +516,15 @@ class CP2KOS(CP2KRun):
 
     def _use_restart(self, ndir):
         os.system('tail -%d run-%d/run-pos-1.xyz > COORD.tmp' % (self._my_sed_dict.get('NATOMS'), ndir) )
-        os.system('mv COORD.tmp %s' % self.tmp.path)
+        os.system('tail -%d run-%d/run-vel-1.xyz > preVELOC.tmp' % (self._my_sed_dict.get('NATOMS'), ndir) )
+        self._clean_velocities('preVELOC.tmp','VELOC.tmp')
+        os.system('mv *.tmp %s' % self.tmp.path)
 
     def _get_new_coord(self):
         os.system('cp %s/%s/%s %s/COORD.tmp' % (self.paths.get('output'), self._structure,
                                                 self._filecrystal, self.tmp.path))
+        self._create_velocities('%s/VELOC.tmp'% self.tmp.path,'%s/COORD.tmp' % self.tmp.path)
+
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
