@@ -34,6 +34,9 @@ INCLUDE FORCEFIELD.tmp
      		&COORD
 INCLUDE COORD.tmp
      		&END COORD
+                &VELOCITY
+INCLUDE VELOC.tmp
+                &END VELOCITY
                 &KIND CP
                         ELEMENT C
                 &END KIND

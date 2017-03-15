@@ -1,0 +1,21 @@
+#!/bin/bash
+# AC
+PROGRAM=job_generate_hab_sites
+VERSION=16-03-18
+echo Bash version $BASH_VERSION...
+
+NUMBER_CONFIG=2000000
+
+for (( CONFIG=20000; CONFIG<=$NUMBER_CONFIG; CONFIG=CONFIG+20000 ))
+do
+	head -1 Hab-$CONFIG >> Hab-laura-160419.dat
+	head -1 sites-$CONFIG >> E1-laura-160419.dat
+	head -2 sites-$CONFIG | tail -1  >> E2-laura-160419.dat
+        head -108 nacv-$CONFIG >> pre-nacv-laura-160419.dat 
+        #awk '{if (NR%3 == 2) print $1}' pre-nacv-laura-160419.dat >> nacv-laura-160419.dat
+        awk '{if (NR%3 == 2) print $2}' pre-nacv-laura-160419.dat >> nacv-laura-160419.dat
+        awk '{if (NR%3 == 0) print $1}' pre-nacv-laura-160419.dat >> nacv-laura-160419.dat
+        #awk '{if (NR%3 == 0) print $2}' pre-nacv-laura-160419.dat >> nacv-laura-160419.dat
+        #head -144 pre-nacv-laura-160419.dat >> nacv-laura-160419.dat
+        rm pre-nacv-laura-160419.dat
+done
