@@ -818,7 +818,9 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
 
     def _get_new_coord(self):
         os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
-        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
+        self._clean_velocities('%s/vel-%d.init' % (self._initial_path, self._init ),'%s/VELOC.tmp' % self.tmp.path)
+
+
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
@@ -858,7 +860,7 @@ class CP2KOSFIST(CP2KOS):
 
     def _get_new_coord(self):
         os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
-        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
+        self._clean_velocities('%s/vel-%d.init' % (self._initial_path, self._init ),'%s/VELOC.tmp' % self.tmp.path)
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
@@ -930,7 +932,7 @@ class CP2KOSFSSH(CP2KOS):
 
     def _get_new_coord(self):
         os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
-        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
+        self._clean_velocities('%s/vel-%d.init' % (self._initial_path, self._init ),'%s/VELOC.tmp' % self.tmp.path)
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
