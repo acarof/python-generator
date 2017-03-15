@@ -386,10 +386,10 @@ class CP2KRun(object):
         filevel.close()
 
     def run(self, ndir):
+        self.ndir = ndir
         self._complete_dict()
         self._write_input()
         self.print_info()
-        self.ndir = ndir
         dir = Dir('run-%d' % ndir)
         dir.rm_mkdir()
         os.system('mv %srun.inp %s' % (self.tmp.path, dir.path))
@@ -409,7 +409,7 @@ class CP2KRun(object):
         return ndir + 1
 
     def _write_input(self):
-        self.tmp = Dir('tmp')
+        self.tmp = Dir('tmp-%d' % self.ndir)
         self.tmp.rm_mkdir()
         self._get_templates()
         self._get_coord()
@@ -1150,10 +1150,10 @@ class FSSHParcel(object):
                         #        + iatom
                         l = string.strip(lines[index])
                         info = re.split('\s+', l)
-                        if iprop == 'pos':
-                            atom_label = self._choose_atom_label(info[0], imol=imol, icharge=pos_mol)
-                        else:
-                            atom_label = '   '
+  #                      if iprop == 'pos':
+                        atom_label = self._choose_atom_label(info[0], imol=imol, icharge=pos_mol)
+  #                      else:
+   #                         atom_label = '   '
                         atom_xyz = [float(info[1]), float(info[2]), float(info[3])]
                         result = '%s  %s\n' \
                                  % (atom_label, str(atom_xyz).strip('[]'))
@@ -1161,7 +1161,16 @@ class FSSHParcel(object):
                 for atom in range(nsolvent):
                     # index = (self._nmol * self._natom_mol) + atom + 2  #2 from the the two initial lines at each timestep
                     index += 1
+    #                if iprop == 'pos':
                     fileout.write(lines[index])
+     #               else:
+      #                  info = lines[index].split()
+       #                 atom_xyz = [float(info[1]), float(info[2]), float(info[3])]
+        #                result = ' %s\n' \
+         #                        % (str(atom_xyz).strip('[]'))
+          #              fileout.write(result)
+
+
                 fileout.close()
                 os.system(' mv %s %s' % (filename, self.initial.path))
         os.chdir(self._bucket_path)
