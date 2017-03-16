@@ -369,11 +369,27 @@ class CP2KRun(object):
     def _use_restart(self, ndir):
         pass
 
+    def _clean_velocities(self, fileinname, fileoutname):
+        filein = open(fileinname)
+        fileout = open(fileoutname, 'w')
+        for line in filein.readlines():
+            fileout.write( '\t'.join(map(str, line.split()[1:])) + '\n')
+        filein.close()
+        fileout.close()
+
+    def _create_velocities(self, filevelname, filecoordname):
+        filevel = open(filevelname, 'w')
+        filecoord = open(filecoordname)
+        for line in filecoord.readlines():
+            filevel.write(' 0.000   0.000  0.000\n')
+        filecoord.close()
+        filevel.close()
+
     def run(self, ndir):
+        self.ndir = ndir
         self._complete_dict()
         self._write_input()
         self.print_info()
-        self.ndir = ndir
         dir = Dir('run-%d' % ndir)
         dir.rm_mkdir()
         os.system('mv %srun.inp %s' % (self.tmp.path, dir.path))
@@ -393,7 +409,7 @@ class CP2KRun(object):
         return ndir + 1
 
     def _write_input(self):
-        self.tmp = Dir('tmp')
+        self.tmp = Dir('tmp-%d' % self.ndir)
         self.tmp.rm_mkdir()
         self._get_templates()
         self._get_coord()
@@ -500,11 +516,15 @@ class CP2KOS(CP2KRun):
 
     def _use_restart(self, ndir):
         os.system('tail -%d run-%d/run-pos-1.xyz > COORD.tmp' % (self._my_sed_dict.get('NATOMS'), ndir) )
-        os.system('mv COORD.tmp %s' % self.tmp.path)
+        os.system('tail -%d run-%d/run-vel-1.xyz > preVELOC.tmp' % (self._my_sed_dict.get('NATOMS'), ndir) )
+        self._clean_velocities('preVELOC.tmp','VELOC.tmp')
+        os.system('mv *.tmp %s' % self.tmp.path)
 
     def _get_new_coord(self):
         os.system('cp %s/%s/%s %s/COORD.tmp' % (self.paths.get('output'), self._structure,
                                                 self._filecrystal, self.tmp.path))
+        self._create_velocities('%s/VELOC.tmp'% self.tmp.path,'%s/COORD.tmp' % self.tmp.path)
+
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
@@ -798,7 +818,9 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
 
     def _get_new_coord(self):
         os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
-        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
+        self._clean_velocities('%s/vel-%d.init' % (self._initial_path, self._init ),'%s/VELOC.tmp' % self.tmp.path)
+
+
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
@@ -838,7 +860,7 @@ class CP2KOSFIST(CP2KOS):
 
     def _get_new_coord(self):
         os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
-        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
+        self._clean_velocities('%s/vel-%d.init' % (self._initial_path, self._init ),'%s/VELOC.tmp' % self.tmp.path)
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
@@ -910,7 +932,7 @@ class CP2KOSFSSH(CP2KOS):
 
     def _get_new_coord(self):
         os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
-        os.system('cp %s/vel-%d.init %s/VELOC.tmp' % (self._initial_path, self._init, self.tmp.path))
+        self._clean_velocities('%s/vel-%d.init' % (self._initial_path, self._init ),'%s/VELOC.tmp' % self.tmp.path)
 
     def _get_templates(self):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
@@ -1128,10 +1150,10 @@ class FSSHParcel(object):
                         #        + iatom
                         l = string.strip(lines[index])
                         info = re.split('\s+', l)
-                        if iprop == 'pos':
-                            atom_label = self._choose_atom_label(info[0], imol=imol, icharge=pos_mol)
-                        else:
-                            atom_label = '   '
+  #                      if iprop == 'pos':
+                        atom_label = self._choose_atom_label(info[0], imol=imol, icharge=pos_mol)
+  #                      else:
+   #                         atom_label = '   '
                         atom_xyz = [float(info[1]), float(info[2]), float(info[3])]
                         result = '%s  %s\n' \
                                  % (atom_label, str(atom_xyz).strip('[]'))
@@ -1139,7 +1161,16 @@ class FSSHParcel(object):
                 for atom in range(nsolvent):
                     # index = (self._nmol * self._natom_mol) + atom + 2  #2 from the the two initial lines at each timestep
                     index += 1
+    #                if iprop == 'pos':
                     fileout.write(lines[index])
+     #               else:
+      #                  info = lines[index].split()
+       #                 atom_xyz = [float(info[1]), float(info[2]), float(info[3])]
+        #                result = ' %s\n' \
+         #                        % (str(atom_xyz).strip('[]'))
+          #              fileout.write(result)
+
+
                 fileout.close()
                 os.system(' mv %s %s' % (filename, self.initial.path))
         os.chdir(self._bucket_path)

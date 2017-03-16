@@ -52,11 +52,11 @@ def main(inputs, paths):
 
     ndir = 0
     print "2. RUN CP2K"
-    config_nvt = Config(inputs, paths, ENSEMBLE = 'NVT', STEPS = inputs.get('NEQ'))
+    config_nvt = Config(inputs, paths, ENSEMBLE = 'NVT', STEPS = inputs.get('NEQ'), TEMPLATE_FILE='FIST_without_vel.template')
     ndir = config_nvt.run(ndir)
 
  
-    config_nve = Config(inputs, paths, ENSEMBLE = 'NVE', STEPS = inputs.get('NPROD'), RESTART = config_nvt.ndir)
+    config_nve = Config(inputs, paths, ENSEMBLE = 'NVE', STEPS = inputs.get('NPROD'), RESTART = config_nvt.ndir, TEMPLATE_FILE='FIST_TEMPLATE')
     ndir = config_nve.run(ndir)
  
  
