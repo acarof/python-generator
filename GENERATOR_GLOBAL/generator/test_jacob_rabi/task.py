@@ -4,6 +4,9 @@ import string, re, struct, sys, math, os, time
 import numpy as np
 import imp
 import subprocess
+from scipy.optimize import curve_fit
+
+
 
 from utils import *
 
@@ -175,6 +178,84 @@ def main(inputs, paths):
     final += "\n\n"
 
 
+    # CHECK DECO DECAY: FROZEN HAMILTONIN SCALING=0
+    
+    subtask = {
+        'TEMPLATE_FILE': 'FSSH_CORE.template',
+        'FORCEFIELD_FILE': 'FSSH_FF.template',
+        'NUMBER_INIT': 2,
+        'STEPS': 50,
+        'PRINT': 1,
+        'SCALING': 0.0,
+        'PROPAGATION': 'FROZEN_HAMILTONIAN',
+        'DECO': 'DAMPING',
+        'EDC_C': 1.0,
+        'EDC_E0': 0.0
+    }
+     
+
+    rmse = []
+    tau_calculated = []
+    tau_fitted = []
+    for init in range(subtask.get('NUMBER_INIT')):
+        populations = []
+        config = Config(inputs, paths, INIT=init, **subtask)     
+        print "GO FOR RUN %d" % ndir
+        dir = scripts.FSSHRun( 'run-%d' % ndir)
+        ndir = config.run(ndir)
+        if os.path.exists('run-%d' % (ndir - 1)):
+            pass
+            #os.system('rm -rf run-%d' % (ndir - 1))
+        else:
+            print " ERROR IN CP2K FOR THOSE PARAMETERS:"
+            print dict
+            print " TO BE COMPARED WITH:"
+            print dict_prev
+            sys.exit()
+        dict_prev = dict
+        os.chdir('run-%d' % (ndir -1))
+
+        step = []
+        pop = dir.extract('Populations')
+        for times in sorted(pop):
+            populations.append( pop.get(times)[1] )
+            step.append(times)
+        populations = np.array(populations[4:])
+        if populations[0] < 0.2: 
+            populations = 1 - populations
+        else:
+            pass
+
+        step = np.array(step[4:])
+        def func(x1, a, b):
+            return a * np.exp(-2*b*x1)
+        popt, pcov = curve_fit(func, step, populations)
+        tau_fit = 1/popt[1]
+        
+         
+        delta_e = dir.extract('Delta_E').get( 0 )[0]
+        au_to_fs = 41.34137
+        tau_cal = 1/(delta_e*au_to_fs)
+        diff = abs(tau_cal- tau_fit)
+        tau_calculated.append(tau_cal)
+        x = np.array(tau_calculated)
+        tau_fitted.append(tau_fit)
+        y = np.array(tau_fitted)
+
+
+        rmse.append(scripts.rmse(x, y))
+        os.chdir('..')
+    final += "2. CHECK DECO DECAY: FROZEN HAMILTONIN SCALING=0 \n"
+    
+    final += "Number of config: %s\n " % subtask.get('NUMBER_INIT')
+    final += "Number of steps:  %s\n\n" % subtask.get('STEPS')
+   # final += "difference in decay time is: %s\n" % diff
+    rmse_mean = np.mean(rmse)
+    final += "RMSE between calculated decoherence time and fitted decoherence time" \
+          " is: %s\n" \
+          % rmse_mean
+    final += "\n\n"
+
 
 
     # CHECK RABI OSCILLATION
@@ -191,7 +272,7 @@ def main(inputs, paths):
     rmse = []
     for init in range(subtask.get('NUMBER_INIT')):
         populations = []
-        config = Config(inputs, paths, INIT=init, **subtask)
+        config = Config(inputs, paths, INIT=init, **subtask)     
         print "GO FOR RUN %d" % ndir
         dir = scripts.FSSHRun( 'run-%d' % ndir)
         ndir = config.run(ndir)
@@ -219,7 +300,7 @@ def main(inputs, paths):
         rmse.append(scripts.rmse(populations, rabi))
         os.chdir('..')
 
-    final += "2. CHECK RABI OSCILLATION\n"
+    final += "3. CHECK RABI OSCILLATION\n"
 
     final += "Number of config: %s\n " % subtask.get('NUMBER_INIT')
     final += "Number of steps:  %s\n\n" % subtask.get('STEPS')
@@ -283,7 +364,7 @@ def main(inputs, paths):
             os.chdir('..')
         ind += 1
 
-    final += "3. CHECK DIAGONAL FORCES\n"
+    final += "4. CHECK DIAGONAL FORCES\n"
 
     final += "Number of config: %s\n " % subtask.get('NUMBER_INIT')
     final += "Number of steps:  %s\n\n" % subtask.get('STEPS')
@@ -345,7 +426,7 @@ def main(inputs, paths):
 
                    os.chdir('..')
 
-    final += "2. CHECK FORCES FORMULA\n"
+    final += "5. CHECK FORCES FORMULA\n"
 
     final += "Number of config: %s\n " % subtask.get('NUMBER_INIT')
     final += "Number of steps:  %s\n\n" % subtask.get('STEPS')
