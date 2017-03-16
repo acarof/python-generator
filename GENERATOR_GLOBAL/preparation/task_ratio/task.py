@@ -73,8 +73,8 @@ def main(inputs, paths):
                   for scaling in list_scaling
                   ]
 
-    systems = ['dimer_solvent_0.001']
-    #systems = ['for_test']
+    #systems = ['dimer_solvent_0.001']
+    systems = ['for_test']
 
     # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
     bucket = Bucket(inputs)
