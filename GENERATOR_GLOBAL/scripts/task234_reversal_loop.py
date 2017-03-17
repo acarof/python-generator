@@ -16,12 +16,17 @@ mean_properties = ['Temperature']
 #specific_properties = ['FSSH']
 specific_properties = []
 total_properties = detail_properties + mean_properties + specific_properties + histo_properties
-test = False
+test = True
 
 if test:
     dirlist = ['run-%d' % i for i in range(40)]
+    title = 'TEST'
 else:
     dirlist = os.listdir('.')
+    name_bucket = os.getcwd().split('/')[-1]
+    short_time = time.strftime("%y%m%d%H%M", time.localtime())
+    title = '%s-%s' % (name_bucket, short_time,)
+
 
 bin = 2
 bin_histo = 50
@@ -30,9 +35,6 @@ bin_histo = 50
 
 properties_dict  = {}
 
-name_bucket = os.getcwd().split('/')[-1]
-short_time = time.strftime("%y%m%d%H%M", time.localtime())
-title = '%s-%s' % (name_bucket, short_time, )
 
 dataname = 'data-%s-%s' % (scripts, title)
 if not os.path.isdir(dataname):
@@ -104,20 +106,44 @@ def average_dict(dict1, number):
         result[key] = np.array( dict1[key] ) / number
     return result
 
-
+nfig =-1
+ratio_properties = ['Internal consistency ratio']
 for reversal in properties_dict:
     for scaling in properties_dict[reversal]:
+        properties= properties_dict[reversal][scaling]
+        nfig += 1
+        plt.figure(nfig)
         for property in detail_properties:
-            properties_dict[reversal][scaling][property] = average_dict( properties_dict[reversal][scaling][property], properties_dict[reversal][scaling]['Number runs'])
+            properties[property] = average_dict( properties[property], properties['Number runs'])
+            plt.plot( sorted(properties[property]), [ properties[property][time][0] for time in  sorted(properties[property])], label = property)
+        plt.xlabel('Time (fs)')
+        plt.ylim([0,1])
+        plt.ylabel('Populations')
+        plt.title('Populations vs time for reversal: %s and scaling value C = %s Ha' % (reversal, scaling) )
+        plt.legend()
+        #plt.show()
+        plt.savefig('%s/population_vs_time_%s_%s_%s.png' % (dataname, reversal, scaling, title))
+        #sys.exit()
             #for time in sorted(properties_dict[reversal][scaling][property]):
                 #print time, properties_dict[reversal][scaling][property][time]
-        property = 'Internal consistency ratio'
-        properties_dict[reversal][scaling][property] = {}
-        for time in sorted( properties_dict[reversal][scaling]['Surface populations'] ):
-            if properties_dict[reversal][scaling]['Adiabatic populations'].get(time) is not None:
-                properties_dict[reversal][scaling][property][time] = properties_dict[reversal][scaling]['Surface populations'][time] / properties_dict[reversal][scaling]['Adiabatic populations'][time]
-                print time, properties_dict[reversal][scaling][property][time], properties_dict[reversal][scaling]['Surface populations'][time], properties_dict[reversal][scaling]['Adiabatic populations'][time]
-        sys.exit()
+
+        nfig += 1
+        plt.figure(nfig)
+        for property in ratio_properties:
+            properties[property] = {}
+            for time in sorted( properties_dict[reversal][scaling]['Surface populations'] ):
+                if properties_dict[reversal][scaling]['Adiabatic populations'].get(time) is not None:
+                    properties_dict[reversal][scaling][property][time] = properties_dict[reversal][scaling]['Surface populations'][time] / properties_dict[reversal][scaling]['Adiabatic populations'][time]
+                 #print time, properties_dict[reversal][scaling][property][time], properties_dict[reversal][scaling]['Surface populations'][time], properties_dict[reversal][scaling]['Adiabatic populations'][time]
+            plt.plot( sorted(properties[property]), [ properties[property][time][0] for time in  sorted(properties[property])], label = property)
+        plt.xlabel('Time (fs)')
+        #plt.ylim([0, 1])
+        plt.ylabel('Populations')
+        plt.title('Ratio vs time for reversal: %s and scaling value C = %s Ha' % (reversal, scaling))
+        plt.legend()
+        plt.savefig('%s/ratio_vs_time_%s_%s_%s.png' % (dataname, reversal, scaling, title))
+        #plt.show()
+        #sys.exit()
 
 
 sys.exit()
