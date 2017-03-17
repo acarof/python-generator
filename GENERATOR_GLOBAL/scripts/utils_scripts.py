@@ -463,7 +463,7 @@ def create_file(property, title, text, label='None'):
         file.write(header)
     file.write(text)
     file.close()
-    os.system('mv %s data-%s' % (filename, title))
+    return  filename
 
 
 def print_dat(array, label, title):

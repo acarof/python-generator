@@ -39,7 +39,7 @@ reorga= 0.300
 free_energy = 0.00
 
 properties_dict  = {}
-
+run_dict = {}
 
 dataname = 'data-%s-%s' % (scripts, title)
 if not os.path.isdir(dataname):
@@ -62,6 +62,48 @@ def sum_two_dict( dict1, dict2):
 
 nadiab = 2
 os.system('cd ..')
+for i, directory in enumerate(dirlist):
+    if i % 100 == 0:
+           print time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+    if 'run-' in directory and 'per' not in directory:
+        os.chdir(directory)
+        dir = FSSHRun(directory)
+        ( scaling, reversal ) = dir.get_input_key(['SCALING_FACTOR','METHOD_REVERSAL'])
+        if run_dict.get( ( scaling, reversal ) ) is None:
+            run_dict[( scaling, reversal )] = []
+        run_dict[( scaling, reversal )].append(directory)
+        os.chdir('..')
+
+def analyse_properties(list_dir):
+    for directory in list_dir:
+        #print "Do %s" % directory
+        os.chdir(directory)
+        dir = FSSHRun(directory)
+        properties_dict = {}
+        for property in (total_properties):
+            prop = dir.extract(property)
+            if property in detail_properties:
+                properties_dict[property] = sum_two_dict(properties_dict.get(property), prop)
+            elif property in mean_properties:
+                list = statistics( prop )
+                if properties_dict.get(property) is None:
+                    properties_dict[property] = []
+                    properties_dict[property + 'info'] = ''
+                properties_dict[property].append(list)
+                line = '%s      %s\n' % ( directory, '    '.join(map(str, list )))
+                properties_dict[property + 'info'] += line
+        os.chdir('..')
+        return properties_dict
+
+
+for tuple in run_dict:
+    print tuple, analyse_properties( run_dict[tuple] )
+
+
+sys.exit()
+
+
+
 
 def analyse_properties(directory):
     global properties_dict
