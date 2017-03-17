@@ -39,6 +39,10 @@ class FSSHRun(object):
             return self._extract_coupling(filename='run-nace-1.xyz')
         elif (property == 'NACV'):
             return self._extract_nacv()
+        elif property == 'Surface populations':
+            return self._extract_surface_population()
+        elif property == 'Adiabatic populations':
+            return self._extract_adiabatic_population()
         else:
             print "Extraction of %s not implemented" % property
             sys.exit()
@@ -76,6 +80,36 @@ class FSSHRun(object):
         file.close()
         return results
 
+    def _state_to_surface_pop(self, state, nadiab):
+        list = [0.00] * nadiab
+        list[state-1] = 1.00
+        return list
+
+    def _extract_adiabatic_population(self):
+        hamiltonian = self._read_xyz_file('run-hamilt-1.xyz')
+        diabat_coeff = self._read_xyz_file('run-coeff-1.xyz')
+        result = {}
+        for time in hamiltonian:
+            if diabat_coeff.get(time) is not None:
+                hamilt = np.transpose( hamiltonian[time])[2:]
+                eigenvalues, eigenvectors = np.linalg.eig( hamilt )
+                idx = eigenvalues.argsort()
+                eigenvalues = eigenvalues[idx]
+                eigenvectors = eigenvectors[:, idx]
+                diabat = [ np.complex(coeff[2], coeff[3]) for coeff in diabat_coeff[time] ]
+                adiabat = eigenvectors.transpose().dot(diabat)
+                populations = [ np.absolute(x)**2 for x in adiabat]
+                result[time] = populations
+        return result
+
+    def _extract_surface_population(self):
+        state = self._extract_state()
+        results = {}
+        nadiab = int( self.get_input_key(['NUMBER_DIABATIC_STATES'])[0] )
+        for time in state:
+            results[time] = self._state_to_surface_pop(state[time][0], nadiab)
+        return results
+
     def _extract_fssh(self, filename='run-sh-1.log'):
         results = []
         for property in ['ATTEMPT', 'PASSED', 'SUCCESS', 'DECOHERENCE']:
@@ -84,6 +118,15 @@ class FSSHRun(object):
                 count = contents.count(property)
             results.append(count)
         return results
+
+    def get_input_key(self, key_list, filename='run.inp'):
+        file = open(filename, 'r')
+        values = []
+        for line in file.readlines():
+            for key in key_list:
+                if re.search(key, line):
+                    values.append( (line.split()[-1]) )
+        return values
 
     def _get_atoms_number(self, filename='run.inp'):
         file = open(filename, 'r')
