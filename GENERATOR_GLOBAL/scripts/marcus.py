@@ -36,15 +36,6 @@ def boltzmann_weight( delta_e, landau_energy,  reorga, free_energy, coupling, te
     return np.exp( - beta * landau_energy(delta_e, reorga, free_energy, coupling))
 
 
-
-def average_dict(dict1, number):
-    result = {}
-    for key in dict1:
-        result[key] = np.array( dict1[key] ) / number
-    return result
-
-
-
 def calculate_integral_boltzmann_weight(landau_energy, reorga, free_energy, coupling, temperature):
     return quad( boltzmann_weight, - np.inf, np.inf, args = (landau_energy, reorga, free_energy, coupling, temperature)  )[0]
 

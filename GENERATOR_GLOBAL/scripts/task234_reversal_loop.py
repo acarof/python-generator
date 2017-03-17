@@ -60,6 +60,14 @@ def sum_two_dict( dict1, dict2):
     return result
 
 
+
+def average_dict(dict1, number):
+    result = {}
+    for key in dict1:
+        result[key] = np.array( dict1[key] ) / number
+    return result
+
+
 nadiab = 2
 os.system('cd ..')
 
