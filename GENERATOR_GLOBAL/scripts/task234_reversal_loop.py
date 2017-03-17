@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from operator import itemgetter
 from utils_scripts import *
+from multiprocessing import Pool
 
 
 scripts = 'task234_reversal_loop'
@@ -57,9 +58,10 @@ def sum_two_dict( dict1, dict2):
 
 nadiab = 2
 os.system('cd ..')
-for i, directory in enumerate(dirlist):
-    if i % 100 == 0:
-        print time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+
+def analyse_properties(directory):
+#    if i % 100 == 0:
+#        print time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
     if 'run-' in directory and 'per' not in directory:
         print "Do %s" % directory
         os.chdir(directory)
@@ -98,6 +100,10 @@ for i, directory in enumerate(dirlist):
 #                #dir.histo_print(histo, property)
 #        os.system('mv *run*.dat ../per-run')
         os.chdir('..')
+
+
+pool = Pool()
+pool.map(analyse_properties, dirlist)
 
 
 def average_dict(dict1, number):
