@@ -9,7 +9,7 @@ from scipy.integrate import quad
 
 from utils_scripts import *
 from marcus import *
-
+from datetime import datetime
 
 scripts = 'task234_parallel'
 
@@ -36,7 +36,7 @@ else:
 
 bin = 2
 bin_histo = 50
-reorga= 0.300
+reorga = 0.300
 free_energy = 0.00
 nadiab = 2
 
@@ -67,6 +67,11 @@ def average_dict(dict1, number):
         result[key] = np.array( dict1[key] ) / number
     return result
 
+
+this_time = datetime.now()
+this_time_str = datetime.strftime(this_time, "%Y %m %d %H:%M:%S ")
+print "Start to build run_dir at %s" % (this_time_str)
+
 run_dict = {}
 os.system('cd ..')
 for i, directory in enumerate(dirlist):
@@ -79,8 +84,14 @@ for i, directory in enumerate(dirlist):
         run_dict[( scaling, reversal )].append(directory)
         os.chdir('..')
 
+this_time = datetime.now()
+this_time_str = datetime.strftime(this_time, "%Y %m %d %H:%M:%S ")
+print "Finish to build run_dir at %s" % (this_time_str)
+
 def analyse_properties(tuple):
-    print "One core for: %s" % (tuple,)
+    real_start_time = datetime.now()
+    start_time = datetime.strftime( real_start_time, "%Y %m %d %H:%M:%S ")
+    print "One worker for: %s starts at %s" % (tuple, start_time)
     list_dir = run_dict[tuple]
     properties_dict = {}
     for directory in list_dir:
@@ -100,6 +111,13 @@ def analyse_properties(tuple):
                 properties_dict[property + 'info'] += line
         os.chdir('..')
     properties_dict['Number runs'] = len(list_dir)
+    real_end_time = datetime.now()
+    end_time = datetime.strftime( real_end_time, "%Y %m %d %H:%M:%S ")
+    print "One worker for: %s ends at %s" % (tuple, end_time)
+    time_diff = real_end_time - real_start_time
+    hours, remainder = divmod(time_diff.total_seconds(), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    print "The worker %s lasted: %s hours %s minutes %s seconds" % (tuple, hours, minutes, seconds)
     return properties_dict
 
 #results_dict = {}
@@ -111,6 +129,10 @@ results = pool.map(analyse_properties, run_dict.keys() )
 results_dict = {}
 for tuple, result in zip( run_dict.keys(), results):
     results_dict[tuple] = result
+
+this_time = datetime.now()
+this_time_str = datetime.strftime(this_time, "%Y %m %d %H:%M:%S ")
+print "Start the graphs at %s" % (this_time_str)
 
 nfig =-1
 for tuple in run_dict.keys():
@@ -126,7 +148,7 @@ for tuple in run_dict.keys():
     boltzmann_ratio = calculate_boltzman_ratio(reorga, free_energy, coupling, temperature)
 
     nfig += 1
-    plt.figure(nfig)
+    plt.figure(nfig, figsize=(8, 6))
     for property in detail_properties:
         properties[property] = average_dict(properties[property], properties['Number runs'])
         plt.plot(sorted(properties[property]), [properties[property][time][0] for time in sorted(properties[property])],
@@ -135,10 +157,11 @@ for tuple in run_dict.keys():
             plt.plot(sorted(properties[property]),
                      [boltzmann_ratio for time in sorted(properties[property])], label='Boltzmann ratio')
     plt.xlabel('Time (fs)')
-    plt.ylim([0, 1])
+    plt.ylim([0, 1.2])
     plt.ylabel('Populations')
     plt.title('Populations vs time for reversal: %s and scaling value C = %s Ha' % (reversal, scaling))
     plt.legend()
+    plt.legend(bbox_to_anchor=(1.6, 1))
     # plt.show()
     plt.savefig('%s/population_vs_time_%s_%s_%s.png' % (dataname, reversal, scaling, title))
     # sys.exit()
@@ -146,7 +169,7 @@ for tuple in run_dict.keys():
     # print time, properties[property][time]
 
     nfig += 1
-    plt.figure(nfig)
+    plt.figure(nfig, figsize=(8, 6))
     for property in ratio_properties:
         properties[property] = {}
         for time in sorted(properties['Surface populations']):
@@ -162,10 +185,14 @@ for tuple in run_dict.keys():
     plt.ylabel('Populations')
     plt.title('Ratio vs time for reversal: %s and scaling value C = %s Ha' % (reversal, scaling))
     plt.legend()
+    plt.legend(bbox_to_anchor=(1.6, 1))
     plt.savefig('%s/ratio_vs_time_%s_%s_%s.png' % (dataname, reversal, scaling, title))
     # plt.show()
     # sys.exit()
 
-print "End of the analysis"
+this_time = datetime.now()
+this_time_str = datetime.strftime(this_time, "%Y %m %d %H:%M:%S ")
+print "End of the analysis at %s" % (this_time_str)
+
 
 
