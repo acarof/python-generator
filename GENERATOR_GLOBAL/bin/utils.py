@@ -398,6 +398,10 @@ class CP2KRun(object):
         print "CP2K STARTS AT: " + complete_time
         dir.chdir()
         val = os.system(self.paths.get('cp2k') + '  run.inp > run.log')
+        #val = subprocess.Popen([ self.paths.get('cp2k'), '-i', 'run.inp', '-o', 'run.log'  ])
+        #input = open('run.inp')
+        #logfile = open('run.log', 'w')
+        #val = subprocess.call([self.paths.get('cp2k')], stdin=input, stdout=logfile)
         os.chdir(self.paths.get('bucket'))
         complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
         print "CP2K FINISHES AT: " + complete_time

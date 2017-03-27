@@ -50,16 +50,6 @@ def main(inputs, paths):
     bin = Dir('bin', paths)
     bin.checkdir()
 
-    # FIND CP2K PATHS
-    try:
-        local_paths = Dir('local_paths', paths)
-        local_paths.checkdir()
-        cp2k_file = open(paths.get('local_paths') + 'cp2k.path', 'r')
-        paths.update({'cp2k': cp2k_file.read().rstrip()})
-        if not os.path.isfile(paths.get('cp2k')):
-            raise SystemExit('WARNING: check path for CP2K executable in local_paths/cp2k.path')
-    except:
-        raise SystemExit("WARINING: please provide the path for CP2K executable in local_paths/cp2k.path")
 
     system = inputs.get('SYSTEM')
     if system == 'CRYSTAL':
@@ -84,7 +74,7 @@ def main(inputs, paths):
         file = open('initial/vel-%d.init' % i, 'w')
         results = ''
         for atom in range(inputs.get('NATOMS')):
-            results += '0.00  0.00  0.00\n'
+            results += '0.00 0.00  0.00  0.00\n'
         file.write(results)
         file.close()
     ndir = 0
@@ -103,7 +93,7 @@ def main(inputs, paths):
     subtask = {
         'TEMPLATE_FILE': 'FSSH_CORE.template',
         'FORCEFIELD_FILE': 'FSSH_FF.template',
-        'NUMBER_INIT' : 100,
+        'NUMBER_INIT' : 5 ,
         'STEPS' : 3,
         'PRINT' : 1,
         'SCALING' : 0.065190,
@@ -261,13 +251,15 @@ def main(inputs, paths):
     # CHECK RABI OSCILLATION
 
     subtask = {
-        'TEMPLATE_FILE': 'FSSH_CORE.template',
-        'FORCEFIELD_FILE': 'FSSH_FF.template',
-        'NUMBER_INIT': 3,
-        'STEPS': 3,
+        'TEMPLATE_FILE': 'FSSH_CORE_without_constraint.template',
+        'FORCEFIELD_FILE': 'FSSH_FF_without_constraint.template',
+        'NUMBER_INIT': 1,
+        'STEPS': 5,
         'PRINT': 1,
         'SCALING': 0.0065190,
-        'PROPAGATION': 'FROZEN_HAMILTONIAN'
+        'PROPAGATION': 'FROZEN_HAMILTONIAN',
+        'DECO' : 'NO_DECO_CORR',
+        'TIMESTEP' : 0.5
     }
     rmse = []
     for init in range(subtask.get('NUMBER_INIT')):
@@ -295,10 +287,11 @@ def main(inputs, paths):
         coupling = dir.extract('Couplings').get( 0 )[0]
         delta_e = dir.extract('Delta_E').get( 0 )[0]
 
-        rabi = scripts.rabi_oscillation( coupling, delta_e, 0.1, subtask.get('STEPS')*5  )
+        rabi = scripts.rabi_oscillation(  coupling, delta_e, subtask.get('TIMESTEP') / 5, subtask.get('STEPS')*5  )
 
         rmse.append(scripts.rmse(populations, rabi))
         os.chdir('..')
+
 
     final += "3. CHECK RABI OSCILLATION\n"
 

@@ -3,7 +3,7 @@
 import string, re, struct, sys, math, os, time
 import numpy
 import importlib, imp
-
+import machine
 
 from utils import *
 
@@ -42,6 +42,15 @@ else:
 
 # SELECT THE METHOD TO RUN
 paths = {}
+
+# GET CP2K READY
+paths.update(
+   { 'cp2k' : machine.get_cp2k_path(),
+     'source' : machine.source_cp2k()
+     }
+)
+#machine.source_cp2k()
+
 if (kind_run == 'NO_METHOD'):
    print "A METHOD IS REQUIRED!"
 elif (kind_run == 'FIST_OS'):

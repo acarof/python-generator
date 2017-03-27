@@ -1,0 +1,63 @@
+&FORCE_EVAL
+	METHOD  FIST
+	&MM
+    		&FORCEFIELD
+      			&SPLINE
+        			RCUT_NB         sedRCUT
+       			&END SPLINE
+INCLUDE FORCEFIELD.tmp
+		&END FORCEFIELD	
+		&POISSON
+       			&EWALD
+         			EWALD_TYPE  NONE
+         			#EWALD_TYPE  EWALD
+         			#ALPHA        sedALPHA
+         			#GMAX         sedGMAX
+         			#O_SPLINE     sedOSPLINE
+       			&END EWALD
+     		&END POISSON
+     		&PRINT
+      			&ITER_INFO  SILENT
+      			&END ITER_INFO
+      				&PROGRAM_RUN_INFO LOW
+        				&EACH
+          					MD 1
+        				&END EACH
+      				&END PROGRAM_RUN_INFO
+     			&END PRINT
+   	&END MM
+   	&SUBSYS
+     		&CELL
+       			ABC                    sedLBOXA        sedLBOXB        sedLBOXC     
+       			PERIODIC               sedPERIODIC
+     		&END CELL
+     		&COORD
+INCLUDE COORD.tmp
+     		&END COORD
+                &VELOCITY
+INCLUDE VELOC.tmp
+                &END VELOCITY
+                &KIND CP
+                        ELEMENT C
+                &END KIND
+                &KIND H
+                        ELEMENT H
+                &END KIND
+                &KIND CN
+                        ELEMENT C
+                &END KIND
+                &TOPOLOGY
+                        NUMBER_OF_ATOMS                   sedNATOMS
+                        CONN_FILE_FORMAT  MOL_SET
+                        &MOL_SET
+INCLUDE SPECIAL PSF
+                        &END MOL_SET
+                        &DUMP_PSF
+                                &EACH
+                                   MD          1
+                                &END EACH
+                                FILENAME ./input
+                        &END DUMP_PSF
+                &END TOPOLOGY
+   	&END SUBSYS
+&END FORCE_EVAL
