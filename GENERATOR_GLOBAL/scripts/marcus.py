@@ -46,10 +46,13 @@ def calculate_free_energy(landau_energy, temperature, *args ):
 
 
 
-def calculate_boltzman_ratio( reorga, free_energy, coupling, temperature ):
+def calculate_boltzman_ratio( reorga, free_energy, coupling, temperature, state ):
     I0 = calculate_integral_boltzmann_weight(landau_energy_adiabatic_ground, temperature, reorga, free_energy, coupling, )
     I1 = calculate_integral_boltzmann_weight(landau_energy_adiabatic_excited, temperature, reorga, free_energy, coupling)
-    return I0 / ( I1 + I0)
+    if state == 'Excited':
+        return I1 / (I0 + I1)
+    else:
+        return I0 / ( I1 + I0)
 
 
 

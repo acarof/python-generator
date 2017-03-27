@@ -145,23 +145,29 @@ for tuple in run_dict.keys():
     temperature = np.mean(np.array(properties['Temperature']).transpose()[0])
     coupling = np.mean(np.array(properties['Couplings']).transpose()[0]) * 27.211399  # coupling in eV
 
-    boltzmann_ratio = calculate_boltzman_ratio(reorga, free_energy, coupling, temperature)
+    boltzmann_ratio = calculate_boltzman_ratio(reorga, free_energy, coupling, temperature, 'Excited')
 
     nfig += 1
-    plt.figure(nfig, figsize=(8, 6))
+    #plt.figure(nfig, figsize=(8, 6))
+    fig = plt.figure(nfig, figsize = (8,4) )
+    ax = fig.add_subplot(111)
+    ax.set_position([0.2, 0.2, 0.5, 0.8])
     for property in detail_properties:
         properties[property] = average_dict(properties[property], properties['Number runs'])
-        plt.plot(sorted(properties[property]), [properties[property][time][0] for time in sorted(properties[property])],
+        plt.plot(sorted(properties[property]), [properties[property][time][1] for time in sorted(properties[property])],
                  label=property)
         if property == 'Surface populations':
             plt.plot(sorted(properties[property]),
                      [boltzmann_ratio for time in sorted(properties[property])], label='Boltzmann ratio')
     plt.xlabel('Time (fs)')
-    plt.ylim([0, 1.2])
+    #plt.xscale('log')
+    plt.ylim([0.0000000001, 1])
+    plt.yscale('log')
     plt.ylabel('Populations')
-    plt.title('Populations vs time for reversal: %s and scaling value C = %s Ha' % (reversal, scaling))
-    plt.legend()
-    plt.legend(bbox_to_anchor=(1.6, 1))
+    #plt.title('Populations vs time for reversal: %s and scaling value C = %s Ha' % (reversal, scaling))
+    plt.title('Excited state populations vs time')
+    #plt.legend()
+    plt.legend(bbox_to_anchor=(2.0, 1.0))
     # plt.show()
     plt.savefig('%s/population_vs_time_%s_%s_%s.png' % (dataname, reversal, scaling, title))
     # sys.exit()
@@ -183,6 +189,7 @@ for tuple in run_dict.keys():
     plt.xlabel('Time (fs)')
     # plt.ylim([0, 1])
     plt.ylabel('Populations')
+    plt.yscale('log')
     plt.title('Ratio vs time for reversal: %s and scaling value C = %s Ha' % (reversal, scaling))
     plt.legend()
     plt.legend(bbox_to_anchor=(1.6, 1))
