@@ -36,7 +36,8 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'EDC_E0': 0.1,
             'FIRST_ADIABAT': 1,
             'FIRST_DIABAT': 1,
-            'INITIALIZATION': 'ADIABATIC'
+            'INITIALIZATION': 'ADIABATIC',
+            'CC_CHARGED' :   1.4008
             }
 
 
@@ -458,10 +459,11 @@ class CP2KRun(object):
             file_to_include = open(word_list[2] + '-' + str(mol) + '.tmp')
         else:
             file_to_include = open(word_list[1])
-        result = ''
-        for my_line in file_to_include.readlines():
-            result = result + my_line
-        return result
+        return self._amend(file_to_include)
+        #result = ''
+        #for my_line in file_to_include.readlines():
+        #    result = result + my_line
+        #return result
 
     def _sed(self, line):
         word_list = line.split()

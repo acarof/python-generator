@@ -377,7 +377,8 @@ def main(inputs, paths):
         'PRINT': 1,
         'SCALING': 0.0065190,
         'PROPAGATION': 'BORN_OPPENHEIMER',
-        'ANALYTICS' : 'T'
+        'ANALYTICS' : 'T',
+        'CC_CHARGED' : 1.369
         }
 
     list_state = [1, 2]
