@@ -36,7 +36,7 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'EDC_E0': 0.1,
             'FIRST_ADIABAT': 1,
             'FIRST_DIABAT': 1,
-            'INITIALIZATION': 'ADIABATIC',
+            'INITIALIZATION': 'DIABATIC',
             'CC_CHARGED' :   1.4008
             }
 
@@ -1300,3 +1300,39 @@ def main(inputs, paths):
         file.write(result)
         file.close()
         os.chdir(self._bucket_path)
+
+
+class FSSHParcelBO(FSSHParcel):
+    """
+    """
+
+    def __init__(self, dict, paths, output):
+        super(FSSHParcelBO, self).__init__(dict, paths)
+        self._nprod = self._my_sed_dict.get('STEPS')
+        self.initial = output
+
+
+    def _complete_dict(self):
+        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
+        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
+        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
+        norm_max = max(norm_a, norm_b, norm_c)
+        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
+        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
+        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
+        n_max = max(n_a, n_b, n_c)
+        self._my_sed_dict.update({
+            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
+            'NORM_LATTICE': [norm_a, norm_b, norm_c],
+            'FIRST_DIABAT' : int(self._get_pos_mol())
+        })
+        if self._my_sed_dict.get('RCUT') is None:
+            self._my_sed_dict.update( { 'RCUT': 5 * norm_max * n_max })
+        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
+        self._printfrq = self._my_sed_dict.get('PRINT')
+        self._nmol = self._my_sed_dict.get('NMOL')
+
+
+
+

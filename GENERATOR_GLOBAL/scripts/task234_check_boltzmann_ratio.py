@@ -53,6 +53,7 @@ hab = 0.3
 print calculate_free_energy(landau_energy_adiabatic_excited, temperature, reorga, free_energy, hab) - calculate_free_energy(landau_energy_adiabatic_ground, temperature, reorga, free_energy, hab)
 
 
+
 free_energy_diff = np.array([
     calculate_free_energy(landau_energy_adiabatic_excited, temperature, reorga, free_energy, hab) -
     calculate_free_energy(landau_energy_adiabatic_ground, temperature, reorga, free_energy, hab)
