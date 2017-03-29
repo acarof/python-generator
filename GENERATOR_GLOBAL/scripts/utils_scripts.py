@@ -39,9 +39,9 @@ class FSSHRun(object):
             return self._extract_coupling(filename='run-nace-1.xyz')
         elif (property == 'NACV'):
             return self._extract_nacv()
-        elif property == 'Surface populations':
+        elif property == 'Surface-populations':
             return self._extract_surface_population()
-        elif property == 'Adiabatic populations':
+        elif property == 'Adiabatic-populations':
             return self._extract_adiabatic_population()
         else:
             print "Extraction of %s not implemented" % property
@@ -448,8 +448,11 @@ def log_free(x, b, a, c):
     return np.log(a * np.exp(- b * x) + c)
 
 
-def create_file(property, title, text, label='None'):
-    filename = '%s-%s.dat' % (property, title)
+def create_file(property, text, title, label='None', tuple = 'None'):
+    if tuple is not 'None':
+        filename = '%s-%s.dat' % (property, '-'.join(tuple))
+    else:
+        filename = '%s-%s.dat' % (property, title)
     file = open(filename, 'w')
     unit = units.get(property)
     if (label == 'Mean'):
