@@ -171,8 +171,8 @@ def main(inputs, paths):
     # CHECK DECO DECAY: FROZEN HAMILTONIN SCALING=0
     
     subtask = {
-        'TEMPLATE_FILE': 'FSSH_CORE.template',
-        'FORCEFIELD_FILE': 'FSSH_FF.template',
+        'TEMPLATE_FILE': 'FSSH_CORE_without_constraint.template',
+        'FORCEFIELD_FILE': 'FSSH_FF_without_constraint.template',
         'NUMBER_INIT': 2,
         'STEPS': 50,
         'PRINT': 1,

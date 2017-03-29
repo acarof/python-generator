@@ -44,9 +44,7 @@ nadiab = 2
 dataname = 'data-%s-%s' % (scripts, title)
 if not os.path.isdir(dataname):
     os.mkdir(dataname)
-per_run_name = 'per-run-%s' % scripts
-if not os.path.isdir(per_run_name):
-    os.mkdir(per_run_name)
+
 
 
 def sum_two_dict( dict1, dict2):
