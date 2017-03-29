@@ -2,7 +2,7 @@ import os, pwd
 
 path_cp2k_dict = {
     'seacourt.phys.ucl.ac.uk' : {
-        'acarof' : '/scratch/acarof/bin/cp2k-test.sopt'
+        'acarof' : '/scratch/acarof/bin/cp2k.sopt'
     },
     'scutum.phys.ucl.ac.uk'   : {
         'acarof' : '/scratch/grudorff/antoine/bin/cp2k.sopt'
