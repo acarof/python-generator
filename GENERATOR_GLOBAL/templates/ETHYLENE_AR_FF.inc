@@ -60,7 +60,7 @@
 #UNITS hartree/bohr^2
      K                          0.263099D0
 #     R0         [bohr]          2.6475D0
-     R0         [angstrom]       1.4008D0
+     R0         [angstrom]       sedCC_CHARGED
     &END BOND
     &BOND
      ATOMS                      CP H

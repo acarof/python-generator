@@ -94,6 +94,20 @@ for i, directory in enumerate(dirlist):
         run_dict[( scaling, reversal )].append(directory)
         os.chdir('..')
 
+
+def print_run_dict(run_dict):
+    filename = 'List-run.dat'
+    file = open(filename, 'w')
+    for tuple in run_dict:
+        line = '%s %s\n' % ( tuple, '  '.join(run_dict[tuple]) )
+        file.write(line)
+    file.close()
+    os.system('mv %s %s' % (filename, dataname))
+
+print_run_dict(run_dict)
+
+
+
 this_time = datetime.now()
 this_time_str = datetime.strftime(this_time, "%Y %m %d %H:%M:%S ")
 print "Finish to build run_dir at %s" % (this_time_str)
@@ -133,14 +147,15 @@ def analyse_properties(tuple):
 #results_dict = {}
 #for tuple in run_dict.keys():
 #    results_dict[tuple] = analyse_properties(tuple)
+#sys.exit()
 
 pool = Pool()
 results = pool.map(analyse_properties, run_dict.keys() )
 results_dict = {}
+filetuple = open('List-tuple.dat', 'w')
 for tuple, result in zip( run_dict.keys(), results):
+    filetuple.write('%s\n' % '  '.join(tuple))
     results_dict[tuple] = result
-    scaling = tuple[0]
-    reversal = tuple[1]
     properties = results_dict[tuple]
     for property in mean_properties:
         filename = create_file(property, title, properties[property + 'info'], 'Mean', tuple = tuple)
@@ -154,7 +169,8 @@ for tuple, result in zip( run_dict.keys(), results):
         filename = print_dict( properties[property], property, tuple  )
         os.system('mv %s %s' % (filename, dataname))
         #sys.exit()
-
+filetuple.close()
+os.system('mv List-tuple.dat %s' % dataname )
 
 
 

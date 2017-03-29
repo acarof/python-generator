@@ -448,7 +448,7 @@ def log_free(x, b, a, c):
     return np.log(a * np.exp(- b * x) + c)
 
 
-def create_file(property, text, title, label='None', tuple = 'None'):
+def create_file(property, title, text,  label='None', tuple = 'None'):
     if tuple is not 'None':
         filename = '%s-%s.dat' % (property, '-'.join(tuple))
     else:
