@@ -6,6 +6,9 @@ path_cp2k_dict = {
     },
     'scutum.phys.ucl.ac.uk'   : {
         'acarof' : '/scratch/grudorff/antoine/bin/cp2k.sopt'
+    },
+    'bulstake.phys.ucl.ac.uk'   : {
+        'sgiannini' : '/scratch/sgiannini/bin/TRIVIAL_merged_code/cp2k.sopt'
     }
 }
 

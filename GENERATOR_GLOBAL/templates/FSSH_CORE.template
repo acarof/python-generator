@@ -57,7 +57,9 @@ INCLUDE CONSTRAINT.tmp
                 &ADIABATIC
                         METHOD_PROPAGATION sedPROPAGATION
                         METHOD_COUPLING    AOM
+                        SURF_HOP_CHOICE   sedTRIVIAL
                         DECOHERENCE_CORRECTIONS sedDECO
+                        THRESHOLD_TRIVIAL_CROSS sedT_THRESHOLD
                         EDC_C sedEDC_C
                         EDC_E0 sedEDC_E0
                         INITIALIZATION                        sedINITIALIZATION
