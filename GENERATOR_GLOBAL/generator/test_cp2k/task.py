@@ -21,6 +21,7 @@ def main(inputs, paths):
     list_propagation = ['FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN']
     #list_propagation = ['FSSH']
     list_decoherences = ['NO_DECO_CORR', 'INSTANT_COLLAPSE', 'DAMPING', 'TRESH_ONLY_COLLAPSE']
+    list_trivial_corr = ['TRIVIAL_HOP_CORRECT', 'UNMODIFIED_SURF_HOP']
 
     list_analytics   = ['T', 'F']
     #list_analytics = ['T']
@@ -41,6 +42,7 @@ def main(inputs, paths):
     mega_list = [ { 'PROPAGATION' : prop,
                    # 'COLLAPSE'    : collapse,
                     'DECOHERENCES': deco,
+                    'TRIVIAL_CORR' : trivial,
                     'ANALYTICS'   : analytics,
                     'FIRST_DIABAT': diabat,
                     'METHOD_RESCALING' : rescaling,
@@ -49,7 +51,7 @@ def main(inputs, paths):
                     'CENTER_OF_MASS'    : com
                    }
                   for prop in list_propagation
-                 # for collapse in list_collapse
+                  for trivial in list_trivial_corr
                   for deco in list_decoherences
                   for analytics in list_analytics
                   for diabat    in list_first_diabat
