@@ -13,7 +13,7 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'OSPLINE': 6,
             'GMAX': 17,
             'LBOX': 100,
-            'RESTRAINT': 1E-4,
+            'RESTRAINT': 0.005,
             'NORBITALS': 1,
             'CUTOFF_SITES': 12.0,
             'CUTOFF_CONN': 3.50,
@@ -39,7 +39,8 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'FIRST_ADIABAT': 1,
             'FIRST_DIABAT': 1,
             'INITIALIZATION': 'DIABATIC',
-            'CC_CHARGED' :   1.4008
+            'CC_CHARGED' :   1.4008,
+            'CONSTRAINT_LENGTH' : 6
             }
 
 
@@ -492,6 +493,7 @@ class CP2KOS(CP2KRun):
         self._filecrystal = self._my_sed_dict.get('FILECRYSTAL')
         self._filemol = self._my_sed_dict.get('FILEMOL')
         self._structure = self._my_sed_dict.get('SYSTEM')
+        self._constraint_length = self._my_sed_dict.get('CONSTRAINT_LENGTH')
 
     def print_info(self):
         print "Hey Hey"
@@ -544,7 +546,7 @@ class CP2KOS(CP2KRun):
         self._forcefield()
         self._kind()
         self._psf()
-        self._colvar()
+        #self._colvar()
         self._constraint()
 
     def _forcefield(self):
@@ -568,10 +570,12 @@ class CP2KOS(CP2KRun):
 
     def _constraint(self):
         fileout = open('CONSTRAINT.tmp', 'w')
+        fileout_colvar = open('COLVAR.tmp', 'w')
         fileout.write('        &CONSTRAINT\n')
         list_mol = [[i, j, k] for i in range(1, self._sizecrystal[0] + 1)
                     for j in range(1, self._sizecrystal[1] + 1)
-                    for k in range(1, self._sizecrystal[2] + 1)]
+                    for k in range(1, self._sizecrystal[2] + 1)
+                    ]
         colvar = 0
         list_mol2 = list_mol
         for mol in list_mol:
@@ -580,7 +584,7 @@ class CP2KOS(CP2KRun):
                 for mol2 in list_mol2:
                     top_vect = abs(array(mol) - array(mol2))
                     top_dist = norm(top_vect)
-                    if (top_dist == 1) or (top_dist == 2):
+                    if (top_dist <  self._constraint_length ):
                         colvar = colvar + 1
                         result = """\n
              &COLLECTIVE
@@ -589,29 +593,13 @@ class CP2KOS(CP2KRun):
                   &END RESTRAINT
                   COLVAR                %d
                   INTERMOLECULAR
-                  TARGET                %f
+                  TARGET      [angstrom]          %f
              &END COLLECTIVE
                          \n     """ \
                                  % (self._restraint,
                                     colvar,
                                     dot(array(self._norm_lattice), top_vect))
                         fileout.write(result)
-        fileout.write('        &END CONSTRAINT\n')
-        fileout.close()
-
-    def _colvar(self):
-        fileout = open('COLVAR.tmp', 'w')
-        list_mol = [[i, j, k] for i in range(1, self._sizecrystal[0] + 1)
-                    for j in range(1, self._sizecrystal[1] + 1)
-                    for k in range(1, self._sizecrystal[2] + 1)]
-        list_mol2 = list_mol
-        for mol in list_mol:
-            list_mol2.remove(mol)
-            if (list_mol2 is not None):
-                for mol2 in list_mol2:
-                    top_vect = abs(array(mol) - array(mol2))
-                    top_dist = norm(top_vect)
-                    if (top_dist == 1) or (top_dist == 2):
                         result = """\n
                 &COLVAR
                      &DISTANCE
@@ -630,8 +618,44 @@ class CP2KOS(CP2KRun):
                 """ % (
                             self._list_carbon(mol),
                             self._list_carbon(mol2))
-                        fileout.write(result)
+                        fileout_colvar.write(result)
+        fileout.write('        &END CONSTRAINT\n')
         fileout.close()
+        fileout_colvar.close()
+
+#    def _colvar(self):
+#        fileout = open('COLVAR.tmp', 'w')
+#        list_mol = [[i, j, k] for i in range(1, self._sizecrystal[0] + 1)
+#                    for j in range(1, self._sizecrystal[1] + 1)
+#                    for k in range(1, self._sizecrystal[2] + 1)]
+#        list_mol2 = list_mol
+#        for mol in list_mol:
+#            list_mol2.remove(mol)
+#            if (list_mol2 is not None):
+#                for mol2 in list_mol2:
+#                    top_vect = abs(array(mol) - array(mol2))
+#                    top_dist = norm(top_vect)
+#                    if (top_dist == 1) or (top_dist == 2):
+#                        result = """\n
+#                &COLVAR
+#                     &DISTANCE
+#                          &POINT
+#                               ATOMS %s
+#                               TYPE  GEO_CENTER
+#                          &END POINT
+#                          &POINT
+#                               ATOMS %s
+#                               TYPE  GEO_CENTER
+#                          &END POINT
+#                          POINTS 1 2
+#                     &END DISTANCE
+#                &END COLVAR
+#                \n
+#                """ % (
+#                            self._list_carbon(mol),
+#                            self._list_carbon(mol2))
+#                        fileout.write(result)
+#        fileout.close()
 
     def _list_carbon(self, mol):
         molfile = open(self._filemol, 'r')
@@ -773,7 +797,7 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         self._kind()
         for mol in range(1, self._nmol + 1):
             self._psf(mol, True)
-        self._colvar()
+        #self._colvar()
         self._constraint()
         self._aom()
         self._write_file(self._forcefield_file, 'FORCEEVAL.tmp', number=self._nmol)
@@ -862,7 +886,7 @@ class CP2KOSFIST(CP2KOS):
         self._forcefield()
         self._kind()
         self._psf()
-        self._colvar()
+        #self._colvar()
         self._constraint()
 
 
@@ -933,7 +957,7 @@ class CP2KOSFSSH(CP2KOS):
         self._kind()
         for mol in range(1, self._nmol + 1):
             self._psf(mol, True)
-        self._colvar()
+        #self._colvar()
         self._constraint()
         self._aom()
         self._write_file(self._forcefield_file, 'FORCEEVAL.tmp', number=self._nmol)
@@ -1001,7 +1025,6 @@ class FSSHParcel(object):
         self._bucket_path = paths.get('bucket')
         self._output_path = paths.get('output')
         self._bin_path = paths.get('bin')
-        self._local_path = paths.get('local_paths')
         self._complete_dict()
 
     def _complete_dict(self):
@@ -1186,7 +1209,6 @@ class FSSHParcel(object):
     def gather_templates_bin(self):
         os.system('cp %s/*  %s' % (self._templates_path, self.templates.path))
         os.system('cp %s/*  %s' % (self._bin_path, self.bin.path))
-        os.system('cp %s/*  %s' % (self._local_path, self.local.path))
 
     def _create(self):
         os.chdir(self._output_path)
@@ -1197,8 +1219,6 @@ class FSSHParcel(object):
         self.bin.mkdir()
         self.templates = Dir('templates')
         self.templates.mkdir()
-        self.local = Dir('local_paths')
-        self.local.mkdir()
         self.task = Dir('task')
         self.task.mkdir()
         self.task.chdir()
@@ -1261,18 +1281,6 @@ def main(inputs, paths):
 
     bin = Dir('bin', paths)
     bin.checkdir()
-
-    # FIND CP2K PATHS
-    try:
-        local_paths = Dir('local_paths', paths)
-        local_paths.checkdir()
-        cp2k_file = open(paths.get('local_paths') + 'cp2k.path', 'r')
-        paths.update({'cp2k': cp2k_file.read().rstrip()})
-        if not os.path.isfile(paths.get('cp2k')):
-            raise SystemExit('WARNING: check path for CP2K executable in local_paths/cp2k.path')
-    except:
-        raise SystemExit("WARINING: please provide the path for CP2K executable in local_paths/cp2k.path")
-
 
     os.system(' cp -r %%s/%%s %%s' %% (paths.get('task'), inputs.get('FILE_INIT'), paths.get('bucket')))
     initial = Dir(inputs.get('FILE_INIT'), paths)
