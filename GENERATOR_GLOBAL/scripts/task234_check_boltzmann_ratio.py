@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 
-reorga = 0.3
+reorga = 0.1
 free_energy = 0.0
 coupling = 0.3
 temperature = 300
