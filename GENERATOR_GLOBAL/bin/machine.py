@@ -1,4 +1,6 @@
 import os, pwd
+from subprocess import Popen, PIPE
+
 
 path_cp2k_dict = {
     'seacourt.phys.ucl.ac.uk' : {
@@ -41,6 +43,19 @@ def get_cp2k_path():
         raise SystemExit
 
 
+
+
+def source(script, update=1):
+    pipe = Popen(". %s; env" % script, stdout=PIPE, shell=True)
+    data = pipe.communicate()[0]
+
+    env = dict((line.split("=", 1) for line in data.splitlines()))
+    if update:
+        os.environ.update(env)
+
+    return env
+
+
 def shell_source(script):
     """Sometime you want to emulate the action of "source" in bash,
     settings some environment variables. Here is a way to do it."""
@@ -57,6 +72,7 @@ def source_cp2k():
     if source_cp2k_dict.get(hostname) is not None:
         if source_cp2k_dict[hostname].get(username) is not None:
             cmd = source_cp2k_dict[hostname][username]
+            source( cmd )
             #shell_source(cmd)
             #execfile(cmd)
             return cmd

@@ -4,7 +4,7 @@ import importlib, imp
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from operator import itemgetter
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 from scipy.integrate import quad
 
 from utils_scripts import *
@@ -21,10 +21,13 @@ mean_properties = ['Temperature','Couplings']
 #specific_properties = ['FSSH']
 specific_properties = []
 total_properties = detail_properties + mean_properties + specific_properties + histo_properties
-test = True
 
-if test:
-    #dirlist = ['run-%d' % i for i in range(10)]
+try:
+    nworker = int( sys.argv[1] )
+except:
+    nworker = cpu_count()
+
+if 'GENERATOR_GLOBAL' in os.getcwd():
     dirlist = os.listdir('.')
     title = 'TEST'
 else:
@@ -147,7 +150,7 @@ def analyse_properties(tuple):
 #    results_dict[tuple] = analyse_properties(tuple)
 #sys.exit()
 
-pool = Pool()
+pool = Pool(nworker)
 results = pool.map(analyse_properties, run_dict.keys() )
 results_dict = {}
 filetuple = open('List-tuple.dat', 'w')

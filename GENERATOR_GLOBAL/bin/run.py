@@ -9,39 +9,40 @@ from utils import *
 
 
 try:
-         input_info = sys.argv[1]
+    input_info = sys.argv[1]
 except:
-          print "A INPUT DIRECTORY IS REQUIRED!"
-          raise SystemExit
+    print "A INPUT DIRECTORY IS REQUIRED!"
+    raise SystemExit
+
+try:
+    nworker = int( sys.argv[2] )
+except:
+    nworker = -1
+
+# PATHS CONTAINS ALL THE PATHS
+paths = {}
+
 
 # OPEN AND READ THE INPUT FILE
-if 'task/' in input_info:
-   if os.path.isfile(input_info + '/input'):
-      input = InputFile(input_info + '/input')
+def read_input(path):
+   if os.path.isfile(path + '/input'):
+      input = InputFile(path + '/input')
    else:
       input = InputFile('NONE')
-   input.dict.update({'TEST': 'NO'})
-   kind_run = 'TASK'
-elif 'generator/' in input_info:
-   if os.path.isfile(input_info + '/input'):
-      input = InputFile(input_info + '/input')
-   else:
-      input = InputFile('NONE')
-   input.dict.update({'TEST' : 'YES'})
-   kind_run = 'TASK'
-elif 'preparation/' in input_info:
-   if os.path.isfile(input_info + '/input'):
-      input = InputFile(input_info + '/input')
-   else:
-      input = InputFile('NONE')
-   input.dict.update({'TEST' : 'YES'})
-   kind_run = 'TASK'
-else:
-   input = InputFile(input_info)
-   kind_run = input.dict.get('KIND_RUN', 'NO_METHOD')
+   return input
 
-# SELECT THE METHOD TO RUN
-paths = {}
+
+if 'generator/' in input_info:
+   input = read_input(input_info)
+   input.dict.update({'TEST' : 'YES'})
+elif 'preparation/' in input_info:
+   input = read_input(input_info)
+   input.dict.update({'TEST' : 'YES'})
+else:
+   input = read_input(input_info)
+   input.dict.update({'TEST': 'NO'})
+input.dict.update({'INPUT_INFO': input_info})
+input.dict.update({'NWORKER' : nworker})
 
 # GET CP2K READY
 paths.update(
@@ -49,28 +50,14 @@ paths.update(
      'source' : machine.source_cp2k()
      }
 )
-#machine.source_cp2k()
 
-if (kind_run == 'NO_METHOD'):
-   print "A METHOD IS REQUIRED!"
-elif (kind_run == 'FIST_OS'):
-   output = Dir('output', paths)
-   output.rm_mkdir()
-   fist_os.main(input.dict, paths)   
-elif (kind_run == 'FSSH_OS'):
-   initial = Dir('initial', paths)
-   initial.checkdir()
-   fssh_os.main(input.dict, paths)   
-elif (kind_run == 'TEST_CP2K'):
-   test_cp2k.main(input.dict, paths)   
-elif (kind_run == 'ENERGETICS'):
-   energetics.main(input.dict, paths)   
-elif (kind_run == 'TASK'):
-   task = Dir(input_info)
-   paths.update( {'task' : task.path} )
-   input.dict.update({'INPUT_INFO': input_info})
-   mod = imp.load_source('task', task.path + 'task.py')
-   mod.main(input.dict, paths)
-else:
-   print "METHOD %s IS UNKNOWN" % kind_run
+
+# UPLOAD task.py as a MODULE
+task = Dir(input_info)
+paths.update( {'task' : task.path} )
+mod = imp.load_source('task', task.path + 'task.py')
+
+
+# RUN MAIN FUNCTION OF task.py
+mod.main(input.dict, paths)
 

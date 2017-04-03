@@ -21,8 +21,8 @@ else:
     raise SystemExit
 
 dst=name
-srclist = ['bin', 'templates', 'task']
+srclist = ['bin', 'templates', 'scripts']
 for src in srclist:
     shutil.copytree(src, dst + '/' + src)
 
-shutil.copytree(task, name + '/task/' + taskname)
+shutil.copytree(task, name + '/' + taskname)
