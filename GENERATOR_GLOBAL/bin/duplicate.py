@@ -21,7 +21,7 @@ else:
     raise SystemExit
 
 dst=name
-srclist = ['bin', 'templates', 'scripts']
+srclist = ['bin', 'templates', 'scripts','initial']
 for src in srclist:
     shutil.copytree(src, dst + '/' + src)
 

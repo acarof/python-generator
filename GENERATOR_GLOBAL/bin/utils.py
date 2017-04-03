@@ -1221,13 +1221,12 @@ class FSSHParcel(object):
         self.bin.mkdir()
         self.templates = Dir('templates')
         self.templates.mkdir()
-        self.task = Dir('task')
-        self.task.mkdir()
-        self.task.chdir()
-        self.subtask = Dir('fssh_os')
-        self.subtask.mkdir()
-        self.subtask.chdir()
-        self.initial = Dir('initial')
+        self.taskdir = Dir('task-fssh-os')
+        self.taskdir.mkdir()
+        self.supinitial = Dir('initial')
+        self.supinitial.mkdir()
+        self.supinitial.chdir()
+        self.initial = Dir(self._bucket_path.split('/')[-1])
         self.initial.mkdir()
         os.chdir(self._bucket_path)
 
@@ -1253,15 +1252,19 @@ class FSSHParcel(object):
         return atom_label
 
     def _prepare_task(self):
-        os.chdir(self.subtask.path)
+        os.chdir(self.taskdir.path)
         file = open('task.py', 'w')
         result = """
  #!/usr/bin/python
 
+# standard modules
 import string, re, struct, sys, math, os, time
 import numpy
 
+# custom modules
 from utils import *
+
+
 
 def main(inputs, paths):
 
@@ -1279,16 +1282,16 @@ def main(inputs, paths):
 
     templates = Dir('templates', paths)
     templates.checkdir()
-    templates.clean()
 
     bin = Dir('bin', paths)
     bin.checkdir()
 
-    os.system(' cp -r %%s/%%s %%s' %% (paths.get('task'), inputs.get('FILE_INIT'), paths.get('bucket')))
-    initial = Dir(inputs.get('FILE_INIT'), paths)
+    initial = Dir( 'initial/' + '%s' , paths)
     initial.checkdir()
     paths.update({'initial': initial.path})
 
+
+    # UPLOARD ADEQUATE MODULE
     system = inputs.get('SYSTEM')
     if system == 'CRYSTAL':
         from utils import OSCluster as Structure
@@ -1299,6 +1302,8 @@ def main(inputs, paths):
     else:
         sys.exit()
 
+
+    # RUN CP2K FOR number_init * number_random FSSH RUNS
     number_init = inputs.get('NUMBER_INIT', 1)
     number_random = inputs.get('NUMBER_RANDOM', 1)
     ndir= 0
@@ -1308,10 +1313,11 @@ def main(inputs, paths):
             config = Config( inputs, paths, INIT = init)
             ndir = config.run(ndir)
 
-        """ % self.task
+        """ % (self.task, self._bucket_path.split('/')[-1])
         file.write(result)
         file.close()
         os.chdir(self._bucket_path)
+
 
 
 class FSSHParcelBO(FSSHParcel):

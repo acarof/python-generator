@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
+# standard modules
 import string, re, struct, sys, math, os, time
 import numpy
 
+# custom modules
 from utils import Dir, FSSHParcel, Bucket
 
 def main(inputs, paths):

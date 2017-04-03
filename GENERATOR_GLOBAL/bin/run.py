@@ -1,11 +1,14 @@
 #!/usr/bin/python
 
+# standard modules
 import string, re, struct, sys, math, os, time
 import numpy
 import importlib, imp
+
+# custom modules
+from utils import *
 import machine
 
-from utils import *
 
 
 try:
@@ -46,10 +49,9 @@ input.dict.update({'NWORKER' : nworker})
 
 # GET CP2K READY
 paths.update(
-   { 'cp2k' : machine.get_cp2k_path(),
-     'source' : machine.source_cp2k()
-     }
-)
+   { 'cp2k' : machine.get_cp2k_path()
+     })
+machine.source_cp2k()
 
 
 # UPLOAD task.py as a MODULE
