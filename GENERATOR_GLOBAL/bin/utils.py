@@ -1159,7 +1159,9 @@ class FSSHParcel(object):
             self._my_sed_dict.get('FIRST_DIABAT', '!!!')
         )
 
-    def gather_vel_coord(self, ndir):
+    def gather_vel_coord(self, ndir, output_path = None):
+        if output_path is None:
+            output_path = self.initial.path
         nsolvent = self._my_sed_dict.get('NATOMS') - (self._nmol * self._natom_mol)
         os.chdir('run-%d' % ndir)
         pos_mol = (self._coordcharge[0] - 1) * (self._sizecrystal[1] * self._sizecrystal[2]) + \
@@ -1206,7 +1208,7 @@ class FSSHParcel(object):
 
 
                 fileout.close()
-                os.system(' mv %s %s' % (filename, self.initial.path))
+                os.system(' mv %s %s' % (filename, output_path))
         os.chdir(self._bucket_path)
 
     def gather_templates_bin(self):
@@ -1318,6 +1320,75 @@ def main(inputs, paths):
         file.write(result)
         file.close()
         os.chdir(self._bucket_path)
+
+
+    def create_system_info(self, output_path = None):
+        if output_path is None:
+            output_path = self.initial.path
+        file = open('%s/system.info' % output_path, 'w')
+        result = self._get_system_info()
+        file.write(result)
+        file.close()
+
+    def _get_system_info(self):
+        if (self._system == 'CRYSTAL'):
+            result = """
+        SYSTEM        CRYSTAL
+        MOL_NAME      %s
+        NATOMS        %d
+        NATOM_MOL     %d
+        VECTA         %s
+        VECTB         %s
+        VECTC         %s
+        SIZE_CRYSTAL  %s
+        COORD_CHARGE  %s
+        CC_CHARGED    %s
+        }
+        """ % (
+            self._my_sed_dict.get('MOL_NAME', '!!!'),
+            self._my_sed_dict.get('NATOMS', '!!!'),
+            self._my_sed_dict.get('NATOM_MOL', '!!!'),
+            '    '.join(map(str, self._my_sed_dict.get('VECTA', '!!!'))),
+            '    '.join(map(str, self._my_sed_dict.get('VECTB', '!!!'))),
+            '    '.join(map(str, self._my_sed_dict.get('VECTC', '!!!'))),
+            '    '.join(map(str, self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'))),
+            '    '.join(map(str, self._my_sed_dict.get('COORD_CHARGE', '!!!'))),
+            self._my_sed_dict['CC_CHARGED']
+            )
+        elif (self._system == 'SOLVENT'):
+            result = """
+                PERIODIC  XYZ
+                SYSTEM   SOLVENT
+                MOL_NAME      %s
+                NAME_SOLVENT  %s
+                SOLVENT       %s
+                NATOMS        %d
+                NATOM_MOL     %d
+                SIZE_BOX      %s
+                VECTA         %s
+                VECTB         %s
+                VECTC         %s
+                SIZE_CRYSTAL  %s
+                COORD_CHARGE  %s
+                RCUT          %s
+                CC_CHARGED    %s
+                """ % (
+                self._my_sed_dict.get('MOL_NAME', '!!!'),
+                self._my_sed_dict.get('NAME_SOLVENT', '!!!'),
+                self._my_sed_dict.get('SOLVENT'),
+                self._my_sed_dict.get('NATOMS', '!!!'),
+                self._my_sed_dict.get('NATOM_MOL', '!!!'),
+                '    '.join(map(str, self._my_sed_dict.get('SIZE_BOX', '!!!'))),
+                '    '.join(map(str, self._my_sed_dict.get('VECTA', '!!!'))),
+                '    '.join(map(str, self._my_sed_dict.get('VECTB', '!!!'))),
+                '    '.join(map(str, self._my_sed_dict.get('VECTC', '!!!'))),
+                '    '.join(map(str, self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'))),
+                '    '.join(map(str, self._my_sed_dict.get('COORD_CHARGE', '!!!'))),
+                self._my_sed_dict.get('RCUT'),
+                self._my_sed_dict['CC_CHARGED']
+            )
+        return result
+
 
 
 

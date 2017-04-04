@@ -13,8 +13,16 @@ from utils import *
 def run_fssh( dict_):
     inputs = dict_.get('INPUTS_DICT')
     paths  = dict_.get('PATHS_DICT')
-    system = inputs.get('SYSTEM')
-    state_dict = dict_.get('STATE_DICT')
+
+    initial_name =  'state-%s-density-%s-%s' % (dict_['FIRST_ADIABAT'], dict_['DENSITY'], inputs['FILE_INIT'])
+    initial = Dir('initial/' +  initial_name, paths)
+    initial.checkdir()
+    paths.update({'initial': initial.path})
+    systems = InputFile( initial.path + '/system.info').dict
+    inputs.update(systems)
+
+
+    system = inputs['SYSTEM']
     if system == 'CRYSTAL':
         from utils import CP2KOSFSSH as Config
     elif system == 'SOLVENT':
@@ -22,17 +30,10 @@ def run_fssh( dict_):
     else:
         sys.exit()
 
-    initial = Dir('initial/' + dict_['INITIAL'], paths)
-    initial.checkdir()
-    paths.update({'initial': initial.path})
-
-    output = Dir('output/%s-scaling-%s-%s' % (dict_['INITIAL'], dict_['SCALING'], paths['bucket'].split('/')[-1]) , paths )
+    output = Dir('output/state-%s-scaling-%s-%s' % (dict_['FIRST_ADIABAT'], dict_['SCALING'], paths['bucket'].split('/')[-1]) , paths )
     output.rm_mkdir()
 
-    dict_.update(
-        {'FIRST_DIABAT' : state_dict[ dict_['INITIAL'] ]}
-    )
-
+    inputs.update(dict_)
     config = Config(inputs, paths, **dict_)
     ndir = dict_['NDIR']
     print "GO FOR RUN %d" % ndir
@@ -41,6 +42,7 @@ def run_fssh( dict_):
     if os.path.exists('run-%d' % (ndir)):
         fssh_parcel = FSSHParcelBO(inputs, paths, output)
         fssh_parcel.gather_vel_coord(config.ndir)
+        fssh_parcel.create_system_info(output_path=output.path)
 
 
 
@@ -52,26 +54,11 @@ def main(inputs, paths):
         'KIND_RUN'  : 'TASK234-SAMPLE-BO',
         'TEMPLATE_FILE' : 'FSSH_CORE.template',
         'FORCEFIELD_FILE' : 'FSSH_FF.template',
-        'FILE_INIT' : 'initial',
-        'PERIODIC' : 'XYZ',
-        'NUMBER_INIT' : 1,
-        'NUMBER_RANDOM' : 1,
-        'SYSTEM' : 'SOLVENT',
-        'MOL_NAME' :     'ETHYLENE',
-        'NAME_SOLVENT' : 'NE',
-        'SOLVENT'      : 'Ne',
-        'NATOMS'       : 136,
-        'NATOM_MOL'    : 6,
-        'SIZE_BOX'     : [60.0, 60.0, 60.0],
-        'VECTA'        : [3.527, 0.784, -0.166],
-        'VECTB'        : [0.0, 0.0, 0.0],
-        'VECTC'        : [0.0, 0.0, 0.0],
-        'SIZE_CRYSTAL' : [2, 1, 1],
-        'COORD_CHARGE' : [2, 1, 1],
+        'NUMBER_INIT'     : 1,
+        'NUMBER_RANDOM'   : 1,
+        'FILE_INIT' : 'GENERATOR_GLOBAL',
         'STEPS'        : 100,
         'PRINT'        : 1,
-        'RCUT'      :    12,
-        'CC_CHARGED'   : 1.369
             }
     inputs.update(task)
 
@@ -80,23 +67,26 @@ def main(inputs, paths):
     list_repeat   = range(inputs.get('NUMBER_RANDOM'))
     list_scaling = [0.0001, 0.001, 0.01, 0.03, 0.05, 0.07, 0.1]
     #list_scaling = [0.0001]
-    state_dict = {
-        'ground-state': 1,
-        'excited-state': 2
-    }
+    list_first_adiabat = [1, 2]
+    list_density = [0.001]
+    list_cc_charged = [1.369]
 
 
     mega_list = [ { 'PROPAGATION' : prop,
                     'INIT'              : init ,
                     'REPEAT'             : repeat,
                     'SCALING'            : scaling,
-                    'INITIAL'            : initial
+                    'FIRST_ADIABAT'            : adiabat,
+                    'DENSITY'             : density,
+                    'CC_CHARGED'          : cc_charged
                    }
                   for prop in list_propagation
                   for init      in list_init
                   for repeat    in list_repeat
                   for scaling in list_scaling
-                  for initial in state_dict.keys()
+                  for adiabat in list_first_adiabat
+                  for density in list_density
+                  for cc_charged in list_cc_charged
                   ]
 
 
@@ -118,16 +108,12 @@ def main(inputs, paths):
     output_total = Dir('output')
     output_total.rm_mkdir()
 
-    for element in state_dict.keys():
-        os.system(' cp -r %s/%s %s' % (paths.get('task'), element, paths.get('bucket')))
-
 
     # PREPARE THE MEGA_LIST FOR POOL
     for ndir in range(len(mega_list)):
         mega_list[ndir].update({ 'NDIR' : ndir,
                                  'PATHS_DICT' : paths,
-                                 'INPUTS_DICT' : inputs,
-                                 'STATE_DICT' : state_dict
+                                 'INPUTS_DICT' : inputs
                                  })
 
     # RUN THE CALCULATIONS, SERIE OR PARALLEL ACCORDING TO THE NWORKER VARIABLE
