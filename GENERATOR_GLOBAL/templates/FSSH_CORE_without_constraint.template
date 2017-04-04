@@ -86,7 +86,7 @@ INCLUDE AOM_COEFF.tmp
                         &PRINT
                             &COEFFICIENTS  LOW
                                &EACH
-                                   MD          1
+                                   MD          sedPRINT_FSSH
                                &END EACH
                             &END COEFFICIENTS
                             #&POPULATIONS  LOW
@@ -97,7 +97,7 @@ INCLUDE AOM_COEFF.tmp
                             &HAMILTONIAN
                                UNIT     hartree
                                &EACH
-                                   MD          1
+                                   MD          sedPRINT_FSSH
                                &END EACH
                             &END HAMILTONIAN
                             #&DENSITY_MATRIX
@@ -130,11 +130,11 @@ INCLUDE AOM_COEFF.tmp
                                    MD          sedPRINT
                                &END EACH
                             &END EXACT_FORCES
-                            &ACTIVE_STATE_INFO
-                               &EACH
-                                   MD          sedPRINT
-                               &END EACH
-                            &END ACTIVE_STATE_INFO
+                            #&ACTIVE_STATE_INFO
+                            #   &EACH
+                            #       MD          sedPRINT
+                            #   &END EACH
+                            #&END ACTIVE_STATE_INFO
                             &SH_INFO
                                &EACH
                                    MD          1
@@ -142,7 +142,7 @@ INCLUDE AOM_COEFF.tmp
                             &END SH_INFO
                             &ADIABAT_ENERGIES
                                &EACH
-                                   MD          sedPRINT
+                                   MD          sedPRINT_FSSH
                                &END EACH
                             &END ADIABAT_ENERGIES
                         &END PRINT

@@ -40,7 +40,8 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'FIRST_DIABAT': 1,
             'INITIALIZATION': 'DIABATIC',
             'CC_CHARGED' :   1.4008,
-            'CONSTRAINT_LENGTH' : 6
+            'CONSTRAINT_LENGTH' : 6,
+            'PRINT_FSSH'        : 1
             }
 
 

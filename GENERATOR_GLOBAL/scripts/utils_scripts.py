@@ -10,7 +10,8 @@ units = {
 }
 
 headers = {
-    'FSSH': '# Attempts  Kin-passed Successful Decoherence\n '
+    'FSSH': '# Attempts  Kin-passed Successful Decoherence\n ',
+    'Detailed-FSSH' : '# Attempts  Kin-passed Successful Decoherence Ups Downs\n'
 }
 
 
@@ -29,6 +30,8 @@ class FSSHRun(object):
             return self._extract_energies('Temperature')
         elif (property == 'FSSH'):
             return self._extract_fssh()
+        elif property == 'Detailed-FSSH':
+            return self._extract_detailed_fssh()
         elif (property == 'Delta_E'):
             return self._extract_delta_e()
         elif (property == 'State'):
@@ -119,6 +122,40 @@ class FSSHRun(object):
             results.append(count)
         return results
 
+    def _extract_detailed_fssh(self, filename='run-sh-1.log'):
+        results = self._extract_fssh(filename)
+        results += self._extract_up_down_hop(filename)
+        results += self._extract_deco_per_state(filename)
+        return results
+
+    def _extract_deco_per_state(self, filename = 'run-sh-1.log'):
+        file = open(filename, 'r')
+        nadiab = int(self.get_input_key(['NUMBER_DIABATIC_STATES'])[0])
+        results = [0] * nadiab
+        for line in file.readlines():
+            if 'Final' in line:
+                state = int(line.split()[3])
+            elif 'DECOHERENCE' in line:
+                results[ state - 1] += 1
+        file.close()
+        return results
+
+
+    def _extract_up_down_hop(self, filename='run-sh-1.log'):
+        results = [0, 0]
+        states = self._extract_state(filename)
+        previous = states[ sorted(states)[0] ][0]
+        for time in sorted(states)[1:]:
+            present = states[time][0]
+            if (present - previous) > 0:
+                results[0] += 1
+            elif (present - previous) < 0:
+                results[1] += 1
+            previous = present
+        return results
+
+
+
     def get_input_key(self, key_list, filename='run.inp'):
         file = open(filename, 'r')
         values = []
@@ -126,7 +163,7 @@ class FSSHRun(object):
             for key in key_list:
                 if re.search(key, line):
                     values.append( (line.split()[-1]) )
-        return values
+        return tuple(values)
 
     def _get_atoms_number(self, filename='run.inp'):
         file = open(filename, 'r')
