@@ -56,7 +56,7 @@ def main(inputs, paths):
         'FORCEFIELD_FILE' : 'FSSH_FF.template',
         'NUMBER_INIT'     : 1,
         'NUMBER_RANDOM'   : 1,
-        'FILE_INIT' : 'GENERATOR_GLOBAL',
+        'FILE_INIT' : 'TASK234-SAMPLE-BO-FIRST-ETHYLENE-170404-a5e55a180874b5807f102df3d41df810',
         'STEPS'        : 100,
         'PRINT'        : 1,
             }
