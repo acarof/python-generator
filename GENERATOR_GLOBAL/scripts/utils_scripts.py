@@ -159,10 +159,13 @@ class FSSHRun(object):
     def get_input_key(self, key_list, filename='run.inp'):
         file = open(filename, 'r')
         values = []
+        preval = {}
         for line in file.readlines():
             for key in key_list:
                 if re.search(key, line):
-                    values.append( (line.split()[-1]) )
+                    preval[key] = (line.split()[-1])
+        for key in key_list:
+            values.append( preval[key] )
         return tuple(values)
 
     def _get_atoms_number(self, filename='run.inp'):

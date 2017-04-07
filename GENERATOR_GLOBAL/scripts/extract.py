@@ -2,11 +2,11 @@
 import string, re, struct, sys, math, os, time
 import numpy as np
 import importlib, imp
-import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
-from operator import itemgetter
+#import matplotlib.pyplot as plt
+#from scipy.optimize import curve_fit
+#from operator import itemgetter
 from multiprocessing import Pool, cpu_count
-from scipy.integrate import quad
+#from scipy.integrate import quad
 
 # custom modudules
 from utils_scripts import *
@@ -14,7 +14,7 @@ from marcus import *
 from datetime import datetime
 
 scripts = 'task234-ratio-reversal'
-keywords = ['SCALING_FACTOR','METHOD_REVERSAL']
+keywords = ['SCALING_FACTOR','DECOHERENCE_CORRECTIONS']
 
 detail_properties = ['Surface-populations', 'Adiabatic-populations']
 #ratio_properties = ['Internal consistency ratio']
@@ -112,7 +112,7 @@ def analyse_properties(tuple):
     return properties_dict
 
 
-def print_run_dict(run_dict):
+def print_run_dict(run_dict, keywords):
     filename = 'List-run.dat'
     file = open(filename, 'w')
     for tuple in run_dict:
@@ -136,7 +136,7 @@ for i, directory in enumerate(dirlist):
             run_dict[keys] = []
         run_dict[keys].append(directory)
         os.chdir('..')
-print_run_dict(run_dict)
+print_run_dict(run_dict, keywords)
 print "Finish to build run_dir at %s" %\
     datetime.strftime(datetime.now(), "%Y %m %d %H:%M:%S ")
 
@@ -160,6 +160,8 @@ else:
 # PRINT THE RESULTS
 results_dict = {}
 filetuple = open('List-tuple.dat', 'w')
+line = '%s\n' % ('  '.join(keywords))
+filetuple.write(line)
 for tuple, result in zip( run_dict.keys(), results):
     filetuple.write('%s\n' % '  '.join(tuple))
     results_dict[tuple] = result

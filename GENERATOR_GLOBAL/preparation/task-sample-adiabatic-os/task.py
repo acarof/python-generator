@@ -3,7 +3,7 @@
 
 # standard modules
 import string, re, struct, sys, math, os, time
-import numpy
+import numpy as np
 from multiprocessing import Pool, cpu_count
 
 # custom modules
@@ -44,7 +44,48 @@ def run_fssh( dict_):
         fssh_parcel.gather_vel_coord(config.ndir)
         fssh_parcel.create_system_info(output_path=output.path)
 
+def estimate_scaling(coupling):  # coupling in eV
+    jacob_coupling = {
+        89: 8,
+        133: 11,
+        177: 15,
+        266: 23,
+        355: 30,
+        532: 45,
+        710: 61,
+        887: 76,
+        1330: 114,
+        1774: 151,
+        2217: 189,
+        2661: 227,
+        3104: 265,
+        3548: 303,
+        3991: 341,
+        4435: 378,
+        4878: 418,
+        5322: 455
+    }
 
+    scalings = np.array(jacob_coupling.keys()) * 0.0000367493  # convert in Ha
+    couplings = np.array(jacob_coupling.values()) * 0.001  # convert in eV
+    fit = np.polyfit(scalings, couplings, 1)
+    scaling = (coupling - fit[1]) / fit[0]
+    #coupling =  fit[0] * scaling + fit[1]
+
+    return scaling
+
+def round_to_1(x):
+    return round(x, -int(np.floor(np.log10(np.abs(x)))))
+
+def get_list_scaling(number, reorga):
+    division = { 1 : 1, 2 : 2, 3 : 3, 4 :5, 5 : 10, 6 : 100, 7 : 1000}
+    scalings = []
+    for i in range(1, number + 1):
+        div = division[i]
+        coupling = reorga / div
+        scaling = estimate_scaling(coupling)
+        scalings.append(round_to_1(scaling))
+    return scalings
 
 
 def main(inputs, paths):
@@ -59,18 +100,18 @@ def main(inputs, paths):
         'FILE_INIT' : 'TASK234-SAMPLE-BO-FIRST-ETHYLENE-170404-a5e55a180874b5807f102df3d41df810',
         'STEPS'        : 100,
         'PRINT'        : 1,
+        'NUMBER_SCALING' : 7,
+        'REORGANIZATION_ENERGY' : 0.1  # eV
             }
     inputs.update(task)
 
     list_propagation = ['BORN_OPPENHEIMER']
     list_init     = range(1, inputs.get('NUMBER_INIT') + 1)
     list_repeat   = range(inputs.get('NUMBER_RANDOM'))
-    list_scaling = [0.0001, 0.001, 0.01, 0.03, 0.05, 0.07, 0.1]
-    #list_scaling = [0.0001]
+    list_scaling = get_list_scaling( inputs['NUMBER_SCALING'], inputs['REORGANIZATION_ENERGY']  )
     list_first_adiabat = [1, 2]
     list_density = [0.001]
     list_cc_charged = [1.369]
-
 
     mega_list = [ { 'PROPAGATION' : prop,
                     'INIT'              : init ,
@@ -115,6 +156,7 @@ def main(inputs, paths):
                                  'PATHS_DICT' : paths,
                                  'INPUTS_DICT' : inputs
                                  })
+
 
     # RUN THE CALCULATIONS, SERIE OR PARALLEL ACCORDING TO THE NWORKER VARIABLE
     nworker = inputs['NWORKER']

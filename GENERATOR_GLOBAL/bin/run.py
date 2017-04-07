@@ -51,7 +51,7 @@ input.dict.update({'NWORKER' : nworker})
 paths.update(
    { 'cp2k' : machine.get_cp2k_path()
      })
-machine.source_cp2k()
+#machine.source_cp2k()
 
 
 # UPLOAD task.py as a MODULE

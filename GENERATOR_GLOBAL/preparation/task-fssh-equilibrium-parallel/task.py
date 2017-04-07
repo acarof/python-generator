@@ -14,28 +14,31 @@ from utils import *
 def run_fssh( dict_):
     inputs = dict_.get('INPUTS_DICT')
     paths  = dict_.get('PATHS_DICT')
-    system = inputs.get('SYSTEM')
-    if system == 'CRYSTAL':
-        from utils import CP2KOSFSSH as Config
-    elif system == 'SOLVENT':
-        from utils import CP2KOSwSolventFSSH as Config
-    else:
-        sys.exit()
 
     # DETERMINE INITIAL STATE TO GET BOLTZMANN RATIO
     scaling = dict_['SCALING']
     pop_ground_state = estimate_boltzmann_ratio(scaling, paths, inputs.get('NUMBER_CONFIG')*inputs['NUMBER_REPEAT'])
     indice = (dict_['REPEAT'] + 1)  + (dict_['INIT'] -1 )*inputs['NUMBER_REPEAT']
     if indice < pop_ground_state:
-        initial = Dir('initial/ground-state-scaling-%s-%s' % (scaling, inputs['INITIAL']), paths)
+        initial = Dir('initial/state-1-scaling-%s-%s' % (scaling, inputs['FILE_INIT']), paths)
         inputs.update({'FIRST_ADIABAT' : 1})
     else:
-        initial = Dir('initial/excited-state-scaling-%s-%s' % (scaling, inputs['INITIAL']), paths)
+        initial = Dir('initial/state-2-scaling-%s-%s' % (scaling, inputs['FILE_INIT']), paths)
         inputs.update({'FIRST_ADIABAT' : 2})
 
 
     initial.checkdir()
     paths.update({'initial': initial.path})
+    systems = InputFile( initial.path + '/system.info').dict
+    inputs.update(systems)
+
+    system = inputs['SYSTEM']
+    if system == 'CRYSTAL':
+        from utils import CP2KOSFSSH as Config
+    elif system == 'SOLVENT':
+        from utils import CP2KOSwSolventFSSH as Config
+    else:
+        sys.exit()
 
     config = Config(inputs, paths, **dict_)
     ndir = dict_['NDIR']
@@ -77,6 +80,48 @@ def estimate_boltzmann_ratio(scaling, paths, nconfig):  # scaling in Ha
 
     return np.rint( nconfig * marcus.calculate_boltzman_ratio(reorga, free_energy, coupling, temperature, state = 'Ground') )
 
+def estimate_scaling(coupling):  # coupling in eV
+    jacob_coupling = {
+        89: 8,
+        133: 11,
+        177: 15,
+        266: 23,
+        355: 30,
+        532: 45,
+        710: 61,
+        887: 76,
+        1330: 114,
+        1774: 151,
+        2217: 189,
+        2661: 227,
+        3104: 265,
+        3548: 303,
+        3991: 341,
+        4435: 378,
+        4878: 418,
+        5322: 455
+    }
+
+    scalings = np.array(jacob_coupling.keys()) * 0.0000367493  # convert in Ha
+    couplings = np.array(jacob_coupling.values()) * 0.001  # convert in eV
+    fit = np.polyfit(scalings, couplings, 1)
+    scaling = (coupling - fit[1]) / fit[0]
+    #coupling =  fit[0] * scaling + fit[1]
+
+    return scaling
+
+def round_to_1(x):
+    return round(x, -int(np.floor(np.log10(np.abs(x)))))
+
+def get_list_scaling(number, reorga):
+    division = { 1 : 1, 2 : 2, 3 : 3, 4 :5, 5 : 10, 6 : 100, 7 : 1000}
+    scalings = []
+    for i in range(1, number + 1):
+        div = division[i]
+        coupling = reorga / div
+        scaling = estimate_scaling(coupling)
+        scalings.append(round_to_1(scaling))
+    return scalings
 
 
 def main(inputs, paths):
@@ -85,25 +130,33 @@ def main(inputs, paths):
 
     task = {
         'KIND_RUN' : 'TONAME',
-        'STEPS'    : 200,
-        'PRINT'    : 200,
+        'FILE_INIT': 'TASK234-SAMPLE-TWO-ADIABATS-170405-1655c3bacaee42ccabccff93dbff0f92',
+        'TEMPLATE_FILE': 'FSSH_CORE.template',
+        'FORCEFIELD_FILE': 'FSSH_FF.template',
+        'STEPS'    : 10000,
+        'PRINT'    : 10000,
+        'TIMESTEP' : 0.5,
         'PRINT_FSSH' : 1,
         'INITIALIZATION': 'ADIABATIC',
         'NUMBER_CONFIG'        : 1,
-        'NUMBER_REPEAT'  :  1
+        'NUMBER_REPEAT'  :  1,
+        'NUMBER_SCALING' : 1,
+        'REORGANIZATION_ENERGY' : 0.1  # eV
     }
     inputs.update(task)
 
     list_propagation = ['FSSH']
-    list_decoherences = ['INSTANT_COLLAPSE', 'DAMPING']
-    list_rescaling    = ['NACV','SIMPLE_QSYS']
+    #list_decoherences = ['INSTANT_COLLAPSE', 'DAMPING']
+    list_decoherences = ['DAMPING']
+    #list_rescaling    = ['NACV','SIMPLE_QSYS']
+    list_rescaling = ['NACV']
     list_nacv         = ['FAST']
     #list_reversal = ['NEVER', 'ALWAYS', 'TRHULAR', 'SUBOTNIK']
     list_reversal = ['NEVER']
     list_init     = range(1, inputs.get('NUMBER_CONFIG') + 1)
     list_repeat   = range(inputs.get('NUMBER_REPEAT'))
-    list_scaling = [0.0001, 0.001, 0.01, 0.03]
-    list_scaling = [0.03]
+    list_scaling = get_list_scaling( inputs['NUMBER_SCALING'], inputs['REORGANIZATION_ENERGY']  )
+    #list_scaling = [0.03]
 
 
     mega_list = [ { 'PROPAGATION' : prop,
@@ -125,27 +178,6 @@ def main(inputs, paths):
                   for scaling in list_scaling
                   ]
 
-    system = {
-        'INITIAL'      : 'GENERATOR_GLOBAL',
-        'TEMPLATE_FILE': 'FSSH_CORE.template',
-        'FORCEFIELD_FILE': 'FSSH_FF.template',
-        'PERIODIC' : 'XYZ',
-        'SYSTEM' : 'SOLVENT',
-        'MOL_NAME' :     'ETHYLENE',
-        'NAME_SOLVENT' : 'NE',
-        'SOLVENT'      : 'Ne',
-        'NATOMS'       : 136,
-        'NATOM_MOL'    : 6,
-        'SIZE_BOX'     : [60.0, 60.0, 60.0],
-        'VECTA'        : [3.527, 0.784, -0.166],
-        'VECTB'        : [0.0, 0.0, 0.0],
-        'VECTC'        : [0.0, 0.0, 0.0],
-        'SIZE_CRYSTAL' : [2, 1, 1],
-        'COORD_CHARGE' : [2, 1, 1],
-        'RCUT'      :    12,
-        'CC_CHARGED'   : 1.369,
-            }
-    inputs.update(system)
 
 
     # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
