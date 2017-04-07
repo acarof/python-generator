@@ -59,7 +59,7 @@ final += "Number of failed runs: %d\n" % failed
 
 
 print final
-file = open(name_bucket + '.info', 'w')
+file = open( 'info.' + name_bucket , 'w')
 file.write(final)
 file.close()
 

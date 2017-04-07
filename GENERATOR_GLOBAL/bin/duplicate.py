@@ -6,8 +6,11 @@ try:
 except:
     print "A TASK TO DUPLICATE IS REQUIRED!"
     raise SystemExit
-taskname = task.split('/')[1]
 
+if 'preparation/' in task:
+    taskname = task.split('/')[1]
+else:
+    taskname = task
 
 try:
     name = sys.argv[2]
@@ -17,7 +20,7 @@ except:
 if not os.path.exists(name):
     os.mkdir(name)
 else:
-    print "TONAME ALREADY EXISTS"
+    print "%s ALREADY EXISTS" % name
     raise SystemExit
 
 dst=name
