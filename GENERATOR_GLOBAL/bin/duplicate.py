@@ -20,7 +20,7 @@ except:
 if not os.path.exists(name):
     os.mkdir(name)
 else:
-    print "%s ALREADY EXISTS" % name
+    print ("%s ALREADY EXISTS" % name)
     raise SystemExit
 
 dst=name

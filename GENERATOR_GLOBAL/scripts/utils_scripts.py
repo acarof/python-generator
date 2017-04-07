@@ -74,7 +74,7 @@ class FSSHRun(object):
         file = open(filename, 'r')
         results = {}
         for line in file.readlines():
-            if 'time' in line:
+            if ', time' in line:
                 time = float(line.split()[5])
                 results.update({time: []})
             elif 'Final' in line:
@@ -115,7 +115,7 @@ class FSSHRun(object):
 
     def _extract_fssh(self, filename='run-sh-1.log'):
         results = []
-        for property in ['ATTEMPT', 'PASSED', 'SUCCESS', 'DECOHERENCE']:
+        for property in ['ATTEMPT', 'PASSED', 'SUCCESS', 'DECOHERENCE!']:
             with open(filename) as f:
                 contents = f.read()
                 count = contents.count(property)
@@ -125,7 +125,9 @@ class FSSHRun(object):
     def _extract_detailed_fssh(self, filename='run-sh-1.log'):
         results = self._extract_fssh(filename)
         results += self._extract_up_down_hop(filename)
-        results += self._extract_deco_per_state(filename)
+        deco = self.get_input_key(['DECOHERENCE_CORRECTIONS'])
+        if deco[0] == 'INSTANT_COLLAPSE':
+            results += self._extract_deco_per_state(filename)
         return results
 
     def _extract_deco_per_state(self, filename = 'run-sh-1.log'):
@@ -135,7 +137,7 @@ class FSSHRun(object):
         for line in file.readlines():
             if 'Final' in line:
                 state = int(line.split()[3])
-            elif 'DECOHERENCE' in line:
+            elif 'DECOHERENCE!' in line:
                 results[ state - 1] += 1
         file.close()
         return results

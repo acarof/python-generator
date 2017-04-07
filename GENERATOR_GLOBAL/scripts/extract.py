@@ -13,7 +13,7 @@ from utils_scripts import *
 from marcus import *
 from datetime import datetime
 
-scripts = 'task234-ratio-reversal'
+scripts = 'extract-scaling-deco'
 keywords = ['SCALING_FACTOR','DECOHERENCE_CORRECTIONS']
 
 detail_properties = ['Surface-populations', 'Adiabatic-populations']
