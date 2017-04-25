@@ -28,6 +28,8 @@ class FSSHRun(object):
             return self._extract_population()
         elif (property == 'Temperature'):
             return self._extract_energies('Temperature')
+        elif (property == 'Total-energy'):
+            return self._extract_energies('Conserved')
         elif (property == 'FSSH'):
             return self._extract_fssh()
         elif property == 'Detailed-FSSH':
