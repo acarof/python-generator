@@ -6,38 +6,42 @@ import numpy as np
 from multiprocessing import Pool, cpu_count
 import imp
 from itertools import product as iterprod
-from collections import Counter
+
 
 # custom modules
 from utils import *
 
 
 
-def run_fssh( dict_):
-    inputs = dict_.get('INPUTS_DICT')
-    paths  = dict_.get('PATHS_DICT')
+def run_fssh( cp2k_info):
+    task_info = cp2k_info.get('INPUTS_DICT')
+    paths  = cp2k_info.get('PATHS_DICT')
+
 
     # DETERMINE INITIAL STATE TO GET BOLTZMANN RATIO
-    scaling = dict_['SCALING']
-    pop_ground_state = estimate_boltzmann_ratio(scaling, paths, inputs.get('NUMBER_CONFIG')*inputs['NUMBER_REPEAT'])
-    indice = (dict_['REPEAT'] + 1)  + (dict_['INIT'] -1 )*inputs['NUMBER_REPEAT']
+    scaling = cp2k_info['SCALING']
+    pop_ground_state = estimate_boltzmann_ratio(scaling, paths, task_info.get('NUMBER_CONFIG')*task_info['NUMBER_REPEAT'])
+    indice = (cp2k_info['REPEAT'] + 1)  + (cp2k_info['INIT'] -1 )*task_info['NUMBER_REPEAT']
     if indice < pop_ground_state:
-        initial = Dir('initial/state-1-scaling-%s-%s' % (scaling, inputs['FILE_INIT']), paths)
-        inputs.update({'FIRST_ADIABAT' : 1})
+        initial = Dir('initial/state-1-scaling-%s-%s' % (scaling, task_info['FILE_INIT']), paths)
+        cp2k_info.update({'FIRST_ADIABAT' : 1})
     else:
-        initial = Dir('initial/state-2-scaling-%s-%s' % (scaling, inputs['FILE_INIT']), paths)
-        inputs.update({'FIRST_ADIABAT' : 2})
+        initial = Dir('initial/state-2-scaling-%s-%s' % (scaling, task_info['FILE_INIT']), paths)
+        cp2k_info.update({'FIRST_ADIABAT' : 2})
 
-    inputs.update({'STEPS' : int(inputs['LENGTH_FS'] / dict_['TIMESTEP'] ) } )
-    inputs.update({'PRINT':  int(inputs['LENGTH_FS'] / dict_['TIMESTEP']) } )
-    inputs.update({'PRINT_FSSH': int( 1 / dict_['TIMESTEP']) })
+
+    cp2k_info.update({'STEPS' : int(task_info['LENGTH_FS'] / cp2k_info['TIMESTEP'] ) } )
+    cp2k_info.update({'PRINT':  int(task_info['LENGTH_FS'] / cp2k_info['TIMESTEP']) } )
+    cp2k_info.update({'PRINT_FSSH': int( 1 / cp2k_info['TIMESTEP']) })
+
 
     initial.checkdir()
     paths.update({'initial': initial.path})
     systems = InputFile( initial.path + '/system.info').dict
-    inputs.update(systems)
+    cp2k_info.update(systems)
 
-    system = inputs['SYSTEM']
+
+    system = cp2k_info['SYSTEM']
     if system == 'CRYSTAL':
         from utils import CP2KOSFSSH as Config
     elif system == 'SOLVENT':
@@ -45,8 +49,9 @@ def run_fssh( dict_):
     else:
         sys.exit()
 
-    config = Config(inputs, paths, **dict_)
-    ndir = dict_['NDIR']
+
+    config = Config(cp2k_info, paths)
+    ndir = cp2k_info['NDIR']
     print "GO FOR RUN %d" % ndir
     config.run(ndir)
 
@@ -129,7 +134,7 @@ def get_list_scaling(number, reorga):
     return scalings
 
 
-def main(inputs, paths):
+def main(task_info, paths):
     print """
     """
 
@@ -140,46 +145,48 @@ def main(inputs, paths):
         'FORCEFIELD_FILE': 'FSSH_FF.template',
         'LENGTH_FS': 1,
         'INITIALIZATION': 'ADIABATIC',
-        'NUMBER_CONFIG'        : 10,
+        'NUMBER_CONFIG'        : 1,
         'NUMBER_REPEAT'  :  10,
         'NUMBER_SCALING' : 1,
         'REORGANIZATION_ENERGY' : 0.1  # eV
     }
-    inputs.update(task)
+    task_info.update(task)
 
 
-    super_list = [
+    cp2k_param = [
         [ 'PROPAGATION', 'FSSH'],
         [ 'DECO', 'DAMPING'],
         [ 'METHOD_RESCALING', 'NACV'],
         [ 'METHOD_ADIAB_NACV', 'FAST'],
         [ 'METHOD_REVERSAL', 'ALWAYS'],
-        [ 'INIT'] + range(1, inputs.get('NUMBER_CONFIG') + 1),
-        [ 'REPEAT'] + range(inputs.get('NUMBER_REPEAT')),
-        [ 'SCALING'] + get_list_scaling( inputs['NUMBER_SCALING'], inputs['REORGANIZATION_ENERGY']  ),
-        [ 'TIMESTEP', 0.5]
+        [ 'INIT'] + range(1, task_info.get('NUMBER_CONFIG') + 1),
+        [ 'REPEAT'] + range(task_info.get('NUMBER_REPEAT')),
+        [ 'SCALING'] + get_list_scaling( task_info['NUMBER_SCALING'], task_info['REORGANIZATION_ENERGY']  ),
+        [ 'TIMESTEP', 0.5],
+        [ 'TEMPLATE_FILE', 'FSSH_CORE.template'],
+        [ 'FORCEFIELD_FILE', 'FSSH_FF.template']
     ]
 
 
     # BUILD THE MEGA_LISTS
-    second_list = [ sublist[1:] for sublist in super_list]
+    second_list = [ sublist[1:] for sublist in cp2k_param]
     total_list  = list(iterprod(*second_list))
     mega_list = []
     for sublist in total_list:
         subdict = {}
         for index in range(len(sublist)):
             subdict.update({
-                super_list[index][0] : sublist[index]
+                cp2k_param[index][0] : sublist[index]
             })
         mega_list.append(subdict)
 
 
     # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
-    bucket = Bucket(inputs)
+    bucket = Bucket(task_info)
     bucket.name()
     paths.update({'bucket': bucket.path})
 
-    task = Dir(inputs.get('INPUT_INFO'))
+    task = Dir(task_info.get('INPUT_INFO'))
     paths.update( {'task' : task.path} )
 
     templates = Dir('templates', paths)
@@ -197,19 +204,19 @@ def main(inputs, paths):
     for ndir in range(len(mega_list)):
         mega_list[ndir].update({ 'NDIR' : ndir,
                                  'PATHS_DICT' : paths,
-                                 'INPUTS_DICT' : inputs
+                                 'INPUTS_DICT' : task_info
                                  })
 
 
     # RUN THE CALCULATIONS, SERIE OR PARALLEL ACCORDING TO THE NWORKER VARIABLE
-    nworker = inputs['NWORKER']
-    if nworker == -1:
-        nworker = cpu_count()
-
+    nworker = task_info['NWORKER']
     if nworker == 0:
-        for dict_ in mega_list:
-            run_fssh(dict_)
+        for cp2k_info in mega_list:
+            run_fssh(cp2k_info)
     else:
+        from multiprocessing import Pool, cpu_count
+        if nworker == -1:
+            nworker = cpu_count()
         pool = Pool(nworker)
         pool.map( run_fssh, mega_list)
 
