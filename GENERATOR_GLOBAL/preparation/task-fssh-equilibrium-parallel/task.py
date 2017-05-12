@@ -26,6 +26,9 @@ def run_fssh( dict_):
         initial = Dir('initial/state-2-scaling-%s-%s' % (scaling, inputs['FILE_INIT']), paths)
         inputs.update({'FIRST_ADIABAT' : 2})
 
+    inputs.update({'STEPS' : int(inputs['LENGTH_FS'] / dict_['TIMESTEP'] ) } )
+    inputs.update({'PRINT':  int(inputs['LENGTH_FS'] / dict_['TIMESTEP']) } )
+    inputs.update({'PRINT_FSSH': int( 1 / dict_['TIMESTEP']) })
 
     initial.checkdir()
     paths.update({'initial': initial.path})
@@ -133,13 +136,12 @@ def main(inputs, paths):
         'FILE_INIT': 'TASK234-SAMPLE-TWO-ADIABATS-170405-1655c3bacaee42ccabccff93dbff0f92',
         'TEMPLATE_FILE': 'FSSH_CORE.template',
         'FORCEFIELD_FILE': 'FSSH_FF.template',
-        'STEPS'    : 10000,
-        'PRINT'    : 10000,
-        'TIMESTEP' : 0.5,
-        'PRINT_FSSH' : 1,
+        'LENGTH_FS': 1,
+        #        'TIMESTEP' : 0.5,
+        #        'PRINT_FSSH' : 1,
         'INITIALIZATION': 'ADIABATIC',
-        'NUMBER_CONFIG'        : 1,
-        'NUMBER_REPEAT'  :  1,
+        'NUMBER_CONFIG'        : 10,
+        'NUMBER_REPEAT'  :  10,
         'NUMBER_SCALING' : 1,
         'REORGANIZATION_ENERGY' : 0.1  # eV
     }
@@ -156,6 +158,8 @@ def main(inputs, paths):
     list_init     = range(1, inputs.get('NUMBER_CONFIG') + 1)
     list_repeat   = range(inputs.get('NUMBER_REPEAT'))
     list_scaling = get_list_scaling( inputs['NUMBER_SCALING'], inputs['REORGANIZATION_ENERGY']  )
+    list_timestep = [0.01, 0.05, 0.1, 0.5]
+    list_timestep = [0.5]
     #list_scaling = [0.03]
 
 
@@ -165,8 +169,9 @@ def main(inputs, paths):
                     'METHOD_ADIAB_NACV' : nacv,
                     'METHOD_REVERSAL'   : reversal,
                     'INIT'              : init ,
-                    'REPEAT'             : repeat,
-                    'SCALING'            : scaling
+                    'REPEAT'            : repeat,
+                    'SCALING'           : scaling,
+                    'TIMESTEP'          : timestep
                    }
                   for prop in list_propagation
                   for deco in list_decoherences
@@ -176,6 +181,7 @@ def main(inputs, paths):
                   for init      in list_init
                   for repeat    in list_repeat
                   for scaling in list_scaling
+                  for timestep in list_timestep
                   ]
 
 

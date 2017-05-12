@@ -20,7 +20,7 @@ def main(inputs, paths):
 
     list_propagation = ['FSSH','BORN_OPPENHEIMER', 'TEST_HOP','FROZEN_HAMILTONIAN','CLASSICAL_PATH','GALILEAN']
     #list_propagation = ['FSSH']
-    list_decoherences = ['NO_DECO_CORR', 'INSTANT_COLLAPSE', 'DAMPING', 'TRESH_ONLY_COLLAPSE']
+    list_decoherences = ['NO_DECO_CORR', 'INSTANT_COLLAPSE', 'DAMPING']
     list_trivial_corr = ['TRIVIAL_HOP_CORRECT', 'UNMODIFIED_SURF_HOP']
 
     list_analytics   = ['T', 'F']
@@ -36,7 +36,7 @@ def main(inputs, paths):
     #list_rescaling = ['NACV']
     list_nacv         = ['TEST', 'CONTRIBUTION','TOTAL','FAST']
     #list_nacv         = ['TOTAL']
-    list_reversal     = ['NEVER','ALWAYS','TRHULAR','SUBOTNIK']
+    list_reversal     = ['NEVER','ALWAYS','TRUHLAR','SUBOTNIK']
     #list_reversal = ['ALWAYS']
 
     mega_list = [ { 'PROPAGATION' : prop,
