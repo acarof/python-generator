@@ -5,6 +5,8 @@ import string, re, struct, sys, math, os, time
 import numpy as np
 from multiprocessing import Pool, cpu_count
 import imp
+from itertools import product as iterprod
+from collections import Counter
 
 # custom modules
 from utils import *
@@ -137,8 +139,6 @@ def main(inputs, paths):
         'TEMPLATE_FILE': 'FSSH_CORE.template',
         'FORCEFIELD_FILE': 'FSSH_FF.template',
         'LENGTH_FS': 1,
-        #        'TIMESTEP' : 0.5,
-        #        'PRINT_FSSH' : 1,
         'INITIALIZATION': 'ADIABATIC',
         'NUMBER_CONFIG'        : 10,
         'NUMBER_REPEAT'  :  10,
@@ -147,43 +147,31 @@ def main(inputs, paths):
     }
     inputs.update(task)
 
-    list_propagation = ['FSSH']
-    #list_decoherences = ['INSTANT_COLLAPSE', 'DAMPING']
-    list_decoherences = ['DAMPING']
-    #list_rescaling    = ['NACV','SIMPLE_QSYS']
-    list_rescaling = ['NACV']
-    list_nacv         = ['FAST']
-    #list_reversal = ['NEVER', 'ALWAYS', 'TRHULAR', 'SUBOTNIK']
-    list_reversal = ['NEVER']
-    list_init     = range(1, inputs.get('NUMBER_CONFIG') + 1)
-    list_repeat   = range(inputs.get('NUMBER_REPEAT'))
-    list_scaling = get_list_scaling( inputs['NUMBER_SCALING'], inputs['REORGANIZATION_ENERGY']  )
-    list_timestep = [0.01, 0.05, 0.1, 0.5]
-    list_timestep = [0.5]
-    #list_scaling = [0.03]
+
+    super_list = [
+        [ 'PROPAGATION', 'FSSH'],
+        [ 'DECO', 'DAMPING'],
+        [ 'METHOD_RESCALING', 'NACV'],
+        [ 'METHOD_ADIAB_NACV', 'FAST'],
+        [ 'METHOD_REVERSAL', 'ALWAYS'],
+        [ 'INIT'] + range(1, inputs.get('NUMBER_CONFIG') + 1),
+        [ 'REPEAT'] + range(inputs.get('NUMBER_REPEAT')),
+        [ 'SCALING'] + get_list_scaling( inputs['NUMBER_SCALING'], inputs['REORGANIZATION_ENERGY']  ),
+        [ 'TIMESTEP', 0.5]
+    ]
 
 
-    mega_list = [ { 'PROPAGATION' : prop,
-                    'DECO': deco,
-                    'METHOD_RESCALING' : rescaling,
-                    'METHOD_ADIAB_NACV' : nacv,
-                    'METHOD_REVERSAL'   : reversal,
-                    'INIT'              : init ,
-                    'REPEAT'            : repeat,
-                    'SCALING'           : scaling,
-                    'TIMESTEP'          : timestep
-                   }
-                  for prop in list_propagation
-                  for deco in list_decoherences
-                  for rescaling in list_rescaling
-                  for nacv      in list_nacv
-                  for reversal  in list_reversal
-                  for init      in list_init
-                  for repeat    in list_repeat
-                  for scaling in list_scaling
-                  for timestep in list_timestep
-                  ]
-
+    # BUILD THE MEGA_LISTS
+    second_list = [ sublist[1:] for sublist in super_list]
+    total_list  = list(iterprod(*second_list))
+    mega_list = []
+    for sublist in total_list:
+        subdict = {}
+        for index in range(len(sublist)):
+            subdict.update({
+                super_list[index][0] : sublist[index]
+            })
+        mega_list.append(subdict)
 
 
     # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
