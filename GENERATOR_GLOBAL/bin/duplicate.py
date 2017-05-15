@@ -37,9 +37,8 @@ shutil.copytree(task, name + '/' + taskname)
 with open('%s/task.py' % task) as file:
     text = file.read()
     try:
-        inits = re.findall(r"'FILE_INIT': '([^']*)", text)[0]
+        inits = re.findall(r"'FILE_INIT'.*: *'([^']*)", text)[0]
         fileinit = True
-        print "Hey"
     except:
         fileinit = False
 if fileinit:

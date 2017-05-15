@@ -20,9 +20,7 @@ def main(task_info, paths):
 
     task = {
         'KIND_RUN' : 'TONAME',
-        'FILE_INIT': 'TASK234-SAMPLE-TWO-ADIABATS-170405-1655c3bacaee42ccabccff93dbff0f92',
-        'TEMPLATE_FILE': 'FSSH_CORE.template',
-        'FORCEFIELD_FILE': 'FSSH_FF.template',
+        'FILE_INIT': 'TASK271-SAMPLE-TWO-ADIABATS-170405-1655c3bacaee42ccabccff93dbff0f92',
         'LENGTH_FS': 1,
         'INITIALIZATION': 'ADIABATIC',
         'NUMBER_CONFIG'        : 1,

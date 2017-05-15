@@ -38,7 +38,8 @@
      KIND                       AMBER
 #     K   [kcalmol*angstrom^-2]  589.70D0
 #UNITS hartree/bohr^2
-     K                          0.263099D0
+     #K                          0.263099D0
+     K                          sedK_CC_CHARGED
 #     R0         [bohr]          2.6475D0
 #     R0         [angstrom]       1.4008D0
      R0          [angstrom]        sedCC_CHARGED

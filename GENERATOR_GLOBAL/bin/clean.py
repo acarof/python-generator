@@ -14,6 +14,7 @@ if name_bucket != 'GENERATOR_GLOBAL':
     new_name =  '-'.join(list)
     os.chdir('..')
     os.system('mv %s %s' % (name_bucket, new_name))
+    os.chdir(new_name)
 
 os.system('rm -rf run-*')
 os.system('rm -rf fail-*')

@@ -48,6 +48,8 @@ class FSSHRun(object):
             return self._extract_surface_population()
         elif property == 'Adiabatic-populations':
             return self._extract_adiabatic_population()
+        elif property == 'Adiabatic-energies':
+            return self._extract_adiabatic_energies()
         else:
             print "Extraction of %s not implemented" % property
             sys.exit()
@@ -105,6 +107,17 @@ class FSSHRun(object):
                 adiabat = eigenvectors.transpose().dot(diabat)
                 populations = [ np.absolute(x)**2 for x in adiabat]
                 result[time] = populations
+        return result
+
+    def _extract_adiabatic_energies(self):
+        hamiltonian = self._read_xyz_file('run-hamilt-1.xyz')
+        result = {}
+        for time in hamiltonian:
+            hamilt = np.transpose( hamiltonian[time])[2:]
+            eigenvalues, eigenvectors = np.linalg.eig( hamilt )
+            idx = eigenvalues.argsort()
+            eigenvalues = eigenvalues[idx]
+            result[time] = eigenvalues
         return result
 
     def _extract_surface_population(self):
