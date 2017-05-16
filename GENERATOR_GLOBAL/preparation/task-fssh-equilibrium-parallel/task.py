@@ -20,13 +20,11 @@ def main(task_info, paths):
 
     task = {
         'KIND_RUN' : 'TONAME',
-        'FILE_INIT': 'TASK271-SAMPLE-TWO-ADIABATS-170405-1655c3bacaee42ccabccff93dbff0f92',
-        'LENGTH_FS': 1,
+        'FILE_INIT': 'TASK271-SAMPLE-BO-170515-97396bb75636a2b22cea103855143905',
+        'LENGTH_FS': 10000,
         'INITIALIZATION': 'ADIABATIC',
         'NUMBER_CONFIG'        : 1,
-        'NUMBER_REPEAT'  :  10,
-        'NUMBER_SCALING' : 1,
-        'REORGANIZATION_ENERGY' : 0.1  # eV
+        'NUMBER_REPEAT'  :  1
     }
     task_info.update(task)
 
@@ -39,8 +37,9 @@ def main(task_info, paths):
         [ 'METHOD_REVERSAL', 'ALWAYS'],
         [ 'INIT'] + range(1, task_info.get('NUMBER_CONFIG') + 1),
         [ 'REPEAT'] + range(task_info.get('NUMBER_REPEAT')),
-        [ 'SCALING'] + get_list_scaling( task_info['NUMBER_SCALING'], task_info['REORGANIZATION_ENERGY']  ),
-        [ 'TIMESTEP', 0.5],
+        #[ 'SCALING', 0.05, 0.03, 0.01, 0.008, 0.005, 0.003, 0.001, 0.0005, 0.0001, 0.00005],
+         [ 'SCALING', 0.0001 ],
+        [ 'TIMESTEP', 0.1],
         [ 'TEMPLATE_FILE', 'FSSH_CORE.template'],
         [ 'FORCEFIELD_FILE', 'FSSH_FF.template']
     ]

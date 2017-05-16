@@ -16,17 +16,16 @@ from datetime import datetime
 scripts = 'extract-scaling-deco'
 keywords = ['SCALING_FACTOR','FIRST_ADIABAT']
 
-detail_properties = [ 'Adiabatic-energies']
-detail_properties = []
-mega_detail_properties = ['Adiabatic-energies']
+detail_properties = [ 'Adiabatic-energies', 'Delta_E']
+#detail_properties = []
 #ratio_properties = ['Internal consistency ratio']
 #histo_properties = ['Delta_E', 'Couplings', 'Populations']
-histo_properties = ['Delta_E']
+histo_properties = []
 mean_properties = ['Temperature','Couplings','Total-energy']
-mean_properties = ['Temperature','Couplings']
+#mean_properties = ['Temperature','Couplings']
 specific_properties = ['FSSH', 'Detailed-FSSH']
 specific_properties = []
-total_properties = detail_properties + mean_properties + specific_properties + histo_properties + mega_detail_properties
+total_properties = detail_properties + mean_properties + specific_properties + histo_properties
 
 if 'GENERATOR_GLOBAL' in os.getcwd():
     dirlist = os.listdir('.')
@@ -39,13 +38,6 @@ else:
 dataname = 'data-%s-%s' % (scripts, title)
 if not os.path.isdir(dataname):
     os.mkdir(dataname)
-
-bin = 2
-bin_histo = 50
-
-reorga = 0.300
-free_energy = 0.00
-nadiab = 2
 
 
 def sum_two_dict( dict1, dict2):
@@ -98,8 +90,6 @@ def analyse_properties(tuple):
             prop = dir.extract(property)
             if property in detail_properties:
                 properties_dict[property] = sum_two_dict(properties_dict.get(property), prop)
-            elif property in mega_detail_properties:
-                properties_dict[property] = append_two_dict(properties_dict.get(property), prop)
             elif property in mean_properties:
                 list = statistics( prop )
                 if properties_dict.get(property) is None:
@@ -186,9 +176,6 @@ for tuple, result in zip( run_dict.keys(), results):
         os.system('mv %s %s' % (filename, dataname))
     for property in detail_properties:
         properties[property] = average_dict(properties[property], properties['Number runs'])
-        filename = print_dict( properties[property], property, tuple  )
-        os.system('mv %s %s' % (filename, dataname))
-    for property in mega_detail_properties:
         filename = print_dict( properties[property], property, tuple  )
         os.system('mv %s %s' % (filename, dataname))
     for property in specific_properties:
