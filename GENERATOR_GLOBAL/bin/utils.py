@@ -296,7 +296,7 @@ class OSwSolvent(OSCluster):
     """
     """
 
-    def __init__(self, inputs, paths, ndir):
+    def __init__(self, inputs, paths, ndir=0):
         self._closest_dist = inputs.get('CLOSEST_DIST')
         self._kind_solvent = inputs.get('SOLVENT')
         self._density = inputs.get('DENSITY')

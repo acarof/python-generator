@@ -47,7 +47,7 @@ else:
 input.dict.update({'INPUT_INFO': input_info})
 input.dict.update({'NWORKER' : nworker})
 
-# GET CP2K READY
+# GET CP2K READY, get the correct machine to use by bin/machine.py
 paths.update(
    { 'cp2k' : machine.get_cp2k_path()
      })
