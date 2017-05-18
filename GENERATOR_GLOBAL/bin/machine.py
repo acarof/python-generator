@@ -11,6 +11,12 @@ path_cp2k_dict = {
     },
     'bulstake.phys.ucl.ac.uk'   : {
         'sgiannini' : '/scratch/sgiannini/bin/TRIVIAL_merged_code/cp2k.sopt'
+    },
+    'thame.phys.ucl.ac.uk': {
+        'acarof' : '/scratch/acarof/bin/cp2k.sopt'
+    },
+    'shuttle.phys.ucl.ac.uk': {
+        'acarof' : '/scratch/acarof/bin/cp2k.sopt'
     }
 }
 

@@ -1,0 +1,160 @@
+&GLOBAL
+  BLACS_GRID             SQUARE
+  PREFERRED_FFT_LIBRARY  FFTW
+  PRINT_LEVEL            LOW
+  PROGRAM_NAME           CP2K
+  PROJECT_NAME           run
+  RUN_TYPE               MD
+&END GLOBAL
+&MOTION
+	&MD
+     		ENSEMBLE      sedENSEMBLE
+     		STEPS         sedSTEPS
+   		TIMESTEP      sedTIMESTEP
+     		TEMPERATURE   sedTEMPERATURE
+                &THERMOSTAT
+                    REGION  GLOBAL
+                    &NOSE
+                         LENGTH      3
+                         YOSHIDA     3
+                         TIMECON     1000
+                         MTS         2
+                    &END NOSE
+                &END THERMOSTAT
+   	&END MD
+  	&PRINT
+		&TRAJECTORY  LOW
+       			FORMAT  XYZ
+       			&EACH
+         			MD          sedPRINT
+       			&END EACH
+     		&END TRAJECTORY
+     		&VELOCITIES  LOW
+       			FORMAT  XYZ
+       			&EACH
+         			MD          sedPRINT
+       			&END EACH
+     		&END VELOCITIES
+     		&FORCES  LOW
+       			FORMAT  XYZ
+       			&EACH
+         			MD          sedPRINT
+       			&END EACH
+     		&END FORCES
+                &RESTART_HISTORY OFF
+                &END RESTART_HISTORY
+   	&END PRINT
+    &CONSTRAINT
+         &COLLECTIVE
+              &RESTRAINT
+                     K              0.005000
+              &END RESTRAINT
+              COLVAR                1
+              INTERMOLECULAR
+              TARGET      [angstrom]          3.616897
+         &END COLLECTIVE
+         &COLLECTIVE
+              COLVAR                2
+              INTERMOLECULAR
+              TARGET      [angstrom]      1.3239D0
+         &END COLLECTIVE
+         &COLLECTIVE
+              COLVAR                3
+              INTERMOLECULAR
+              TARGET      [angstrom]      sedCC_CHARGED
+         &END COLLECTIVE
+    &END CONSTRAINT
+&END MOTION
+&FORCE_EVAL
+	METHOD  FIST
+	&MM
+    		&FORCEFIELD
+      			&SPLINE
+        			RCUT_NB         sedRCUT
+       			&END SPLINE
+INCLUDE FORCEFIELD.tmp
+		&END FORCEFIELD
+		&POISSON
+       			&EWALD
+         			EWALD_TYPE   NONE
+         			#ALPHA        sedALPHA
+         			#GMAX         sedGMAX
+         			#O_SPLINE     sedOSPLINE
+       			&END EWALD
+     		&END POISSON
+     		&PRINT
+      			&ITER_INFO  SILENT
+      			&END ITER_INFO
+      				&PROGRAM_RUN_INFO LOW
+        				&EACH
+          					MD 1
+        				&END EACH
+      				&END PROGRAM_RUN_INFO
+     			&END PRINT
+   	&END MM
+   	&SUBSYS
+     		&CELL
+       			ABC                    sedLBOXA        sedLBOXB        sedLBOXC
+       			PERIODIC  sedPERIODIC
+     		&END CELL
+     		&COORD
+INCLUDE COORD.tmp
+     		&END COORD
+		&VELOCITY
+INCLUDE VELOC.tmp
+		&END VELOCITY
+INCLUDE KIND.tmp
+                &TOPOLOGY
+                        NUMBER_OF_ATOMS                   sedNATOMS
+                        CONN_FILE_FORMAT  MOL_SET
+                        &MOL_SET
+INCLUDE PSF.tmp
+                        &END MOL_SET
+                        #&DUMP_PSF
+                        #        &EACH
+                        #           MD          1
+                        #        &END EACH
+                        #        FILENAME ./input
+                        #&END DUMP_PSF
+                &END TOPOLOGY
+                &COLVAR
+                     &DISTANCE
+                          &POINT
+                               ATOMS 1  4
+                               TYPE  GEO_CENTER
+                          &END POINT
+                          &POINT
+                               ATOMS 7  10
+                               TYPE  GEO_CENTER
+                          &END POINT
+                          POINTS 1 2
+                     &END DISTANCE
+                &END COLVAR
+                &COLVAR
+                     &DISTANCE
+                          &POINT
+                               ATOMS 1
+                               TYPE  GEO_CENTER
+                          &END POINT
+                          &POINT
+                               ATOMS 4
+                               TYPE  GEO_CENTER
+                          &END POINT
+                        ATOMS 1 2
+                     &END DISTANCE
+                &END COLVAR
+                &COLVAR
+                     &DISTANCE
+                          &POINT
+                               ATOMS 7
+                               TYPE  GEO_CENTER
+                          &END POINT
+                          &POINT
+                               ATOMS 10
+                               TYPE  GEO_CENTER
+                          &END POINT
+                        ATOMS 1 2
+                     &END DISTANCE
+                &END COLVAR
+   	&END SUBSYS
+&END FORCE_EVAL

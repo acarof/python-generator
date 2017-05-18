@@ -20,28 +20,39 @@ def main(task_info, paths):
 
     task = {
         'KIND_RUN' : 'TONAME',
-        'FILE_INIT': 'TASK271-SAMPLE-BO-170515-97396bb75636a2b22cea103855143905',
-        'LENGTH_FS': 10000,
+        'FILE_INIT': 'TASK271-SAMPLE-BO-30ps-170517-b7905f4556ed79fc2323eeec5105416e',
+        'LENGTH_FS': 1,
         'INITIALIZATION': 'ADIABATIC',
         'NUMBER_CONFIG'        : 1,
-        'NUMBER_REPEAT'  :  1
+        'NUMBER_REPEAT'  :  1,
+        'LIGHT' : True
     }
     task_info.update(task)
 
 
     cp2k_param = [
         [ 'PROPAGATION', 'FSSH'],
+        #['DECO', 'NO_DECO_CORR','INSTANT_COLLAPSE','DAMPING']
         [ 'DECO', 'DAMPING'],
+        #['METHOD_RESCALING','NACV','SIMPLE_QSYS']
         [ 'METHOD_RESCALING', 'NACV'],
+        #[ 'METHOD_ADIAB_NACV', 'FAST','TOTAL']
         [ 'METHOD_ADIAB_NACV', 'FAST'],
+        #['METHOD_REVERSAL', 'NEVER', 'ALWAYS', 'TRUHLAR', 'SUBOTNIK']
         [ 'METHOD_REVERSAL', 'ALWAYS'],
-        [ 'INIT'] + range(1, task_info.get('NUMBER_CONFIG') + 1),
-        [ 'REPEAT'] + range(task_info.get('NUMBER_REPEAT')),
         #[ 'SCALING', 0.05, 0.03, 0.01, 0.008, 0.005, 0.003, 0.001, 0.0005, 0.0001, 0.00005],
-         [ 'SCALING', 0.0001 ],
+        [ 'SCALING',  0.03, 0.02, 0.008, 0.005, 0.003,  0.0005, 0.00005],
+        #[ 'TIMESTEP', 0.01, 0.05, 0.1, 0.5],
         [ 'TIMESTEP', 0.1],
+        #['EDC_E0', 0.01, 0.1, 1.0],
+        ['EDC_E0', 0.1],
+        #['ELECTRONIC_STEPS', 5, 10, 50],
+        ['ELECTRONIC_STEPS', 5],
         [ 'TEMPLATE_FILE', 'FSSH_CORE.template'],
-        [ 'FORCEFIELD_FILE', 'FSSH_FF.template']
+        [ 'FORCEFIELD_FILE', 'FSSH_FF.template'],
+        ['INITIALIZATION', 'ADIABATIC'],
+        ['INIT'] + range(1, task_info.get('NUMBER_CONFIG') + 1),
+        ['REPEAT'] + range(task_info.get('NUMBER_REPEAT'))
     ]
 
 

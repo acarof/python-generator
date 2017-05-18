@@ -16,7 +16,10 @@ def main(task_info, paths):
         'KIND_RUN'  : 'TASK234-SAMPLE-BO',
         'INITIALIZATION' : 'SAMPLE_BO',
         'NUMBER_CONFIG'     : 1,
-        'FILE_INIT' : 'TASK234-SAMPLE-FIST-TWOSTATES-ETHYLENE-170512-9979cea216077851c952cfdd4d1c43fe',
+        'FILE_INIT' : {
+            1 :'run-2-density-0.001-GENERATOR_GLOBAL',
+            2 :'run-2-density-0.001-GENERATOR_GLOBAL'
+        },
         'LENGTH_FS': 200,
         'OUTPUT_CONFIG' : 100
             }

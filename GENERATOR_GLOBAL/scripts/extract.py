@@ -14,9 +14,10 @@ from marcus import *
 from datetime import datetime
 
 scripts = 'extract-scaling-deco'
-keywords = ['SCALING_FACTOR','FIRST_ADIABAT']
+keywords = ['SCALING_FACTOR']
 
-detail_properties = [ 'Adiabatic-energies', 'Delta_E']
+#detail_properties = [ 'Adiabatic-energies', 'Delta_E']
+detail_properties = [ 'Adiabatic-populations','Surface-populations', 'Delta_E']
 #detail_properties = []
 #ratio_properties = ['Internal consistency ratio']
 #histo_properties = ['Delta_E', 'Couplings', 'Populations']
@@ -24,7 +25,7 @@ histo_properties = []
 mean_properties = ['Temperature','Couplings','Total-energy']
 #mean_properties = ['Temperature','Couplings']
 specific_properties = ['FSSH', 'Detailed-FSSH']
-specific_properties = []
+#specific_properties = []
 total_properties = detail_properties + mean_properties + specific_properties + histo_properties
 
 if 'GENERATOR_GLOBAL' in os.getcwd():

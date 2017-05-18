@@ -1,5 +1,5 @@
 import os, shutil,sys, re
-
+import tarfile
 
 try:
     task = sys.argv[1]
@@ -44,3 +44,7 @@ with open('%s/task.py' % task) as file:
 if fileinit:
    os.mkdir('%s/initial' % name)
    os.system('cp -r initial/*-%s %s/initial/' % (inits, name))
+
+#tar = tarfile.open(name + '.tar.gz', 'w:gz')
+#tar.add(name)
+#shutil.rmtree(name)

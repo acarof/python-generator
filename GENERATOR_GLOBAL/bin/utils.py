@@ -190,7 +190,7 @@ class OSCluster(object):
     """
         """
 
-    def __init__(self, structure_dict, paths):
+    def __init__(self, structure_dict, paths, ndir = 0):
         self._structure = structure_dict.get('SYSTEM')
         self._filemol = structure_dict.get('FILEMOL')
         self._vecta = structure_dict.get('VECTA')
@@ -202,10 +202,11 @@ class OSCluster(object):
         self._templates_path = paths.get('templates')
         self._bucket_path = paths.get('bucket')
         self._output_path = paths.get('output')
+        self.ndir = ndir
         self._write()
 
     def _write(self):
-        self.tmp = Dir('tmp')
+        self.tmp = Dir('tmp-cluster-%s' % self.ndir)
         self.tmp.rm_mkdir()
         self._create_dir()
         self._print_info()
@@ -295,12 +296,12 @@ class OSwSolvent(OSCluster):
     """
     """
 
-    def __init__(self, inputs, paths):
+    def __init__(self, inputs, paths, ndir):
         self._closest_dist = inputs.get('CLOSEST_DIST')
         self._kind_solvent = inputs.get('SOLVENT')
         self._density = inputs.get('DENSITY')
         self._sizebox = inputs.get('SIZE_BOX')
-        super(OSwSolvent, self).__init__(inputs, paths)
+        super(OSwSolvent, self).__init__(inputs, paths, ndir)
 
     def _my_write(self):
         self._construct_organic_crystal()
@@ -1160,7 +1161,18 @@ class FSSHParcel(object):
             self._my_sed_dict.get('FIRST_DIABAT', '!!!')
         )
 
-    def gather_vel_coord(self, ndir, output_path = None):
+    def _check_line(self, string, line):
+        #print string
+        if line == -1:
+            return True
+        else:
+            if  int(re.findall(r"i = *([0-9]*)", string)[0]) == line:
+                print 'Use config: %s' % line
+                return True
+            else:
+                return False
+
+    def gather_vel_coord(self, ndir, output_path = None, line=-1):
         if output_path is None:
             output_path = self.initial.path
         nsolvent = self._my_sed_dict.get('NATOMS') - (self._nmol * self._natom_mol)
@@ -1173,43 +1185,36 @@ class FSSHParcel(object):
             lines = filein.readlines()
             iconfig = 0
             index = -1
-            for istep in range(0, self._nprod, self._printfrq):
-                index = index + 2
-                iconfig = iconfig + 1
-                filename = iprop + '-' + str(iconfig) + '.init'
-                fileout = open(filename, 'w')
-                for imol in range(self._nmol):
-                    for iatom in range(self._natom_mol):
-                        index = index + 1
-                        # index = (istep / self._printfrq) * (self._nmol * self._natom_mol + 2) \
-                        #        + 2 \
-                        #        + imol * self._natom_mol \
-                        #        + iatom
-                        l = string.strip(lines[index])
-                        info = re.split('\s+', l)
-  #                      if iprop == 'pos':
-                        atom_label = self._choose_atom_label(info[0], imol=imol, icharge=pos_mol)
-  #                      else:
-   #                         atom_label = '   '
-                        atom_xyz = [float(info[1]), float(info[2]), float(info[3])]
-                        result = '%s  %s\n' \
-                                 % (atom_label, str(atom_xyz).strip('[]'))
-                        fileout.write(result)
-                for atom in range(nsolvent):
-                    # index = (self._nmol * self._natom_mol) + atom + 2  #2 from the the two initial lines at each timestep
-                    index += 1
-    #                if iprop == 'pos':
-                    fileout.write(lines[index])
-     #               else:
-      #                  info = lines[index].split()
-       #                 atom_xyz = [float(info[1]), float(info[2]), float(info[3])]
-        #                result = ' %s\n' \
-         #                        % (str(atom_xyz).strip('[]'))
-          #              fileout.write(result)
-
-
-                fileout.close()
-                os.system(' mv %s %s' % (filename, output_path))
+            #for istep in range(0, self._nprod + 1, self._printfrq):
+            for istep in range(0, self._nprod + 1, self._printfrq):
+                #print istep, self._nprod + 1, self._printfrq, range(0, self._nprod + 1, self._printfrq)
+                if self._check_line(lines[index + 2], line):
+                    index = index + 2
+                    iconfig = iconfig + 1
+                    filename = iprop + '-' + str(iconfig) + '.init'
+                    fileout = open(filename, 'w')
+                    for imol in range(self._nmol):
+                        for iatom in range(self._natom_mol):
+                            index = index + 1
+                            l = string.strip(lines[index])
+                            info = re.split('\s+', l)
+                            atom_label = self._choose_atom_label(info[0], imol=imol, icharge=pos_mol)
+                            atom_xyz = [float(info[1]), float(info[2]), float(info[3])]
+                            result = '%s  %s\n' \
+                                     % (atom_label, str(atom_xyz).strip('[]'))
+                            fileout.write(result)
+                    for atom in range(nsolvent):
+                        index += 1
+                        fileout.write(lines[index])
+                    fileout.close()
+                    os.system(' mv %s %s' % (filename, output_path))
+                else:
+                    index = index + 2
+                    for imol in range(self._nmol):
+                        for iatom in range(self._natom_mol):
+                            index = index + 1
+                    for atom in range(nsolvent):
+                        index += 1
         os.chdir(self._bucket_path)
 
     def gather_templates_bin(self):
