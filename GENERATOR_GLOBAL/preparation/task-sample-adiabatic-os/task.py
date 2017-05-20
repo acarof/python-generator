@@ -17,8 +17,8 @@ def main(task_info, paths):
         'INITIALIZATION' : 'SAMPLE_BO',
         'NUMBER_CONFIG'     : 1,
         'FILE_INIT' : {
-            1 :'run-2-density-0.001-GENERATOR_GLOBAL',
-            2 :'run-2-density-0.001-GENERATOR_GLOBAL'
+            1 :'run-4-density-0.001-TASK271-SAMPLE-FIST-SAME-TEMPERATURE-ETHYLENE-170518-e18ae8b397d707659c3b6e124ce6b92f',
+            2 :'run-5-density-0.001-TASK271-SAMPLE-FIST-SAME-TEMPERATURE-ETHYLENE-170518-e18ae8b397d707659c3b6e124ce6b92f'
         },
         'LENGTH_FS': 200,
         'OUTPUT_CONFIG' : 100
@@ -29,13 +29,14 @@ def main(task_info, paths):
     cp2k_param = [
         [ 'PROPAGATION', 'BORN_OPPENHEIMER'],
         [ 'INIT'] + range(1, task_info.get('NUMBER_CONFIG') + 1),
-        [ 'SCALING', 0.05, 0.03, 0.01, 0.008, 0.005, 0.003, 0.001, 0.0005, 0.0001, 0.00005],
+        [ 'SCALING', 0.05, 0.03, 0.02, 0.01, 0.008, 0.005, 0.003, 0.001, 0.0005, 0.0001, 0.00005],
         [ 'TIMESTEP', 0.1],
         [ 'TEMPLATE_FILE', 'FSSH_CORE.template'],
         [ 'FORCEFIELD_FILE', 'FSSH_FF.template'],
         ['FIRST_ADIABAT',1,2],
         ['DENSITY', 0.001],
-        ['CC_CHARGED', 1.369]
+        ['CC_CHARGED', 1.369],
+        ['INITIALIZATION', 'ADIABATIC']
     ]
 
 

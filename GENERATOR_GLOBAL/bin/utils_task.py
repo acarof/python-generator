@@ -8,80 +8,25 @@ from collections import deque
 from utils import *
 
 
-# DATE FROM PREVIOUS RUNS
-jacob_coupling = {  # meV : meV
-    89: 8,
-    133: 11,
-    177: 15,
-    266: 23,
-    355: 30,
-    532: 45,
-    710: 61,
-    887: 76,
-    1330: 114,
-    1774: 151,
-    2217: 189,
-    2661: 227,
-    3104: 265,
-    3548: 303,
-    3991: 341,
-    4435: 378,
-    4878: 418,
-    5322: 455
-}
-
-cp2k_coupling = { # Ha : Ha
-    9E-05 : 1.04E-05,
-    0.0005 : 6.05E-05,
-    0.004  : 0.000505,
-    0.02   : 0.0027
-}
-
-# This data are taken from: extract-scaling-adiabat-TASK271-SAMPLE-BO-GROUND-100ps-170516-1dca75020bb2d36bb5841283e6867e5a-1705161812
-dict_1_Simulation = {  \
- 5e-05 : 0.0252513034296,   \
- 0.0001 : 0.0253138065831,   \
- 0.0005 : 0.0253136759442,   \
- 0.001 : 0.0251646663009,   \
- 0.003 : 0.0240682953401,   \
- 0.005 : 0.0223558285774,   \
- 0.008 : 0.0181561059991,   \
- 0.01 : 0.0151159085859,   \
- 0.03 : 0.000904812300885,   \
- 0.05 : 2.80776025514e-05
- }
-
-# This data are taken from: extract-scaling-adiabat-TASK271-SAMPLE-BO-30ps-170517-b7905f4556ed79fc2323eeec5105416e-1705172113
-dict_scaling_excited_pop = {  \
- 5e-05 : 52.2374550503,   \
- 0.0001 : 52.4626889155,   \
- 0.0005 : 54.2785150554,   \
- 0.001 : 56.5831263004,   \
- 0.003 : 66.1847344636,   \
- 0.005 : 76.3807141674,   \
- 0.008 : 92.7009484113,   \
- 0.01 : 104.188794639,   \
- 0.02 : 166.8687697,   \
- 0.03 : 234.597679201,   \
- 0.05 : 375.850102623
-}
 
 # FUNCTION TO RUN CP2K
-def run_equilibrium_fssh(cp2k_info, task_info, paths):
+def run_equilibrium_fssh(cp2k_info, task_info, paths, dict_equilibrium):
     # DETERMINE INITIAL STATE TO GET BOLTZMANN RATIO
     scaling = cp2k_info['SCALING']
-    #pop_ground_state = estimate_boltzmann_ratio(scaling, paths, task_info.get('NUMBER_CONFIG')*task_info['NUMBER_REPEAT']
-    pop_excited_state = max( round(  dict_scaling_excited_pop[scaling]  * task_info.get('NUMBER_CONFIG') * task_info['NUMBER_REPEAT']) , 1)
-    pop_ground_state = task_info.get('NUMBER_CONFIG') * task_info['NUMBER_REPEAT'] - pop_excited_state
-    #print pop_excited_state
-    #print pop_ground_state
-    indice = (cp2k_info['REPEAT'] + 1)  + (cp2k_info['INIT'] -1 )*task_info['NUMBER_REPEAT']
-    if indice <= pop_ground_state:
-        initial = Dir('initial/state-1-scaling-%s-%s' % (scaling, task_info['FILE_INIT']), paths)
-        cp2k_info.update({'FIRST_ADIABAT' : 1})
-    else:
-        initial = Dir('initial/state-2-scaling-%s-%s' % (scaling, task_info['FILE_INIT']), paths)
-        cp2k_info.update({'FIRST_ADIABAT' : 2})
+    population = [ task_info.get('NUMBER_CONFIG') * task_info['NUMBER_REPEAT'] ]
+    for state in range(1, task_info['NUMBER_ADIABAT']):
+        pop = max( round(  dict_equilibrium[scaling][state]  * task_info.get('NUMBER_CONFIG') * task_info['NUMBER_REPEAT']) , 1)
+        population.append(pop)
+        population[0] = population[0] - pop
+    indice = (cp2k_info['REPEAT'] + 1) + (cp2k_info['INIT'] - 1) * task_info['NUMBER_REPEAT']
+    this_pop = 0
+    for state in range(len(population)):
+        this_pop += population[state]
+        if indice <= this_pop:
+            initial = Dir('initial/state-%s-scaling-%s-%s' % (state + 1, scaling,  task_info['FILE_INIT']), paths)
+            cp2k_info.update({'FIRST_ADIABAT': state + 1})
+            break
+    print population, indice, cp2k_info['FIRST_ADIABAT']
 
     cp2k_info.update({'STEPS' : int(task_info['LENGTH_FS'] / cp2k_info['TIMESTEP'] ) } )
     cp2k_info.update({'PRINT':  int(task_info['LENGTH_FS'] / cp2k_info['TIMESTEP']) } )
@@ -153,7 +98,8 @@ def run_fssh( cp2k_info):
     paths  = cp2k_info.get('PATHS_DICT')
 
     if task_info['INITIALIZATION'] == 'ADIABATIC':
-        run_equilibrium_fssh(cp2k_info, task_info, paths)
+        dict_equilibrium = cp2k_info['DICT_EQUILIBRIUM']
+        run_equilibrium_fssh(cp2k_info, task_info, paths, dict_equilibrium)
     elif task_info['INITIALIZATION'] == 'SAMPLE_BO':
         run_sample_bo(cp2k_info, task_info, paths)
     else:
@@ -353,3 +299,64 @@ def extract_one_config(run_results, inputs, paths, line):
             fssh_parcel = FSSHParcel(inputs, paths)
             fssh_parcel.gather_vel_coord(ndir, output_path=output.path, line=line)
             fssh_parcel.create_system_info(output_path=output.path)
+
+
+
+
+## DATE FROM PREVIOUS RUNS
+#jacob_coupling = {  # meV : meV
+#    89: 8,
+#    133: 11,
+#    177: 15,
+#    266: 23,
+#    355: 30,
+#    532: 45,
+#    710: 61,
+#    887: 76,
+#    1330: 114,
+#    1774: 151,
+#    2217: 189,
+#    2661: 227,
+#    3104: 265,
+#    3548: 303,
+#    3991: 341,
+#    4435: 378,
+#    4878: 418,
+#    5322: 455
+#}
+ #
+#cp2k_coupling = { # Ha : Ha
+#    9E-05 : 1.04E-05,
+#    0.0005 : 6.05E-05,
+#    0.004  : 0.000505,
+#    0.02   : 0.0027
+#}
+ #
+## This data are taken from: extract-scaling-adiabat-TASK271-SAMPLE-BO-GROUND-100ps-170516-1dca75020bb2d36bb5841283e6867e5a-1705161812
+#dict_1_Simulation = {  \
+# 5e-05 : 0.0252513034296,   \
+# 0.0001 : 0.0253138065831,   \
+# 0.0005 : 0.0253136759442,   \
+# 0.001 : 0.0251646663009,   \
+# 0.003 : 0.0240682953401,   \
+# 0.005 : 0.0223558285774,   \
+# 0.008 : 0.0181561059991,   \
+# 0.01 : 0.0151159085859,   \
+# 0.03 : 0.000904812300885,   \
+# 0.05 : 2.80776025514e-05
+# }
+#
+## This data are taken from: extract-scaling-adiabat-TASK271-SAMPLE-BO-30ps-170517-b7905f4556ed79fc2323eeec5105416e-1705172113
+#dict_scaling_excited_pop = {  \
+# 5e-05 : 52.2374550503,   \
+# 0.0001 : 52.4626889155,   \
+# 0.0005 : 54.2785150554,   \
+# 0.001 : 56.5831263004,   \
+# 0.003 : 66.1847344636,   \
+# 0.005 : 76.3807141674,   \
+# 0.008 : 92.7009484113,   \
+# 0.01 : 104.188794639,   \
+# 0.02 : 166.8687697,   \
+# 0.03 : 234.597679201,   \
+# 0.05 : 375.850102623
+#}

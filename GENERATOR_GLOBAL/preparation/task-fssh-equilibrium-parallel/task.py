@@ -23,6 +23,7 @@ def main(task_info, paths):
         'FILE_INIT': 'TASK271-SAMPLE-BO-30ps-170517-b7905f4556ed79fc2323eeec5105416e',
         'LENGTH_FS': 1,
         'INITIALIZATION': 'ADIABATIC',
+        'NUMBER_ADIABAT' : 2,
         'NUMBER_CONFIG'        : 1,
         'NUMBER_REPEAT'  :  1,
         'LIGHT' : True
@@ -41,7 +42,7 @@ def main(task_info, paths):
         #['METHOD_REVERSAL', 'NEVER', 'ALWAYS', 'TRUHLAR', 'SUBOTNIK']
         [ 'METHOD_REVERSAL', 'ALWAYS'],
         #[ 'SCALING', 0.05, 0.03, 0.01, 0.008, 0.005, 0.003, 0.001, 0.0005, 0.0001, 0.00005],
-        [ 'SCALING',  0.03, 0.02, 0.008, 0.005, 0.003,  0.0005, 0.00005],
+        [ 'SCALING', 0.03, 0.02, 0.01, 0.008, 0.003, 0.0005, 0.00005],
         #[ 'TIMESTEP', 0.01, 0.05, 0.1, 0.5],
         [ 'TIMESTEP', 0.1],
         #['EDC_E0', 0.01, 0.1, 1.0],
@@ -54,6 +55,21 @@ def main(task_info, paths):
         ['INIT'] + range(1, task_info.get('NUMBER_CONFIG') + 1),
         ['REPEAT'] + range(task_info.get('NUMBER_REPEAT'))
     ]
+
+    # This data are taken from: extract-scaling-adiabat-TASK271-SAMPLE-BO-30ps-170517-b7905f4556ed79fc2323eeec5105416e-1705172113
+    dict_for_equilibrium = { \
+        5e-05: [0.882946564262, 0.117053435738], \
+        0.0001: [0.883844010925, 0.116155989075], \
+        0.0005: [0.89086291711, 0.10913708289], \
+        0.001: [0.899233079636, 0.100766920364], \
+        0.003: [0.928251700237, 0.0717482997627], \
+        0.005: [0.950477468394, 0.0495225316059], \
+        0.008: [0.973033713426, 0.0269662865739], \
+        0.01: [0.98253952535, 0.0174604746505], \
+        0.02: [0.998429468654, 0.00157053134578], \
+        0.03: [0.999885479206, 0.000114520794399], \
+        0.05: [0.999999514713, 4.85286930795e-07]
+    }
 
 
     # BUILD THE MEGA_LISTS
@@ -92,7 +108,8 @@ def main(task_info, paths):
     for ndir in range(len(mega_list)):
         mega_list[ndir].update({ 'NDIR' : ndir,
                                  'PATHS_DICT' : paths,
-                                 'INPUTS_DICT' : task_info
+                                 'INPUTS_DICT' : task_info,
+                                 'DICT_EQUILIBRIUM' : dict_for_equilibrium
                                  })
 
 
