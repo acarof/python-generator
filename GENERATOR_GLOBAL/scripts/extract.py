@@ -135,7 +135,7 @@ for tuple, result in zip( run_dict.keys(), results):
         properties[property] = average_dict(properties[property], properties['Number runs'])
         filename = print_dict( properties[property], property, tuple  )
         os.system('mv %s %s' % (filename, dataname))
-    for property in dict_properties['Block-runs-average']:
+    for property in dict_properties.get('Block-runs-average', []):
         new_list = []
         for element in properties[property]:
             new_list.append(average_dict(element, properties['Length-block']))
