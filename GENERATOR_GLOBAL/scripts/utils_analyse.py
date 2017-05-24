@@ -17,7 +17,7 @@ from datetime import datetime
 
 def sum_two_dict( dict1, dict2):
     result = {}
-    if dict1 is None:
+    if dict1 is None or dict1 == {}:
         result = dict2
     else:
         for key in dict1:
@@ -42,6 +42,19 @@ def print_dict( dict_, property, tuple):
     file.close()
     return filename
 
+def print_list_dict( list_, property, tuple):
+    filename = property + '-' + '-'.join(tuple) + '.dat'
+    file = open(filename, 'w')
+    for time in sorted(list_[0]):
+        result = []
+        for dict_ in list_:
+            result.append(dict_[time])
+        line = '%f  %s\n' % (time, '   '.join(map(str, result)) )
+        file.write(line)
+    file.close()
+    return filename
+
+
 def append_two_dict(dict1, dict2):
     result = {}
     if dict1 is None:
@@ -53,15 +66,28 @@ def append_two_dict(dict1, dict2):
     return result
 
 
-def analyse_properties(tuple, run_dict, dict_properties):
+def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5):
     real_start_time = datetime.now()
     start_time = datetime.strftime( real_start_time, "%Y %m %d %H:%M:%S ")
     print "One worker for: %s starts at %s" % (tuple, start_time)
     list_dir = run_dict[tuple]
     properties_dict = {}
+    index = -1
+    properties_dict['Number runs'] = len(list_dir)
+    length_block = int(len(list_dir) / number_blocks)
+    print "Number runs", len(list_dir)
+    print "Length block", length_block
+    properties_dict['Length-block'] = length_block
     for directory in list_dir:
         dir = FSSHRun(directory)
-        for property in dict_properties.get('Detailled', []):
+        index += 1
+        for property in dict_properties.get(('Block-runs-average'), []):
+            prop = dir.extract(property)
+            block = int(index/length_block)
+            if properties_dict.get(property) is None:
+                properties_dict[property] = [{}] * number_blocks
+            properties_dict[property][block] = sum_two_dict(properties_dict.get(property)[block], prop)
+        for property in dict_properties.get('Runs-average', []):
             prop = dir.extract(property)
             properties_dict[property] = sum_two_dict(properties_dict.get(property), prop)
         for property in dict_properties.get('Mean', []):
@@ -88,7 +114,6 @@ def analyse_properties(tuple, run_dict, dict_properties):
                 properties_dict[property] = []
                 properties_dict[property + 'info'] = ''
             properties_dict[property + 'info'] += line
-    properties_dict['Number runs'] = len(list_dir)
     real_end_time = datetime.now()
     end_time = datetime.strftime( real_end_time, "%Y %m %d %H:%M:%S ")
     print "One worker for: %s ends at %s" % (tuple, end_time)

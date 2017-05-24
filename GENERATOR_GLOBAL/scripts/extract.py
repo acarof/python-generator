@@ -2,17 +2,13 @@
 import string, re, struct, sys, math, os, time
 import numpy as np
 import importlib, imp
-#import matplotlib.pyplot as plt
-#from scipy.optimize import curve_fit
-#from operator import itemgetter
 from multiprocessing import Pool, cpu_count
-#from scipy.integrate import quad
 from functools import partial
+from datetime import datetime
 
 # custom modudules
 from utils_scripts import *
-from marcus import *
-from datetime import datetime
+#from marcus import *
 from utils_analyse import *
 
 scripts = 'extract-scaling-deco'
@@ -20,7 +16,8 @@ keywords = ['SCALING_FACTOR']
 
 dict_properties = {
     #  'Detailled' : [ 'Adiabatic-populations','Surface-populations','Delta_E'],
-    'Detailled' : [ 'Adiabatic-populations','Surface-populations','Delta_E'],
+    'Runs-average' : [],
+    'Block-runs-average' : ['Adiabatic-populations','Surface-populations','Delta_E'],
     #    'Specific' : ['FSSH', 'Detailed-FSSH'],
     'Specific' : ['FSSH', 'Detailed-FSSH'],
     #'Initial' : ['Delta_E'],
@@ -33,12 +30,11 @@ dict_properties = {
 #    'Initial' : ['Couplings']
 #}
 
-# NAME THE DIRECTORY FILE FOR THE DATA
+#  INPUT INFO
 try:
     info = sys.argv[1]
 except:
     info = None
-
 previous_name = None
 unique_run = None
 if info is not None:
@@ -46,6 +42,7 @@ if info is not None:
         unique_run = info.split('/')[0]
     elif 'data-' in info:
         previous_name = info
+
 
 
 #FIND THE TITLE
@@ -58,6 +55,8 @@ else:
     title = '%s-%s' % (name_bucket, short_time,)
 
 
+
+#FIND THE NAME OF THE DATA DIRECTORY
 if unique_run is None:
     dirlist = os.listdir('.')
     if previous_name is None:
@@ -71,6 +70,7 @@ else:
     dataname = 'one-%s-%s-%s' % (unique_run, scripts, title)
     if not os.path.isdir(dataname):
         os.mkdir(dataname)
+
 
 
 # CREATE LIST OF RUNS
@@ -118,6 +118,7 @@ else:
     results = pool.map(super_analyse, run_dict.keys())
 
 
+
 # PRINT THE RESULTS
 results_dict = {}
 filetuple = open('List-tuple.dat', 'w')
@@ -130,9 +131,15 @@ for tuple, result in zip( run_dict.keys(), results):
     for property in dict_properties.get('Mean', []):
         filename = create_file(property, title, properties[property + 'info'], 'Mean', tuple = tuple)
         os.system('mv %s %s' % (filename, dataname))
-    for property in dict_properties.get('Detailled', []):
+    for property in dict_properties.get('Runs-average', []):
         properties[property] = average_dict(properties[property], properties['Number runs'])
         filename = print_dict( properties[property], property, tuple  )
+        os.system('mv %s %s' % (filename, dataname))
+    for property in dict_properties['Block-runs-average']:
+        new_list = []
+        for element in properties[property]:
+            new_list.append(average_dict(element, properties['Length-block']))
+        filename = print_list_dict(new_list, property, tuple)
         os.system('mv %s %s' % (filename, dataname))
     for property in dict_properties.get('Specific', []):
         filename = create_file(property, title, properties[property + 'info'], 'Spec', tuple = tuple)

@@ -21,11 +21,11 @@ def main(task_info, paths):
     task = {
         'KIND_RUN' : 'TONAME',
         'FILE_INIT': 'TASK271-SAMPLE-BO-30ps-170517-b7905f4556ed79fc2323eeec5105416e',
-        'LENGTH_FS': 10,
+        'LENGTH_FS': 2,
         'INITIALIZATION': 'ADIABATIC',
         'NUMBER_ADIABAT' : 2,
-        'NUMBER_CONFIG'        : 1,
-        'NUMBER_REPEAT'  :  5,
+        'NUMBER_CONFIG'        : 100,
+        'NUMBER_REPEAT'  :  4,
         'LIGHT' : True
     }
     task_info.update(task)
