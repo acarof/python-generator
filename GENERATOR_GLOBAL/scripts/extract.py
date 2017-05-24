@@ -19,49 +19,58 @@ scripts = 'extract-scaling-deco'
 keywords = ['SCALING_FACTOR']
 
 dict_properties = {
-    'Detailled' : [ 'Adiabatic-populations','Surface-populations'],
-  #  'Detailled' : [ 'Delta_E'],
-    'Histo' : [],
-    'Specific' : [],
-#    'Specific' : ['FSSH', 'Detailed-FSSH'],
-    'Initial' : ['Delta_E'],
-    'Mean' : ['Temperature','Couplings']
-#    'Mean' : ['Total-energy']
+    #  'Detailled' : [ 'Adiabatic-populations','Surface-populations','Delta_E'],
+    'Detailled' : [ 'Adiabatic-populations','Surface-populations','Delta_E'],
+    #    'Specific' : ['FSSH', 'Detailed-FSSH'],
+    'Specific' : ['FSSH', 'Detailed-FSSH'],
+    #'Initial' : ['Delta_E'],
+    'Initial' : [],
+    #'Mean' : ['Temperature','Couplings', 'Total-energy']
+    'Mean' : ['Temperature','Couplings', 'Total-energy']
 }
 
-dict_properties = {
-    'Initial' : ['Couplings']
-}
+#dict_properties = {
+#    'Initial' : ['Couplings']
+#}
 
 # NAME THE DIRECTORY FILE FOR THE DATA
 try:
-    previous_name = sys.argv([1])
+    info = sys.argv[1]
 except:
-    previous_name = None
+    info = None
 
-if previous_name is None:
-    if 'GENERATOR_GLOBAL' in os.getcwd():
-        dirlist = os.listdir('.')
-        title = 'TEST'
+previous_name = None
+unique_run = None
+if info is not None:
+    if 'run-' in info:
+        unique_run = info.split('/')[0]
+    elif 'data-' in info:
+        previous_name = info
+
+
+#FIND THE TITLE
+if 'GENERATOR_GLOBAL' in os.getcwd():
+    dirlist = os.listdir('.')
+    title = 'TEST'
+else:
+    name_bucket = os.getcwd().split('/')[-1]
+    short_time = time.strftime("%y%m%d%H%M", time.localtime())
+    title = '%s-%s' % (name_bucket, short_time,)
+
+
+if unique_run is None:
+    dirlist = os.listdir('.')
+    if previous_name is None:
+        dataname = 'data-%s-%s' % (scripts, title)
+        if not os.path.isdir(dataname):
+            os.mkdir(dataname)
     else:
-        dirlist = os.listdir('.')
-        name_bucket = os.getcwd().split('/')[-1]
-        short_time = time.strftime("%y%m%d%H%M", time.localtime())
-        title = '%s-%s' % (name_bucket, short_time,)
-    dataname = 'data-%s-%s' % (scripts, title)
+        dataname = previous_name
+else:
+    dirlist = [unique_run]
+    dataname = 'one-%s-%s-%s' % (unique_run, scripts, title)
     if not os.path.isdir(dataname):
         os.mkdir(dataname)
-else:
-    if 'GENERATOR_GLOBAL' in os.getcwd():
-        dirlist = os.listdir('.')
-        title = 'TEST'
-    else:
-        dirlist = os.listdir('.')
-        name_bucket = os.getcwd().split('/')[-1]
-        short_time = time.strftime("%y%m%d%H%M", time.localtime())
-        title = '%s-%s' % (name_bucket, short_time,)
-    dataname = previous_name
-
 
 
 # CREATE LIST OF RUNS
@@ -129,8 +138,6 @@ for tuple, result in zip( run_dict.keys(), results):
         filename = create_file(property, title, properties[property + 'info'], 'Spec', tuple = tuple)
         os.system('mv %s %s' % (filename, dataname))
     for property in dict_properties.get('Initial', []):
-        print property
-        print properties[property + 'info']
         filename = create_file(property, title, properties[property + 'info'], 'Initial', tuple = tuple)
         os.system('mv %s %s' % (filename, dataname))
 filetuple.close()
