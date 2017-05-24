@@ -19,7 +19,13 @@ class FSSHRun(object):
     def __init__(self, name):
         self.name = name
 
-    def extract(self, property, **kwargs):
+    def extract(self, property, init=False, **kwargs):
+        if init:
+            self.init = True
+            self.timestep  = float(self.get_input_key(['\TIMESTEP'])[0])
+            print "TIMESTEP", self.timestep
+        else:
+            self.init = False
         if (property == 'Atoms Number'):
             return self._get_atoms_number()
         elif (property == 'Couplings'):
@@ -54,32 +60,16 @@ class FSSHRun(object):
             print "Extraction of %s not implemented" % property
             sys.exit()
 
-    def detailed_print(self, prop, propname):
-        filename = '%s-%s.dat' % (propname, self.name)
-        file = open(filename, 'w')
-        file.write('# Time  %s(%s)\n' % (propname, units.get(propname)))
-        for time in sorted(prop):
-            line = '%20.10f ' % time
-            for element in prop.get(time):
-                line = line + ('%20.10f ' % element)
-            file.write(line + '\n')
-        file.close()
-
-    def histo_print(self, histo, propname):
-        filename = '%s-histo-%s.dat' % (propname, self.name)
-        file = open(filename, 'w')
-        file.write('# %s(%s) Density of probability\n' % (propname, units.get(propname)))
-        for value, bin in zip(histo[0], histo[1]):
-            line = '%20.10f %20.10f ' % (bin, value)
-            file.write(line + '\n')
-        file.close()
-
     def _extract_state(self, filename='run-sh-1.log'):
-        file = open(filename, 'r')
+        file = open('%s/%s' % (self.name, filename), 'r')
         results = {}
         for line in file.readlines():
             if ', time' in line:
                 time = float(line.split()[5])
+                if self.init:
+                    if time > self.timestep:
+                        file.close()
+                        return results
                 results.update({time: []})
             elif 'Final' in line:
                 state = int(line.split()[3])
@@ -87,10 +77,140 @@ class FSSHRun(object):
         file.close()
         return results
 
-    def _state_to_surface_pop(self, state, nadiab):
-        list = [0.00] * nadiab
-        list[state-1] = 1.00
-        return list
+    def _extract_surface_population(self):
+        def _state_to_surface_pop(state, nadiab):
+            list = [0.00] * nadiab
+            list[state - 1] = 1.00
+            return list
+
+        state = self._extract_state()
+        results = {}
+        nadiab = int( self.get_input_key(['NUMBER_DIABATIC_STATES'])[0] )
+        for time in state:
+            results[time] = _state_to_surface_pop(state[time][0], nadiab)
+        return results
+
+    def _extract_fssh(self, filename='run-sh-1.log'):
+        results = []
+        for property in ['ATTEMPT', 'PASSED', 'SUCCESS', 'DECOHERENCE!']:
+            with open('%s/%s' % (self.name, filename)) as f:
+                contents = f.read()
+                count = contents.count(property)
+            results.append(count)
+        return results
+
+    def _extract_detailed_fssh(self, filename='run-sh-1.log'):
+        def _extract_deco_per_state(filename='run-sh-1.log'):
+            file = open('%s/%s' % (self.name, filename), 'r')
+            nadiab = int(self.get_input_key(['NUMBER_DIABATIC_STATES'])[0])
+            results = [0] * nadiab
+            for line in file.readlines():
+                if 'Final' in line:
+                    state = int(line.split()[3])
+                elif 'DECOHERENCE!' in line:
+                    results[state - 1] += 1
+            file.close()
+            return result
+
+        def _extract_up_down_hop(filename='run-sh-1.log'):
+            results = [0, 0]
+            states = self._extract_state(filename)
+            previous = states[sorted(states)[0]][0]
+            for time in sorted(states)[1:]:
+                present = states[time][0]
+                if (present - previous) > 0:
+                    results[0] += 1
+                elif (present - previous) < 0:
+                    results[1] += 1
+                previous = present
+            return results
+
+
+        results = self._extract_fssh(filename)
+        results += _extract_up_down_hop(filename)
+        deco = self.get_input_key(['DECOHERENCE_CORRECTIONS'])
+        if deco[0] == 'INSTANT_COLLAPSE':
+            results += _extract_deco_per_state(filename)
+        return results
+
+
+    def get_input_key(self, key_list, filename='run.inp'):
+        file = open('%s/%s' % (self.name, filename), 'r')
+        values = []
+        preval = {}
+        for line in file.readlines():
+            for key in key_list:
+                if re.search(key, line):
+                    preval[key] = (line.split()[-1])
+        for key in key_list:
+            values.append( preval[key] )
+        return tuple(values)
+
+    def _extract_nacv(self, filename='run-nacv-1.xyz'):
+        file = open('%s/%s' % (self.name, filename), 'r')
+        results = {}
+        for line in file.readlines():
+            if 'nadiab' in line or len(line.split()) == 1:
+                pass
+            elif 'time' in line:
+                pretime = line.split()[5]
+                if pretime[-1] == ',':
+                    pretime = pretime[:-1]
+                time = float(pretime)
+                results.update({time: {}})
+            elif 'Atom' in line:
+                atom = int( line.split()[2] )
+                if results.get(time).get(atom) is None:
+                    results.get(time).update({atom: {}})
+                dim = int( line.split()[5] )
+                results.get(time).get(atom).update({dim: []})
+            else:
+                results.get(time).get(atom).get(dim).append( [ float(x) for x in line.split()] )
+        file.close()
+        return results
+
+    def _read_xyz_file(self, filename):
+        def _convert_float(s):
+            try:
+                return float(s)
+            except ValueError:
+                return None
+
+        def _convert_int(s):
+            try:
+                return int(s)
+            except ValueError:
+                return None
+
+        file = open('%s/%s' % (self.name, filename), 'r')
+        results = {}
+        for line in file.readlines():
+            if 'nadiab' in line or len(line.split()) == 1:
+                pass
+            elif 'time' in line:
+                pretime = line.split()[5]
+                if pretime[-1] == ',':
+                    pretime = pretime[:-1]
+                time = float(pretime)
+                if self.init:
+                    if (time > self.timestep):
+                        file.close()
+                        return results
+                results.update({time: []})
+            else:
+                list = []
+                for x in line.split():
+                    if _convert_float(x) is None:
+                        list.append(x)
+                    else:
+                        if _convert_int(x) is None:
+                            list.append(_convert_float(x))
+                        else:
+                            list.append(_convert_int(x))
+
+                results.get(time).append(list)
+        file.close()
+        return results
 
     def _extract_adiabatic_population(self):
         hamiltonian = self._read_xyz_file('run-hamilt-1.xyz')
@@ -120,155 +240,22 @@ class FSSHRun(object):
             result[time] = eigenvalues
         return result
 
-    def _extract_surface_population(self):
-        state = self._extract_state()
-        results = {}
-        nadiab = int( self.get_input_key(['NUMBER_DIABATIC_STATES'])[0] )
-        for time in state:
-            results[time] = self._state_to_surface_pop(state[time][0], nadiab)
-        return results
-
-    def _extract_fssh(self, filename='run-sh-1.log'):
-        results = []
-        for property in ['ATTEMPT', 'PASSED', 'SUCCESS', 'DECOHERENCE!']:
-            with open(filename) as f:
-                contents = f.read()
-                count = contents.count(property)
-            results.append(count)
-        return results
-
-    def _extract_detailed_fssh(self, filename='run-sh-1.log'):
-        results = self._extract_fssh(filename)
-        results += self._extract_up_down_hop(filename)
-        deco = self.get_input_key(['DECOHERENCE_CORRECTIONS'])
-        if deco[0] == 'INSTANT_COLLAPSE':
-            results += self._extract_deco_per_state(filename)
-        return results
-
-    def _extract_deco_per_state(self, filename = 'run-sh-1.log'):
-        file = open(filename, 'r')
-        nadiab = int(self.get_input_key(['NUMBER_DIABATIC_STATES'])[0])
-        results = [0] * nadiab
-        for line in file.readlines():
-            if 'Final' in line:
-                state = int(line.split()[3])
-            elif 'DECOHERENCE!' in line:
-                results[ state - 1] += 1
-        file.close()
-        return results
-
-
-    def _extract_up_down_hop(self, filename='run-sh-1.log'):
-        results = [0, 0]
-        states = self._extract_state(filename)
-        previous = states[ sorted(states)[0] ][0]
-        for time in sorted(states)[1:]:
-            present = states[time][0]
-            if (present - previous) > 0:
-                results[0] += 1
-            elif (present - previous) < 0:
-                results[1] += 1
-            previous = present
-        return results
-
-
-
-    def get_input_key(self, key_list, filename='run.inp'):
-        file = open(filename, 'r')
-        values = []
-        preval = {}
-        for line in file.readlines():
-            for key in key_list:
-                if re.search(key, line):
-                    preval[key] = (line.split()[-1])
-        for key in key_list:
-            values.append( preval[key] )
-        return tuple(values)
-
-    def _get_atoms_number(self, filename='run.inp'):
-        file = open(filename, 'r')
-        for line in file.readlines():
-            if re.search('NUMBER_OF_ATOMS', line):
-                natoms = int(line.split()[1])
-        return natoms
-
-    def _convert_float(self, s):
-        try:
-            return float(s)
-        except ValueError:
-            return None
-
-    def _convert_int(self, s):
-        try:
-            return int(s)
-        except ValueError:
-            return None
-
-    def _extract_nacv(self, filename='run-nacv-1.xyz'):
-        file = open(filename, 'r')
-        results = {}
-        for line in file.readlines():
-            if 'nadiab' in line or len(line.split()) == 1:
-                pass
-            elif 'time' in line:
-                pretime = line.split()[5]
-                if pretime[-1] == ',':
-                    pretime = pretime[:-1]
-                time = float(pretime)
-                results.update({time: {}})
-            elif 'Atom' in line:
-                atom = int( line.split()[2] )
-                if results.get(time).get(atom) is None:
-                    results.get(time).update({atom: {}})
-                dim = int( line.split()[5] )
-                results.get(time).get(atom).update({dim: []})
-            else:
-                results.get(time).get(atom).get(dim).append( [ float(x) for x in line.split()] )
-        file.close()
-        return results
-
-    def _read_xyz_file(self, filename):
-        file = open(filename, 'r')
-        results = {}
-        for line in file.readlines():
-            if 'nadiab' in line or len(line.split()) == 1:
-                pass
-            elif 'time' in line:
-                pretime = line.split()[5]
-                if pretime[-1] == ',':
-                    pretime = pretime[:-1]
-                time = float(pretime)
-                results.update({time: []})
-            else:
-                list = []
-                for x in line.split():
-                    if self._convert_float(x) is None:
-                        list.append(x)
-                    else:
-                        if self._convert_int(x) is None:
-                            list.append(self._convert_float(x))
-                        else:
-                            list.append(self._convert_int(x))
-
-                results.get(time).append(list)
-        file.close()
-        return results
-
-    def _read_ener_file(self):
-        file = open('run-1.ener', 'r')
-        results = {}
-        for line in file.readlines():
-            if '#' in line:
-                pass
-            else:
-                time = float(line.split()[1])
-                list = map(float, line.split())
-                results.update({time: []})
-                results[time] = results.get(time) + list
-        file.close()
-        return results
-
     def _extract_energies(self, property):
+        def _read_ener_file():
+            filename = 'run-1.ener'
+            file = open('%s/%s' % (self.name, filename), 'r')
+            results = {}
+            for line in file.readlines():
+                if '#' in line:
+                    pass
+                else:
+                    time = float(line.split()[1])
+                    list = map(float, line.split())
+                    results.update({time: []})
+                    results[time] = results.get(time) + list
+            file.close()
+            return results
+
         properties = {
             'Steps': 0,
             'Time': 1,
@@ -282,7 +269,7 @@ class FSSHRun(object):
         column = properties.get(property)
         if column is None:
             raise NotImplementedError
-        energies = self._read_ener_file()
+        energies = _read_ener_file()
         prop = {}
         for time in energies:
             prop[time] = [energies.get(time)[column]]
@@ -327,6 +314,7 @@ class FSSHRun(object):
                 pop.append(np.square(np.absolute(np.complex(coeff[2], coeff[3]))))
             populations.update({time: pop})
         return populations
+
 
 
 def statistics(prop):
@@ -517,6 +505,8 @@ def create_file(property, title, text,  label='None', tuple = 'None'):
         header = '# Run  Mean (%s)  Std (%s)  Drift (%s/fs)   QMean (%s) \n' % replace
     elif (label == 'Spec'):
         header = headers.get(property)
+    elif (label == 'Initial'):
+        header = '# Run   Initial value (%s)\n' % unit
     else:
         header = None
     if header is not None:
