@@ -23,7 +23,6 @@ class FSSHRun(object):
         if init:
             self.init = True
             self.timestep  = float(self.get_input_key(['\TIMESTEP'])[0])
-            print "TIMESTEP", self.timestep
         else:
             self.init = False
         if (property == 'Atoms Number'):

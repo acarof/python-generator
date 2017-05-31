@@ -26,9 +26,9 @@ dict_properties = {
     'Mean' : ['Temperature','Couplings', 'Total-energy']
 }
 
-#dict_properties = {
-#    'Initial' : ['Couplings']
-#}
+dict_properties = {
+    'Initial' : ['Couplings','Delta_E','Adiabatic-populations','Surface-populations']
+}
 
 #  INPUT INFO
 try:
