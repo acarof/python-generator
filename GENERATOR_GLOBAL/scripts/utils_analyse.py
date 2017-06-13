@@ -32,6 +32,14 @@ def average_dict(dict1, number):
         result[key] = np.array( dict1[key] ) / number
     return result
 
+def print_list(list_, property, tuple, time_):
+    filename = property + '-' + '-'.join(tuple) + '-' + str(time_) + '.dat'
+    file = open(filename, 'w')
+    for index, element in enumerate(list_):
+        line = '%s   %s\n' % ( index + 1, '   '.join(map(str, element)))
+        file.write(line)
+    file.close()
+    return filename
 
 def print_dict( dict_, property, tuple):
     filename = property + '-' + '-'.join(tuple) + '.dat'
@@ -66,7 +74,7 @@ def append_two_dict(dict1, dict2):
     return result
 
 
-def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5):
+def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, list_time=[]):
     real_start_time = datetime.now()
     start_time = datetime.strftime( real_start_time, "%Y %m %d %H:%M:%S ")
     print "One worker for: %s starts at %s" % (tuple, start_time)
@@ -81,12 +89,20 @@ def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5):
     for directory in list_dir:
         dir = FSSHRun(directory)
         index += 1
-        for property in dict_properties.get(('Block-runs-average'), []):
+        for property in dict_properties.get('Block-runs-average', []):
             prop = dir.extract(property)
             block = int(index/length_block)
             if properties_dict.get(property) is None:
                 properties_dict[property] = [{}] * number_blocks
             properties_dict[property][block] = sum_two_dict(properties_dict.get(property)[block], prop)
+        for property in dict_properties.get('Time-runs-average', []):
+            prop = dir.extract(property)
+            #print prop.keys()
+            #print list_time
+            new_prop = dict( (element, prop[element]) for element in list_time if element in prop)
+            #print new_prop
+            properties_dict[property] = sum_two_dict(properties_dict.get(property), new_prop)
+            properties_dict[property + 'for-index-%s' % index] = properties_dict[property]
         for property in dict_properties.get('Runs-average', []):
             prop = dir.extract(property)
             properties_dict[property] = sum_two_dict(properties_dict.get(property), prop)

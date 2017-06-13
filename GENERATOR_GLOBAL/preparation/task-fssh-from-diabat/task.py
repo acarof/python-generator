@@ -20,11 +20,10 @@ def main(task_info, paths):
 
     task = {
         'KIND_RUN' : 'TONAME',
-        'FILE_INIT': 'TASK271-SAMPLE-BO-CORRECT-TEMP-50ps-20dabab-170531-8a3cf20d73a375f450dbba6de1b06d04',
-        'LENGTH_FS': 1,
-        'INITIALIZATION': 'ADIABATIC',
-        'NUMBER_ADIABAT' : 2,
-        'NUMBER_CONFIG'        : 500,
+        'FILE_INIT': 'trimer',
+        'LENGTH_FS': 10000,
+        'INITIALIZATION': 'DIABATIC',
+        'NUMBER_CONFIG'        : 1,
         'NUMBER_REPEAT'  :  1,
         'LIGHT' : True
     }
@@ -32,7 +31,8 @@ def main(task_info, paths):
 
 
     cp2k_param = [
-        [ 'PROPAGATION', 'FSSH'],
+        #[ 'PROPAGATION', 'FSSH'],
+        ['PROPAGATION', 'BORN_OPPENHEIMER'],
         #['DECO', 'NO_DECO_CORR','INSTANT_COLLAPSE','DAMPING']
         [ 'DECO', 'DAMPING'],
         #['METHOD_RESCALING','NACV','SIMPLE_QSYS']
@@ -42,7 +42,7 @@ def main(task_info, paths):
         #['METHOD_REVERSAL', 'NEVER', 'ALWAYS', 'TRUHLAR', 'SUBOTNIK']
         [ 'METHOD_REVERSAL', 'ALWAYS'],
         #[ 'SCALING', 0.05, 0.03, 0.01, 0.008, 0.005, 0.003, 0.001, 0.0005, 0.0001, 0.00005],
-        [ 'SCALING', 0.03, 0.02, 0.01, 0.008, 0.003, 0.0005, 0.00005],
+        [ 'SCALING', 0.00005],
         #['SCALING', 0.003, 0.00005],
         #[ 'TIMESTEP', 0.01, 0.05, 0.1, 0.5],
         [ 'TIMESTEP', 0.1],
@@ -52,27 +52,10 @@ def main(task_info, paths):
         ['ELECTRONIC_STEPS', 5],
         [ 'TEMPLATE_FILE', 'FSSH_CORE.template'],
         [ 'FORCEFIELD_FILE', 'FSSH_FF.template'],
-        ['INITIALIZATION', 'ADIABATIC'],
+        ['INITIALIZATION', 'DIABATIC'],
         ['INIT'] + range(1, task_info.get('NUMBER_CONFIG') + 1),
         ['REPEAT'] + range(task_info.get('NUMBER_REPEAT'))
     ]
-
-    # This data are taken from: extract-scaling-adiabat-TASK271-SAMPLE-BO-CORRECT-TEMP-20dabab-170524-1887874a226bfdd4091af8f822f02c00-1705251344
-    # For the state: ('1',) and average over the last 15 ps
-    dict_for_equilibrium = { \
-        5e-05: [0.928642208171, 0.0713577918293], \
-        0.0001: [0.918165692821, 0.0818343071787], \
-        0.0005: [0.925958122778, 0.0740418772217], \
-        0.001: [0.926807378939, 0.0731926210611], \
-        0.003: [0.937785514554, 0.0622144854463], \
-        0.005: [0.947096132577, 0.0529038674233], \
-        0.008: [0.958346216231, 0.0416537837688], \
-        0.01: [0.971660992297, 0.0283390077033], \
-        0.02: [0.998825781178, 0.00117421882242], \
-        0.03: [0.999483974074, 0.000516025925887], \
-        0.05: [0.999999815705, 1.84294978164e-07]
-    }
-
 
     # BUILD THE MEGA_LISTS
     second_list = [ sublist[1:] for sublist in cp2k_param]
@@ -110,8 +93,7 @@ def main(task_info, paths):
     for ndir in range(len(mega_list)):
         mega_list[ndir].update({ 'NDIR' : ndir,
                                  'PATHS_DICT' : paths,
-                                 'INPUTS_DICT' : task_info,
-                                 'DICT_EQUILIBRIUM' : dict_for_equilibrium
+                                 'INPUTS_DICT' : task_info
                                  })
 
 

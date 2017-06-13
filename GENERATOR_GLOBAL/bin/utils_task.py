@@ -10,6 +10,45 @@ from utils import *
 
 
 # FUNCTION TO RUN CP2K
+def run_fssh_from_diabat(cp2k_info, task_info, paths):
+    # DETERMINE INITIAL STATE TO GET BOLTZMANN RATIO
+    scaling = cp2k_info['SCALING']
+    initial = Dir('initial/config-%s' % (task_info['FILE_INIT']), paths)
+
+
+
+    cp2k_info.update({'STEPS' : int(task_info['LENGTH_FS'] / cp2k_info['TIMESTEP'] ) } )
+    cp2k_info.update({'PRINT':  int(task_info['LENGTH_FS'] / cp2k_info['TIMESTEP']) } )
+    cp2k_info.update({'PRINT_FSSH': int( 1 / cp2k_info['TIMESTEP']) })
+
+    initial.checkdir()
+    paths.update({'initial': initial.path})
+    systems = InputFile( initial.path + '/system.info').dict
+    cp2k_info.update(systems)
+
+    system = cp2k_info['SYSTEM']
+    if system == 'CRYSTAL':
+        from utils import CP2KOSFSSH as Config
+    elif system == 'SOLVENT':
+        from utils import CP2KOSwSolventFSSH as Config
+    else:
+        sys.exit()
+
+    config = Config(cp2k_info, paths)
+    ndir = cp2k_info['NDIR']
+    print "GO FOR RUN %d" % ndir
+    config.run(ndir)
+    if task_info.get('LIGHT', False):
+        with open('run-%s/run.log' % ndir) as oldlog, open('run-%s/new.log' % ndir, 'w' ) as newlog:
+            result = ' '.join([next(oldlog) for x in xrange(100)])
+            result += ' '.join(deque(oldlog, 100))
+            newlog.write(result)
+        os.system('mv run-%s/new.log run-%s/run.log' % (ndir, ndir))
+        os.system('rm run-%s/run-r-1.out' % ndir)
+        os.system('rm run-%s/run-mix-1.ener' % ndir)
+
+
+
 def run_equilibrium_fssh(cp2k_info, task_info, paths, dict_equilibrium):
     # DETERMINE INITIAL STATE TO GET BOLTZMANN RATIO
     scaling = cp2k_info['SCALING']
@@ -102,6 +141,8 @@ def run_fssh( cp2k_info):
         run_equilibrium_fssh(cp2k_info, task_info, paths, dict_equilibrium)
     elif task_info['INITIALIZATION'] == 'SAMPLE_BO':
         run_sample_bo(cp2k_info, task_info, paths)
+    elif task_info['INITIALIZATION'] == 'DIABATIC':
+        run_fssh_from_diabat(cp2k_info, task_info, paths)
     else:
         print "NO METHOD IMPLEMENTED FOR INITIALIZATION"
         sys.exit()
