@@ -1349,7 +1349,7 @@ def main(inputs, paths):
         SIZE_CRYSTAL  %s
         COORD_CHARGE  %s
         CC_CHARGED    %s
-        }
+        RESTRAINT     %s
         """ % (
             self._my_sed_dict.get('MOL_NAME', '!!!'),
             self._my_sed_dict.get('NATOMS', '!!!'),
@@ -1359,7 +1359,8 @@ def main(inputs, paths):
             '    '.join(map(str, self._my_sed_dict.get('VECTC', '!!!'))),
             '    '.join(map(str, self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'))),
             '    '.join(map(str, self._my_sed_dict.get('COORD_CHARGE', '!!!'))),
-            self._my_sed_dict['CC_CHARGED']
+            self._my_sed_dict['CC_CHARGED'],
+            self._my_sed_dict['RESTRAINT']
             )
         elif (self._system == 'SOLVENT'):
             result = """
@@ -1378,6 +1379,7 @@ def main(inputs, paths):
                 COORD_CHARGE  %s
                 RCUT          %s
                 CC_CHARGED    %s
+                RESTRAINT     %s
                 """ % (
                 self._my_sed_dict.get('MOL_NAME', '!!!'),
                 self._my_sed_dict.get('NAME_SOLVENT', '!!!'),
@@ -1391,7 +1393,8 @@ def main(inputs, paths):
                 '    '.join(map(str, self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'))),
                 '    '.join(map(str, self._my_sed_dict.get('COORD_CHARGE', '!!!'))),
                 self._my_sed_dict.get('RCUT'),
-                self._my_sed_dict['CC_CHARGED']
+                self._my_sed_dict['CC_CHARGED'],
+            self._my_sed_dict['RESTRAINT']
             )
         return result
 
