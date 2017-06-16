@@ -298,7 +298,10 @@ def run_fist_nvt_nve_extract(dict_):
     else:
         sys.exit()
 
-    output = Dir('output/config-%s' % ( paths['bucket'].split('/')[-1]) , paths )
+    if dict_.get('DENSITY'):
+        output = Dir('output/config-%s-%s' % ( dict_['DENSITY'], paths['bucket'].split('/')[-1]) , paths )
+    else:
+        output = Dir('output/config-%s' % ( paths['bucket'].split('/')[-1]) , paths )
     output.rm_mkdir()
     paths.update({ 'output' : output.path })
 
