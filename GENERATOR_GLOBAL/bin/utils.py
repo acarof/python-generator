@@ -42,7 +42,8 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'CC_CHARGED' :   1.4008,
             'CONSTRAINT_LENGTH' : 6,
             'PRINT_FSSH'        : 1,
-            'K_CC_CHARGED'      : 0.263099
+            'K_CC_CHARGED'      : 0.263099,
+	        'SEED'              : 2000
             }
 
 
@@ -1350,6 +1351,7 @@ def main(inputs, paths):
         COORD_CHARGE  %s
         CC_CHARGED    %s
         RESTRAINT     %s
+        RCUT          %s
         """ % (
             self._my_sed_dict.get('MOL_NAME', '!!!'),
             self._my_sed_dict.get('NATOMS', '!!!'),
@@ -1360,7 +1362,8 @@ def main(inputs, paths):
             '    '.join(map(str, self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'))),
             '    '.join(map(str, self._my_sed_dict.get('COORD_CHARGE', '!!!'))),
             self._my_sed_dict['CC_CHARGED'],
-            self._my_sed_dict['RESTRAINT']
+            self._my_sed_dict['RESTRAINT'],
+            self._my_sed_dict.get('RCUT')
             )
         elif (self._system == 'SOLVENT'):
             result = """

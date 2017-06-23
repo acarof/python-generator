@@ -3,6 +3,7 @@ import string, re, struct, sys, math, os, time
 import numpy as np
 import imp
 from collections import deque
+from random import seed, randint
 
 # custom modules
 from utils import *
@@ -52,12 +53,13 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
 def run_equilibrium_fssh(cp2k_info, task_info, paths, dict_equilibrium):
     # DETERMINE INITIAL STATE TO GET BOLTZMANN RATIO
     scaling = cp2k_info['SCALING']
-    population = [ task_info.get('NUMBER_CONFIG') * task_info['NUMBER_REPEAT'] ]
+    population = [ task_info['NUMBER_CONFIG'] * task_info['NUMBER_REPEAT'] ]
     for state in range(1, task_info['NUMBER_ADIABAT']):
         pop = max( round(  dict_equilibrium[scaling][state]  * task_info.get('NUMBER_CONFIG') * task_info['NUMBER_REPEAT']) , 1)
         population.append(pop)
         population[0] = population[0] - pop
-    indice = (cp2k_info['REPEAT'] + 1) + (cp2k_info['INIT'] - 1) * task_info['NUMBER_REPEAT']
+    indice = (cp2k_info['REPEAT'] + 1) + (cp2k_info['INIT_CONFIG'][0] - 1) * task_info['NUMBER_REPEAT']
+    cp2k_info['INIT'] = cp2k_info['INIT_CONFIG'][1]
     this_pop = 0
     for state in range(len(population)):
         this_pop += population[state]
@@ -75,6 +77,9 @@ def run_equilibrium_fssh(cp2k_info, task_info, paths, dict_equilibrium):
     paths.update({'initial': initial.path})
     systems = InputFile( initial.path + '/system.info').dict
     cp2k_info.update(systems)
+
+    seed()
+    cp2k_info['SEED'] = randint(1, 1E9)
 
     system = cp2k_info['SYSTEM']
     if system == 'CRYSTAL':

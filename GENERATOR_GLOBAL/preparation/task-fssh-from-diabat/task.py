@@ -20,8 +20,8 @@ def main(task_info, paths):
 
     task = {
         'KIND_RUN' : 'TONAME',
-        'FILE_INIT': 'trimer',
-        'LENGTH_FS': 10000,
+        'FILE_INIT': '11-11mer',
+        'LENGTH_FS': 1,
         'INITIALIZATION': 'DIABATIC',
         'NUMBER_CONFIG'        : 1,
         'NUMBER_REPEAT'  :  1,

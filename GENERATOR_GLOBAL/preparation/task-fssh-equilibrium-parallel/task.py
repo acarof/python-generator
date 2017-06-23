@@ -20,17 +20,20 @@ def main(task_info, paths):
 
     task = {
         'KIND_RUN' : 'TONAME',
-        'FILE_INIT': 'TASK271-SAMPLE-BO-CORRECT-TEMP-50ps-20dabab-170531-8a3cf20d73a375f450dbba6de1b06d04',
+        'FILE_INIT': 'TASK279-SAMPLE-BO-CORRECT-TEMP-100ps-20dabab-170601-8da556911f813378f0577abfd206e148',
+        'FILE_DICT' : 'TASK279-SAMPLE-BO-CORRECT-TEMP-100ps-20dabab-170601-8da556911f813378f0577abfd206e148-1706121812',
         'LENGTH_FS': 1,
         'INITIALIZATION': 'ADIABATIC',
         'NUMBER_ADIABAT' : 2,
-        'NUMBER_CONFIG'        : 500,
+        'NUMBER_CONFIG'        : 2,
+        'FIRST_CONFIG' : 200,
+        'FINAL_CONFIG' : 500,
         'NUMBER_REPEAT'  :  1,
         'LIGHT' : True
     }
     task_info.update(task)
 
-
+    seed()
     cp2k_param = [
         [ 'PROPAGATION', 'FSSH'],
         #['DECO', 'NO_DECO_CORR','INSTANT_COLLAPSE','DAMPING']
@@ -53,26 +56,25 @@ def main(task_info, paths):
         [ 'TEMPLATE_FILE', 'FSSH_CORE.template'],
         [ 'FORCEFIELD_FILE', 'FSSH_FF.template'],
         ['INITIALIZATION', 'ADIABATIC'],
-        ['INIT'] + range(1, task_info.get('NUMBER_CONFIG') + 1),
-        ['REPEAT'] + range(task_info.get('NUMBER_REPEAT'))
+        ['INIT_CONFIG'] + [ (ind + 1, range(task_info['FIRST_CONFIG'], task_info['FINAL_CONFIG'], (task_info['FINAL_CONFIG'] - task_info['FIRST_CONFIG']) / task_info['NUMBER_CONFIG'])[ind])
+                      for ind in range(task_info['NUMBER_CONFIG'])],
+        ['REPEAT'] + range(task_info.get('NUMBER_REPEAT')),
     ]
 
-    # This data are taken from: extract-scaling-adiabat-TASK271-SAMPLE-BO-CORRECT-TEMP-20dabab-170524-1887874a226bfdd4091af8f822f02c00-1705251344
-    # For the state: ('1',) and average over the last 15 ps
-    dict_for_equilibrium = { \
-        5e-05: [0.928642208171, 0.0713577918293], \
-        0.0001: [0.918165692821, 0.0818343071787], \
-        0.0005: [0.925958122778, 0.0740418772217], \
-        0.001: [0.926807378939, 0.0731926210611], \
-        0.003: [0.937785514554, 0.0622144854463], \
-        0.005: [0.947096132577, 0.0529038674233], \
-        0.008: [0.958346216231, 0.0416537837688], \
-        0.01: [0.971660992297, 0.0283390077033], \
-        0.02: [0.998825781178, 0.00117421882242], \
-        0.03: [0.999483974074, 0.000516025925887], \
-        0.05: [0.999999815705, 1.84294978164e-07]
-    }
+    print "How many run?", len(cp2k_param)
 
+    dict_for_equilibrium = {}
+    with open('initial/result-thermodynamics-population-extract-scaling-adiabat-%s/Simulation-1.dat'  %
+              task_info['FILE_DICT']) as file_dict:
+        for line in file_dict.readlines()[1:]:
+            if '#' in line:
+                pass
+            else:
+                dict_for_equilibrium[
+                    float(line.split()[0])
+                ] = [ float(x) for x in line.split()[1:] ]
+
+    print dict_for_equilibrium
 
     # BUILD THE MEGA_LISTS
     second_list = [ sublist[1:] for sublist in cp2k_param]
