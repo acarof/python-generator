@@ -10,7 +10,8 @@ path_cp2k_dict = {
         'acarof' : '/scratch/grudorff/antoine/bin/cp2k.sopt'
     },
     'bulstake.phys.ucl.ac.uk'   : {
-        'sgiannini' : '/scratch/sgiannini/bin/TRIVIAL_merged_code/cp2k.sopt'
+        'sgiannini' : '/scratch/sgiannini/bin/TRIVIAL_merged_code/cp2k.sopt',
+        'acarof' : '/scratch/acarof/bin/cp2k.sopt'
     },
     'thame.phys.ucl.ac.uk': {
         'acarof' : '/scratch/acarof/bin/cp2k.sopt'

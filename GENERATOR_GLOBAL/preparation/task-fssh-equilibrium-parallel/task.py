@@ -22,7 +22,7 @@ def main(task_info, paths):
         'KIND_RUN' : 'TONAME',
         'FILE_INIT': 'TASK279-SAMPLE-BO-CORRECT-TEMP-100ps-20dabab-170601-8da556911f813378f0577abfd206e148',
         'FILE_DICT' : 'TASK279-SAMPLE-BO-CORRECT-TEMP-100ps-20dabab-170601-8da556911f813378f0577abfd206e148-1706121812',
-        'LENGTH_FS': 10000,
+        'LENGTH_FS': 1,
         'INITIALIZATION': 'ADIABATIC',
         'NUMBER_ADIABAT' : 2,
         'NUMBER_CONFIG'        : 1,
@@ -36,8 +36,8 @@ def main(task_info, paths):
     seed()
     cp2k_param = [
         [ 'PROPAGATION', 'FSSH'],
-        #['SURFACE_HOP_CHOICE', 'TRIVIAL_HOP_CORRECT','UNMODIFIED_SURF_HOP']
-        ['SURFACE_HOP_CHOICE', 'TRIVIAL_HOP_CORRECT'],
+        #['TRIVIAL', 'TRIVIAL_HOP_CORRECT','UNMODIFIED_SURF_HOP']
+        ['TRIVIAL', 'TRIVIAL_HOP_CORRECT', 'UNMODIFIED_SURF_HOP'],
         # ['DECO', 'NO_DECO_CORR','INSTANT_COLLAPSE','DAMPING']
         [ 'DECO', 'DAMPING'],
         #['METHOD_RESCALING','NACV','SIMPLE_QSYS']
