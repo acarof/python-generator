@@ -22,10 +22,10 @@ def main(task_info, paths):
         'KIND_RUN' : 'TONAME',
         'FILE_INIT': 'TASK279-SAMPLE-BO-CORRECT-TEMP-100ps-20dabab-170601-8da556911f813378f0577abfd206e148',
         'FILE_DICT' : 'TASK279-SAMPLE-BO-CORRECT-TEMP-100ps-20dabab-170601-8da556911f813378f0577abfd206e148-1706121812',
-        'LENGTH_FS': 1,
+        'LENGTH_FS': 10000,
         'INITIALIZATION': 'ADIABATIC',
         'NUMBER_ADIABAT' : 2,
-        'NUMBER_CONFIG'        : 2,
+        'NUMBER_CONFIG'        : 1,
         'FIRST_CONFIG' : 200,
         'FINAL_CONFIG' : 500,
         'NUMBER_REPEAT'  :  1,
@@ -36,7 +36,9 @@ def main(task_info, paths):
     seed()
     cp2k_param = [
         [ 'PROPAGATION', 'FSSH'],
-        #['DECO', 'NO_DECO_CORR','INSTANT_COLLAPSE','DAMPING']
+        #['SURFACE_HOP_CHOICE', 'TRIVIAL_HOP_CORRECT','UNMODIFIED_SURF_HOP']
+        ['SURFACE_HOP_CHOICE', 'TRIVIAL_HOP_CORRECT'],
+        # ['DECO', 'NO_DECO_CORR','INSTANT_COLLAPSE','DAMPING']
         [ 'DECO', 'DAMPING'],
         #['METHOD_RESCALING','NACV','SIMPLE_QSYS']
         [ 'METHOD_RESCALING', 'NACV'],
@@ -45,10 +47,11 @@ def main(task_info, paths):
         #['METHOD_REVERSAL', 'NEVER', 'ALWAYS', 'TRUHLAR', 'SUBOTNIK']
         [ 'METHOD_REVERSAL', 'ALWAYS'],
         #[ 'SCALING', 0.05, 0.03, 0.01, 0.008, 0.005, 0.003, 0.001, 0.0005, 0.0001, 0.00005],
-        [ 'SCALING', 0.03, 0.02, 0.01, 0.008, 0.003, 0.0005, 0.00005],
+        #[ 'SCALING', 0.03, 0.02, 0.01, 0.008, 0.003, 0.0005, 0.00005],
+        ['SCALING', 0.03],
         #['SCALING', 0.003, 0.00005],
         #[ 'TIMESTEP', 0.01, 0.05, 0.1, 0.5],
-        [ 'TIMESTEP', 0.1],
+        [ 'TIMESTEP', 0.5],
         #['EDC_E0', 0.01, 0.1, 1.0],
         ['EDC_E0', 0.1],
         #['ELECTRONIC_STEPS', 5, 10, 50],

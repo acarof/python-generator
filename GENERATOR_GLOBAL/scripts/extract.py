@@ -11,8 +11,22 @@ from utils_scripts import *
 #from marcus import *
 from utils_analyse import *
 
-scripts = 'one-time'
+
+scripts = 'extract-scaling'
 keywords = ['SCALING_FACTOR']
+
+dict_properties_simple = {
+    #  'Detailled' : [ 'Adiabatic-populations','Surface-populations','Delta_E'],
+    #'Runs-average' : [],
+    #'Block-runs-average' : [],
+    'Runs-average' : ['Adiabatic-populations', 'Surface-populations', 'Delta_E'],
+    #    'Specific' : ['FSSH', 'Detailed-FSSH'],
+    'Specific' : ['FSSH', 'Detailed-FSSH'],
+    #'Initial' : ['Delta_E'],
+    'Initial' : [],
+    'Mean' : ['Couplings', 'Total-energy', 'Temperature']
+}
+
 
 dict_properties_one_time = {
     #  'Detailled' : [ 'Adiabatic-populations','Surface-populations','Delta_E'],
@@ -31,7 +45,7 @@ dict_properties_initial = {
     'Initial' : ['Couplings','Delta_E','Adiabatic-populations','Surface-populations']
 }
 
-dict_properties = dict_properties_one_time
+dict_properties = dict_properties_simple
 
 #  INPUT INFO
 try:

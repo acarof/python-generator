@@ -51,6 +51,9 @@ class FSSHRun(object):
             return self._extract_nacv()
         elif property == 'Surface-populations':
             return self._extract_surface_population()
+        elif 'Surface-populations-' in property:
+            surface = int(property.replace("Surface-populations-", ""))
+            return  self._extract_surface_population(surface=surface)
         elif property == 'Adiabatic-populations':
             return self._extract_adiabatic_population()
         elif property == 'Adiabatic-energies':
@@ -76,7 +79,7 @@ class FSSHRun(object):
         file.close()
         return results
 
-    def _extract_surface_population(self):
+    def _extract_surface_population(self, surface = None):
         def _state_to_surface_pop(state, nadiab):
             list = [0.00] * nadiab
             list[state - 1] = 1.00
@@ -86,7 +89,11 @@ class FSSHRun(object):
         results = {}
         nadiab = int( self.get_input_key(['NUMBER_DIABATIC_STATES'])[0] )
         for time in state:
-            results[time] = _state_to_surface_pop(state[time][0], nadiab)
+            list_surface = _state_to_surface_pop(state[time][0], nadiab)
+            if surface is None:
+                results[time] = list_surface
+            else:
+                results[time] = [list_surface[surface]]
         return results
 
     def _extract_fssh(self, filename='run-sh-1.log'):
