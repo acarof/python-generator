@@ -162,7 +162,8 @@
         &VELOCITY
             @INCLUDE VELOC.init
         &END VELOCITY
-        @INCLUDE TOPOLOGY-1.include
+         @SET ACTIVE_MOL 1
+        @INCLUDE TOPOLOGY.include
    	&END SUBSYS
 &END FORCE_EVAL
 INCLUDE ALL_FORCE_EVAL.tmp

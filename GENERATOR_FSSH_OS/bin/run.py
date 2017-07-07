@@ -33,19 +33,14 @@ def read_input(path):
    else:
       input = InputFile('NONE')
    return input
-
-
-if 'generator/' in input_info:
-   input = read_input(input_info)
-   input.dict.update({'TEST' : 'YES'})
-elif 'preparation/' in input_info:
-   input = read_input(input_info)
-   input.dict.update({'TEST' : 'YES'})
-else:
-   input = read_input(input_info)
-   input.dict.update({'TEST': 'NO'})
+input = read_input(input_info)
+input.dict.update({'TEST' : 'YES'})
+if "GENERATOR" not in os.getcwd():
+    print "Hey"
+    input.dict.update({'TEST': 'NO'})
 input.dict.update({'INPUT_INFO': input_info})
 input.dict.update({'NWORKER' : nworker})
+
 
 # GET CP2K READY, get the correct machine to use by bin/machine.py
 paths.update(

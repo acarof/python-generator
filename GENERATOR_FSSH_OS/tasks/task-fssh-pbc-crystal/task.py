@@ -84,6 +84,10 @@ def main(task_info, paths):
     templates.checkdir()
     templates.clean()
 
+    templates = Dir('topologies', paths)
+    templates.checkdir()
+    templates.clean()
+
     supinitial = Dir('initial')
     supinitial.checkdir()
 

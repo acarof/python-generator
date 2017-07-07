@@ -1074,7 +1074,6 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
         self._kind()
         with open('TOPOLOGY.tmp', 'w') as file_:
             result = """
-                @SET ACTIVE_MOL %s
                 &CELL
                         ABC                    sedLBOXA        sedLBOXB        sedLBOXC
                         PERIODIC               sedPERIODIC
@@ -1094,7 +1093,7 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
                         &END DUMP_PSF
                 &END TOPOLOGY
             """ %\
-            (active_mol, self._kind(), self._new_psf() )
+            (self._kind(), self._new_psf() )
             file_.write(result)
         self._write_file('TOPOLOGY.tmp', 'TOPOLOGY-%s.include' % active_mol)
 
