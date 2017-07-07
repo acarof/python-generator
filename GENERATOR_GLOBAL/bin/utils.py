@@ -3,6 +3,7 @@ import hashlib
 import subprocess
 from numpy import dot, array, prod, power
 from numpy.linalg import norm
+import numpy as np
 from shutil import copyfile
 
 sed_dict = {'ENSEMBLE': 'NVE',
@@ -400,8 +401,7 @@ class CP2KRun(object):
         self.print_info()
         dir = Dir('run-%d' % ndir)
         dir.rm_mkdir()
-        os.system('mv %srun.inp %s' % (self.tmp.path, dir.path))
-        os.system('cp %s/*psf %s' % (self.tmp.path, dir.path))
+        self._get_input(dir)
         complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
         print "CP2K STARTS AT: " + complete_time
         dir.chdir()
@@ -421,6 +421,10 @@ class CP2KRun(object):
             os.system(' mv %s/* %s ' % (dir.path, fail.path))
             os.rmdir(dir.path)
         return ndir + 1
+
+    def _get_input(self, dir):
+        os.system('mv %srun.inp %s' % (self.tmp.path, dir.path))
+        os.system('cp %s/*psf %s' % (self.tmp.path, dir.path))
 
     def _write_input(self):
         self.tmp = Dir('tmp-%d' % self.ndir)
@@ -451,7 +455,7 @@ class CP2KRun(object):
         for mol in range(1, number + 1):
             file.seek(0)
             for line in file.readlines():
-                if 'INCLUDE' in line:
+                if ('INCLUDE' in line) and not ('@' in line):
                     result = result + self._include(line, mol)
                 elif 'sed' in line:
                     result = result + self._sed(line)
@@ -629,40 +633,6 @@ class CP2KOS(CP2KRun):
         fileout.close()
         fileout_colvar.close()
 
-#    def _colvar(self):
-#        fileout = open('COLVAR.tmp', 'w')
-#        list_mol = [[i, j, k] for i in range(1, self._sizecrystal[0] + 1)
-#                    for j in range(1, self._sizecrystal[1] + 1)
-#                    for k in range(1, self._sizecrystal[2] + 1)]
-#        list_mol2 = list_mol
-#        for mol in list_mol:
-#            list_mol2.remove(mol)
-#            if (list_mol2 is not None):
-#                for mol2 in list_mol2:
-#                    top_vect = abs(array(mol) - array(mol2))
-#                    top_dist = norm(top_vect)
-#                    if (top_dist == 1) or (top_dist == 2):
-#                        result = """\n
-#                &COLVAR
-#                     &DISTANCE
-#                          &POINT
-#                               ATOMS %s
-#                               TYPE  GEO_CENTER
-#                          &END POINT
-#                          &POINT
-#                               ATOMS %s
-#                               TYPE  GEO_CENTER
-#                          &END POINT
-#                          POINTS 1 2
-#                     &END DISTANCE
-#                &END COLVAR
-#                \n
-#                """ % (
-#                            self._list_carbon(mol),
-#                            self._list_carbon(mol2))
-#                        fileout.write(result)
-#        fileout.close()
-
     def _list_carbon(self, mol):
         molfile = open(self._filemol, 'r')
         lines = molfile.readlines()
@@ -681,11 +651,14 @@ class CP2KOS(CP2KRun):
                (float(self._coordcharge[1]) - 1) * float(self._sizecrystal[2]) + \
                float(self._coordcharge[2])
 
-    def _psf(self, pos_mol=-1, count=False):
+    def _psf(self, pos_mol=-1, count=False, list_count=-1):
         if pos_mol == -1:
             pos_mol = self._get_pos_mol()
         if count:
-            fileout = open('PSF-%d.tmp' % pos_mol, 'w')
+            if list_count != - 1:
+                fileout = open('PSF-%d.tmp' % (list_count + 1), 'w')
+            else:
+                fileout = open('PSF-%d.tmp' % pos_mol, 'w')
         else:
             fileout = open('PSF.tmp', 'w')
         number_mol = prod(self._sizecrystal)
@@ -702,6 +675,43 @@ class CP2KOS(CP2KRun):
                    &END MOLECULE\n """ % name
             fileout.write(result)
         fileout.close()
+
+
+class CP2KOSCrystal(CP2KOS):
+    """
+    """
+
+    def __init__(self, dict, paths, **kwargs):
+        super(CP2KOSCrystal, self).__init__(dict, paths, **kwargs)
+        self._sizebox = self._my_sed_dict.get('SIZE_BOX')
+
+    def _constraint(self):
+        pass
+
+    def _complete_dict(self):
+        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
+        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
+        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
+        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
+        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
+        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
+        self._my_sed_dict.update({
+            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
+            'NATOM_MOL': sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
+            'NATOMS': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * \
+                      sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
+            'NORM_LATTICE': [norm_a, norm_b, norm_c],
+            'LBOXA': self._sizebox[0],
+            'LBOXB': self._sizebox[1],
+            'LBOXC': self._sizebox[2],
+            'PRINT': int(self._my_sed_dict.get('NPROD') / self._my_sed_dict.get('NCONFIG')),
+            'PERIODIC': 'XYZ'
+        })
+        if self._my_sed_dict.get('RCUT') is None:
+            self._my_sed_dict.update({'RCUT': 12})
+        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
+
 
 
 class CP2KOSwSolvent(CP2KOS):
@@ -777,6 +787,7 @@ class CP2KOSwSolvent(CP2KOS):
     def _forcefield(self):
         print              self._mol_name + '_' + self._name_solvent
         os.system('cp %s_FF.inc FORCEFIELD.tmp' % (self._mol_name + '_' + self._name_solvent))
+
 
 
 class CP2KOSwSolventFSSH(CP2KOSwSolvent):
@@ -866,6 +877,7 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         os.system('cp %s/FSSH* %s' % (self.paths.get('templates'), self.tmp.path))
 
 
+
 class CP2KOSFIST(CP2KOS):
     """
     """
@@ -933,7 +945,247 @@ class CP2KOSFIST(CP2KOS):
         self._restraint = self._my_sed_dict.get('RESTRAINT')
 
 
+class CP2KOSCrystalFSSH(CP2KOSCrystal):
+    """
+    """
 
+
+    def __init__(self, dict, paths, **kwargs):
+        super(CP2KOSCrystalFSSH, self).__init__(dict, paths, **kwargs)
+        self._built_list_activated()
+        self._init = self._my_sed_dict.get('INIT')
+        self._printfrq = self._my_sed_dict.get('PRINTFRQ')
+        self._sizecrystal = self._my_sed_dict.get('SIZE_CRYSTAL')
+        self._coordcharge = self._my_sed_dict.get('COORD_CHARGE')
+        self._mol_name = self._my_sed_dict.get('MOL_NAME')
+        self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
+        self._forcefield_file = '%s_FF.inc'  % (self._mol_name)
+        self._filemol = 'COORD.tmp'
+        self._restraint = self._my_sed_dict.get('RESTRAINT')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
+        self._initial_path = paths.get('initial')
+        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
+
+    def _built_list_activated(self):
+        _vector_diff = np.array(self._my_sed_dict.get('FIRST_MOL_CHAIN')) \
+                       - np.array(self._my_sed_dict.get('LAST_MOL_CHAIN'))
+        n = 0
+        self._list_activated = []
+        for mol0_index in range(self._sizecrystal[0]):
+            for mol1_index in range(self._sizecrystal[1]):
+                for mol2_index in range(self._sizecrystal[2]):
+                    n += 1
+                    index3d = [mol0_index + 1, mol1_index + 1, mol2_index + 1]
+                    index3diff = np.array(index3d) \
+                                 - np.array(self._my_sed_dict.get('FIRST_MOL_CHAIN'))
+                    index3difflast = np.array(index3d) \
+                                 - np.array(self._my_sed_dict.get('LAST_MOL_CHAIN'))
+                    if ((np.cross(index3diff, _vector_diff)) == np.array([0, 0, 0]) ).all():
+                        self._list_activated.append(n)
+        print self._list_activated
+
+    def _get_templates(self):
+        os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
+        os.system('cp %s/%s*.inc %s' % (self.paths.get('templates'), self._mol_name, self.tmp.path))
+        os.system('cp %s/%s %s' % (self.paths.get('templates'), self._template_file, self.tmp.path))
+
+    def _get_input(self, dir):
+        os.system('mv %srun.inp %s' % (self.tmp.path, dir.path))
+        os.system('cp %s/*psf %s' % (self.tmp.path, dir.path))
+        os.system('cp %s/*init %s' % (self.tmp.path, dir.path))
+        os.system('cp %s/*include %s' % (self.tmp.path, dir.path))
+
+    def _write_topo(self):
+        self._write_file(self._forcefield_file, 'FORCEFIELD.include') # CREATE FORCEFIELD.include
+        for active_mol in self._list_activated:
+            self._force_eval(active_mol) # CREATE FORCE_EVAL.include
+            self._topology(active_mol) # CREATE TOPOLOGY,include
+        self._aom()
+        self._complete_main_input()
+
+    def _complete_main_input(self):
+        with open('ALL_FORCE_EVAL.tmp', 'w') as file_:
+            for molecule in self._list_activated:
+                result = "@SET  ACTIVE_MOL %s\n" % molecule
+                result += "@INCLUDE FORCE_EVAL-%s.include\n" % molecule
+                file_.write(result)
+        #self._write_file(self._tem, 'FORCEEVAL.tmp', number=len(self._list_activated))
+
+
+    def _kind(self):
+        result = """
+                &KIND CP
+                        ELEMENT C
+                &END KIND
+                &KIND H
+                        ELEMENT H
+                &END KIND
+                &KIND CN
+                        ELEMENT C
+                &END KIND
+        """
+        return result
+
+    def _new_psf(self):
+        result = ""
+        index = 0
+        for molecule in self._list_activated:
+            if (molecule - index - 1) != 0:
+                result += """
+                            &MOLECULE
+                                NMOL              %s
+                                CONN_FILE_NAME    ./%s
+                                CONN_FILE_FORMAT  PSF
+                           &END MOLECULE
+                   """ % \
+                      ( molecule - index - 1, self._mol_name + "_NEUTRE.psf")
+            result += """
+                           @IF ${ACTIVE_MOL} == %s
+                                &MOLECULE
+                                    NMOL              1
+                                    CONN_FILE_NAME    ./%s
+                                    CONN_FILE_FORMAT  PSF
+                               &END MOLECULE
+                            @ENDIF
+                            @IF ${ACTIVE_MOL} != %s
+                                &MOLECULE
+                                    NMOL              1
+                                    CONN_FILE_NAME    ./%s
+                                    CONN_FILE_FORMAT  PSF
+                               &END MOLECULE
+                            @ENDIF
+                   """ % \
+                      ( molecule, self._mol_name + "_CHARGE.psf",
+                        molecule, self._mol_name + "_NEUTRE.psf")
+            index = molecule
+        if (index != self._nmol):
+            result += """
+                            &MOLECULE
+                                NMOL              %s
+                                CONN_FILE_NAME    ./%s
+                                CONN_FILE_FORMAT  PSF
+                            &END MOLECULE
+                    """ % \
+                      ( self._nmol - index - 1, self._mol_name + "_NEUTRE.psf")
+        return result
+
+
+    def _topology(self, active_mol):
+        self._kind()
+        with open('TOPOLOGY.tmp', 'w') as file_:
+            result = """
+                @SET ACTIVE_MOL %s
+                &CELL
+                        ABC                    sedLBOXA        sedLBOXB        sedLBOXC
+                        PERIODIC               sedPERIODIC
+                &END CELL
+                %s
+                &TOPOLOGY
+                        NUMBER_OF_ATOMS                   sedNATOMS
+                        CONN_FILE_FORMAT  MOL_SET
+                        &MOL_SET
+                %s
+                        &END MOL_SET
+                        &DUMP_PSF
+                                &EACH
+                                   MD          1
+                                &END EACH
+                                FILENAME ./input
+                        &END DUMP_PSF
+                &END TOPOLOGY
+            """ %\
+            (active_mol, self._kind(), self._new_psf() )
+            file_.write(result)
+        self._write_file('TOPOLOGY.tmp', 'TOPOLOGY-%s.include' % active_mol)
+
+
+    def _get_new_coord(self):
+        os.system('cp %s/pos-%d.init %s/COORD.init' % (self._initial_path, self._init, self.tmp.path))
+        self._clean_velocities('%s/vel-%d.init' % (self._initial_path, self._init), '%s/VELOC.init' % self.tmp.path)
+
+
+
+    def _complete_dict(self):
+        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
+        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
+        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
+        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
+        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
+        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
+        n_max = max(n_a, n_b, n_c)
+        norm_max = max(norm_a, norm_b, norm_c)
+        self._my_sed_dict.update({
+            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
+            'NORM_LATTICE': [norm_a, norm_b, norm_c],
+            'NDIABAT': (len(self._list_activated) ) * self._my_sed_dict.get('NORBITALS'),
+            'LBOXA': self._sizebox[0],
+            'LBOXB': self._sizebox[1],
+            'LBOXC': self._sizebox[2],
+            'PERIODIC': 'XYZ'
+        })
+        if self._my_sed_dict.get('RCUT') is None:
+            self._my_sed_dict.update({'RCUT': 12})
+        self._my_sed_dict.update({
+            'FORCE_EVAL_ORDER': '1..%d' % (len(self._list_activated) + 1)
+        })
+        self._nmol = self._my_sed_dict.get('NMOL')
+        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
+
+
+    def _aom(self):
+        for mol in range(1, 1 +self._nmol):
+            if mol in self._list_activated:
+                os.system('cat %s_AOM.inc >> AOM_COEFF.include' % self._mol_name)
+            else:
+                with open('AOM_COEFF.include', 'ab+') as file_:
+                    for atom in range(self._natom_mol):
+                        file_.write('XX   1    0   0.0   0.0\n')
+
+
+    def _force_eval(self, active_mol):
+            result = """
+&FORCE_EVAL
+    METHOD  FIST
+    &MM
+        &FORCEFIELD
+            &SPLINE
+                RCUT_NB         sedRCUT
+            &END SPLINE
+            @INCLUDE FORCEFIELD.include
+        &END FORCEFIELD
+        &POISSON
+            &EWALD
+                EWALD_TYPE  NONE
+                #EWALD_TYPE  EWALD
+                #ALPHA        sedALPHA
+                #GMAX         sedGMAX
+                #O_SPLINE     sedOSPLINE
+            &END EWALD
+        &END POISSON
+        &PRINT
+            &ITER_INFO  SILENT
+            &END ITER_INFO
+            &PROGRAM_RUN_INFO LOW
+                &EACH
+                     MD 1
+                &END EACH
+            &END PROGRAM_RUN_INFO
+        &END PRINT
+    &END MM
+    &SUBSYS
+        &COORD
+            @INCLUDE COORD.init
+        &END COORD
+        &VELOCITY
+            @INCLUDE VELOC.init
+        &END VELOCITY
+        @INCLUDE TOPOLOGY-%s.include
+    &END SUBSYS
+&END FORCE_EVAL
+            """ % active_mol
+            with open('FORCE_EVAL.tmp', 'w') as file_:
+                file_.write(result)
+            self._write_file('FORCE_EVAL.tmp', 'FORCE_EVAL-%s.include' % active_mol)
 
 
 class CP2KOSFSSH(CP2KOS):
@@ -1007,6 +1259,7 @@ class CP2KOSFSSH(CP2KOS):
     def _aom(self):
         for mol in range(self._nmol):
             os.system('cat %s_AOM.inc >> AOM_COEFF.tmp' % self._mol_name)
+
 
 
 class FSSHParcel(object):
@@ -1399,8 +1652,37 @@ def main(inputs, paths):
                 self._my_sed_dict['CC_CHARGED'],
             self._my_sed_dict['RESTRAINT']
             )
+        elif (self._system == 'PBC_CRYSTAL'):
+            result = """
+                PERIODIC  XYZ
+                SYSTEM   PBC_CRYSTAL
+                MOL_NAME      %s
+                NATOMS        %d
+                NATOM_MOL     %d
+                SIZE_BOX      %s
+                VECTA         %s
+                VECTB         %s
+                VECTC         %s
+                SIZE_CRYSTAL  %s
+                COORD_CHARGE  %s
+                RCUT          %s
+                CC_CHARGED    %s
+                RESTRAINT     %s
+                """ % (
+                self._my_sed_dict.get('MOL_NAME', '!!!'),
+                self._my_sed_dict.get('NATOMS', '!!!'),
+                self._my_sed_dict.get('NATOM_MOL', '!!!'),
+                '    '.join(map(str, self._my_sed_dict.get('SIZE_BOX', '!!!'))),
+                '    '.join(map(str, self._my_sed_dict.get('VECTA', '!!!'))),
+                '    '.join(map(str, self._my_sed_dict.get('VECTB', '!!!'))),
+                '    '.join(map(str, self._my_sed_dict.get('VECTC', '!!!'))),
+                '    '.join(map(str, self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'))),
+                '    '.join(map(str, self._my_sed_dict.get('COORD_CHARGE', '!!!'))),
+                self._my_sed_dict.get('RCUT'),
+                self._my_sed_dict['CC_CHARGED'],
+            self._my_sed_dict['RESTRAINT']
+            )
         return result
-
 
 
 

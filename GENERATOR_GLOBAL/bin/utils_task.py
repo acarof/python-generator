@@ -32,6 +32,10 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
         from utils import CP2KOSFSSH as Config
     elif system == 'SOLVENT':
         from utils import CP2KOSwSolventFSSH as Config
+    elif system == 'PBC_CRYSTAL':
+        cp2k_info.update({ 'FIRST_MOL_CHAIN' : task_info['FIRST_MOL_CHAIN'] })
+        cp2k_info.update({ 'LAST_MOL_CHAIN' : task_info['LAST_MOL_CHAIN'] })
+        from utils import CP2KOSCrystalFSSH as Config
     else:
         sys.exit()
 
@@ -242,6 +246,9 @@ def run_fist_long_nvt(cp2k_info):
     elif system == 'SOLVENT':
         from utils import OSwSolvent as Structure
         from utils import CP2KOSwSolvent as Config
+    elif system == 'PBC_CRYSTAL':
+        from utils import OSCluster as Structure
+        from utils import CP2KOSCrystal as Config
     else:
         sys.exit()
 
@@ -300,8 +307,12 @@ def run_fist_nvt_nve_extract(dict_):
     elif system == 'SOLVENT':
         from utils import OSwSolvent as Structure
         from utils import CP2KOSwSolvent as Config
+    elif system == 'PBC_CRYSTAL':
+        from utils import OSCluster as Structure
+        from utils import CP2KOSCrystal as Config
     else:
         sys.exit()
+
 
     if dict_.get('DENSITY'):
         output = Dir('output/config-%s-%s' % ( dict_['DENSITY'], paths['bucket'].split('/')[-1]) , paths )
@@ -315,10 +326,10 @@ def run_fist_nvt_nve_extract(dict_):
     ndir = dict_['NDIR']
     print "2. RUN CP2K"
     print "GO FOR RUN %d" % ndir
-    config_nvt = Config(inputs, paths, ENSEMBLE='NVT', STEPS=inputs['NEQ'], RESTART=None, TEMPLATE_FILE='FIST_without_vel.template')
+    config_nvt = Config(inputs, paths, ENSEMBLE='NVT', STEPS=inputs['NEQ'], RESTART=None, TEMPLATE_FILE=inputs['TEMPLATE_FILE_NVT'])
     ndir = config_nvt.run(ndir)
 
-    config_nve = Config(inputs, paths, ENSEMBLE='NVE', STEPS=inputs['NPROD'], RESTART=config_nvt.ndir, TEMPLATE_FILE='FIST_TEMPLATE')
+    config_nve = Config(inputs, paths, ENSEMBLE='NVE', STEPS=inputs['NPROD'], RESTART=config_nvt.ndir, TEMPLATE_FILE=inputs['TEMPLATE_FILE_NVE'])
     ndir = config_nve.run(ndir)
 
     if os.path.exists('run-%d' % (config_nve.ndir)):

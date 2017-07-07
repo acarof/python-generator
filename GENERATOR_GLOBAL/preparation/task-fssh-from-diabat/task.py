@@ -20,12 +20,14 @@ def main(task_info, paths):
 
     task = {
         'KIND_RUN' : 'TONAME',
-        'FILE_INIT': '11-11mer',
+        'FILE_INIT': '3-3-3-mer',
         'LENGTH_FS': 1,
         'INITIALIZATION': 'DIABATIC',
         'NUMBER_CONFIG'        : 1,
         'NUMBER_REPEAT'  :  1,
-        'LIGHT' : True
+        'LIGHT' : True,
+        'FIRST_MOL_CHAIN' : [1, 1, 1],
+        'LAST_MOL_CHAIN'  : [2, 1, 1]
     }
     task_info.update(task)
 
@@ -50,8 +52,8 @@ def main(task_info, paths):
         ['EDC_E0', 0.1],
         #['ELECTRONIC_STEPS', 5, 10, 50],
         ['ELECTRONIC_STEPS', 5],
-        [ 'TEMPLATE_FILE', 'FSSH_CORE.template'],
-        [ 'FORCEFIELD_FILE', 'FSSH_FF.template'],
+        [ 'TEMPLATE_FILE', 'FSSH_CORE_without_constraint.template'],
+        [ 'FORCEFIELD_FILE', 'FSSH_FF_without_constraint.template'],
         ['INITIALIZATION', 'DIABATIC'],
         ['INIT'] + range(1, task_info.get('NUMBER_CONFIG') + 1),
         ['REPEAT'] + range(task_info.get('NUMBER_REPEAT'))
