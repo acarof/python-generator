@@ -396,11 +396,12 @@ class CP2KRun(object):
 
     def run(self, ndir):
         self.ndir = ndir
+        dir = Dir('run-%d' % ndir)
+        self._dir = dir
+        dir.rm_mkdir()
         self._complete_dict()
         self._write_input()
         self.print_info()
-        dir = Dir('run-%d' % ndir)
-        dir.rm_mkdir()
         self._get_input(dir)
         complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
         print "CP2K STARTS AT: " + complete_time
@@ -433,7 +434,6 @@ class CP2KRun(object):
         self._get_coord()
         os.chdir(self.tmp.path)
         self._write_topo()
-        self._write_file(self._template_file, 'run.inp')
         os.chdir(self.paths.get('bucket'))
 
     def _write_file(self, namein, nameout, number=1):
@@ -445,7 +445,7 @@ class CP2KRun(object):
         fileout.close()
 
     def _write_topo(self):
-        pass
+        self._write_file(self._template_file, 'run.inp')
 
     def _complete_dict(self):
         pass
@@ -558,6 +558,7 @@ class CP2KOS(CP2KRun):
         self._psf()
         #self._colvar()
         self._constraint()
+        self._write_file(self._template_file, 'run.inp')
 
     def _forcefield(self):
         os.system('cp %s_FF.inc FORCEFIELD.tmp' % self._mol_name)
@@ -713,84 +714,6 @@ class CP2KOSCrystal(CP2KOS):
         self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
 
 
-
-class CP2KOSwSolvent(CP2KOS):
-    def __init__(self, dict, paths, **kwargs):
-        super(CP2KOSwSolvent, self).__init__(dict, paths, **kwargs)
-        self._kind_solvent = self._my_sed_dict.get('SOLVENT')
-        self._sizebox = self._my_sed_dict.get('SIZE_BOX')
-        self._name_solvent = self._my_sed_dict.get('NAME_SOLVENT')
-
-    def _complete_dict(self):
-        super(CP2KOSwSolvent, self)._complete_dict()
-        coordname = self.paths.get('output') + self._structure + '/' + self._filecrystal
-        self._my_sed_dict.update({
-            'NATOMS': sum(1 for line in open(coordname)),
-            'NSOLVENT': open(coordname).read().count(self._kind_solvent),
-            'LBOXA': self._sizebox[0],
-            'LBOXB': self._sizebox[1],
-            'LBOXC': self._sizebox[2],
-            'PERIODIC': 'XYZ'
-        })
-        if self._my_sed_dict.get('RCUT') is None:
-            self._my_sed_dict.update( { 'RCUT': min(self._sizebox) / 2 })
-        self._nsolvent = self._my_sed_dict.get('NSOLVENT')
-
-    def _kind(self):
-        fileout = open('KIND.tmp', 'w')
-        result = """\n
-                   &KIND CP
-                        ELEMENT C
-                &END KIND
-                &KIND H
-                        ELEMENT H
-                &END KIND
-                &KIND CN
-                        ELEMENT C
-                &END KIND
-                &KIND %s
-                        ELEMENT %s
-                &END KIND
-            """ % (self._kind_solvent.title(), self._kind_solvent.title())
-        fileout.write(result)
-        fileout.close()
-
-    def _psf(self, pos_mol=-1, count=False):
-        if pos_mol == -1:
-            pos_mol = self._get_pos_mol()
-        if count:
-            fileout = open('PSF-%d.tmp' % pos_mol, 'w')
-        else:
-            fileout = open('PSF.tmp', 'w')
-        number_mol = prod(self._sizecrystal)
-        for mol in range(int(number_mol)):
-            if ((mol + 1) == pos_mol):
-                name = self._name_organic + '_CHARGE.psf'
-            else:
-                name = self._name_organic + '_NEUTRE.psf'
-            result = """\n
-                    &MOLECULE
-                        NMOL              1
-                        CONN_FILE_NAME    ./%s
-                        CONN_FILE_FORMAT  PSF
-                   &END MOLECULE\n """ % name
-            fileout.write(result)
-        result = """\n
-                    &MOLECULE
-                        NMOL              %s
-                        CONN_FILE_NAME    ./%s
-                        CONN_FILE_FORMAT  PSF
-                   &END MOLECULE\n """ % (self._nsolvent, self._kind_solvent.title() + '.psf')
-        fileout.write(result)
-        fileout.close()
-
-    def _forcefield(self):
-        print              self._mol_name + '_' + self._name_solvent
-        os.system('cp %s_FF.inc FORCEFIELD.tmp' % (self._mol_name + '_' + self._name_solvent))
-
-
-
-
 class CP2KOSCrystalFSSH(CP2KOSCrystal):
     """
     """
@@ -830,26 +753,26 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
                         self._list_activated.append(n)
         print self._list_activated
 
-    def _get_templates(self):
-        os.system('cp %s/*.psf %s' % (self.paths.get('topologies'), self.tmp.path))
-        os.system('cp %s/%s*.inc %s' % (self.paths.get('topologies'), self._mol_name, self.tmp.path))
-        os.system('cp %s/%s %s' % (self.paths.get('templates'), self._template_file, self.tmp.path))
 
     def _get_input(self, dir):
-        os.system('mv %srun.inp %s' % (self.tmp.path, dir.path))
-        os.system('cp %s/*psf %s' % (self.tmp.path, dir.path))
-        os.system('cp %s/*init %s' % (self.tmp.path, dir.path))
-        os.system('cp %s/*include %s' % (self.tmp.path, dir.path))
+        os.system('cp %s/*.psf %s' % (self.paths.get('topologies'), dir.path))
+
+    def _write_input(self):
+        self._get_coord()
+        self._write_topo()
 
     def _write_topo(self):
-        self._write_file(self._forcefield_file, 'FORCEFIELD.include') # CREATE FORCEFIELD.include
+        self._write_file('%s/%s' % (self.paths['topologies'], self._forcefield_file), '%s/FORCEFIELD.include' % self._dir.path) # CREATE FORCEFIELD.include
         self._force_eval() # CREATE FORCE_EVAL.include
         self._topology() # CREATE TOPOLOGY,include
         self._aom()
         self._complete_main_input()
 
+
+
     def _complete_main_input(self):
-        with open('ALL_FORCE_EVAL.tmp', 'w') as file_:
+        self._write_file('%s/%s' % (self.paths['templates'], self._template_file), '%s/run.inp' % self._dir.path)
+        with open('%s/run.inp' % self._dir.path, 'ab+') as file_:
             for molecule in self._list_activated:
                 result = "@SET  ACTIVE_MOL %s\n" % molecule
                 result += "@INCLUDE FORCE_EVAL.include\n"
@@ -915,9 +838,22 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
         return result
 
 
+    def _amend_text(self, text, number=1):
+        result = ""
+        for mol in range(1, number + 1):
+            for line in text.split('\n'):
+               # if ('INCLUDE' in line) and not ('@' in line):
+               #     result = result + self._include(line, mol)
+                if 'sed' in line:
+                    result = result + self._sed(line)
+                else:
+                    result = result + line
+                result += "\n"
+        return result
+
     def _topology(self):
         self._kind()
-        with open('TOPOLOGY.tmp', 'w') as file_:
+        with open('%s/TOPOLOGY.include' % self._dir.path, 'w') as file_:
             result = """
                 &CELL
                         ABC                    sedLBOXA        sedLBOXB        sedLBOXC
@@ -939,14 +875,14 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
                 &END TOPOLOGY
             """ %\
             (self._kind(), self._new_psf() )
-            file_.write(result)
-        self._write_file('TOPOLOGY.tmp', 'TOPOLOGY.include')
+            file_.write( self._amend_text(result))
+
+
 
 
     def _get_new_coord(self):
-        os.system('cp %s/pos-%d.init %s/COORD.init' % (self._initial_path, self._init, self.tmp.path))
-        self._clean_velocities('%s/vel-%d.init' % (self._initial_path, self._init), '%s/VELOC.init' % self.tmp.path)
-
+        os.system('cp %s/pos-%d.init %s/COORD.init' % (self._initial_path, self._init, self._dir.path))
+        self._clean_velocities('%s/vel-%d.init' % (self._initial_path, self._init), '%s/VELOC.init' % self._dir.path)
 
 
     def _complete_dict(self):
@@ -979,9 +915,9 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
     def _aom(self):
         for mol in range(1, 1 +self._nmol):
             if mol in self._list_activated:
-                os.system('cat %s_AOM.inc >> AOM_COEFF.include' % self._mol_name)
+                os.system('cat %s/%s_AOM.inc >> %s/AOM_COEFF.include' % (self.paths.get('topologies'), self._mol_name, self._dir.path))
             else:
-                with open('AOM_COEFF.include', 'ab+') as file_:
+                with open('%s/AOM_COEFF.include' % (self._dir.path), 'ab+') as file_:
                     for atom in range(self._natom_mol):
                         file_.write('XX   1    0   0.0   0.0\n')
 
@@ -1027,9 +963,10 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
     &END SUBSYS
 &END FORCE_EVAL
             """
-            with open('FORCE_EVAL.tmp', 'w') as file_:
-                file_.write(result)
-            self._write_file('FORCE_EVAL.tmp', 'FORCE_EVAL.include')
+            with open('%s/FORCE_EVAL.include' % self._dir.path, 'w') as file_:
+                file_.write( self._amend_text(result))
+
+
 
 
 class CP2KOSFSSH(CP2KOS):

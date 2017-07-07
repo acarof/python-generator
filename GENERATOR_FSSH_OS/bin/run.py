@@ -36,7 +36,6 @@ def read_input(path):
 input = read_input(input_info)
 input.dict.update({'TEST' : 'YES'})
 if "GENERATOR" not in os.getcwd():
-    print "Hey"
     input.dict.update({'TEST': 'NO'})
 input.dict.update({'INPUT_INFO': input_info})
 input.dict.update({'NWORKER' : nworker})

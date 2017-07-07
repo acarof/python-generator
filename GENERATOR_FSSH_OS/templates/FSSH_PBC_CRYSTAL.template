@@ -80,8 +80,7 @@
                              METHOD_ADIABATIC_NACV                 sedMETHOD_ADIAB_NACV
                              METHOD_REVERSAL                       sedMETHOD_REVERSAL
                              NACV_INCREMENT   [bohr]               sedNACV_INCREMENT
-
-@INCLUDE AOM_COEFF.include
+                             @INCLUDE AOM_COEFF.include
                         &END AOM
                         &PRINT
                             &COEFFICIENTS  LOW
@@ -89,22 +88,12 @@
                                    MD          sedPRINT_FSSH
                                &END EACH
                             &END COEFFICIENTS
-                            #&POPULATIONS  LOW
-                            #   &EACH
-                            #       MD          sedPRINT
-                            #   &END EACH
-                            #&END POPULATIONS
                             &HAMILTONIAN
                                UNIT     hartree
                                &EACH
                                    MD          sedPRINT_FSSH
                                &END EACH
                             &END HAMILTONIAN
-                            #&DENSITY_MATRIX
-                            #   &EACH
-                            #       MD          sedPRINT
-                            #   &END EACH
-                            #&END DENSITY_MATRIX
                             &HOP_NACV
                                &EACH
                                    MD          1
@@ -120,21 +109,6 @@
                                    MD          sedPRINT
                                &END EACH
                             &END NACE
-                            #&STATE
-                            #   &EACH
-                            #       MD          sedPRINT
-                            #   &END EACH
-                            #&END STATE
-                            &EXACT_FORCES
-                               &EACH
-                                   MD          sedPRINT
-                               &END EACH
-                            &END EXACT_FORCES
-                            #&ACTIVE_STATE_INFO
-                            #   &EACH
-                            #       MD          sedPRINT
-                            #   &END EACH
-                            #&END ACTIVE_STATE_INFO
                             &SH_INFO
                                &EACH
                                    MD          1
@@ -166,4 +140,3 @@
         @INCLUDE TOPOLOGY.include
    	&END SUBSYS
 &END FORCE_EVAL
-INCLUDE ALL_FORCE_EVAL.tmp
