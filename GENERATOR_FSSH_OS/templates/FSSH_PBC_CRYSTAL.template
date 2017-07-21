@@ -129,14 +129,14 @@
                         &END PROGRAM_RUN_INFO
                 &END PRINT
         &END MIXED
-   	&SUBSYS
-        &COORD
-            @INCLUDE COORD.init
-        &END COORD
-        &VELOCITY
-            @INCLUDE VELOC.init
-        &END VELOCITY
-         @SET ACTIVE_MOL 1
-        @INCLUDE TOPOLOGY.include
-   	&END SUBSYS
+        &SUBSYS
+                &COORD
+                    @INCLUDE COORD.init
+                &END COORD
+                &VELOCITY
+                    @INCLUDE VELOC.init
+                &END VELOCITY
+                 @SET ACTIVE_MOL 1
+                @INCLUDE TOPOLOGY.include
+        &END SUBSYS
 &END FORCE_EVAL

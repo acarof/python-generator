@@ -53,7 +53,6 @@ def main(task_info, paths):
         #['ELECTRONIC_STEPS', 5, 10, 50],
         ['ELECTRONIC_STEPS', 5],
         [ 'TEMPLATE_FILE', 'FSSH_PBC_CRYSTAL.template'],
-        [ 'FORCEFIELD_FILE', 'FSSH_FF_without_constraint.template'],
         ['INITIALIZATION', 'DIABATIC'],
         ['INIT'] + range(1, task_info.get('NUMBER_CONFIG') + 1),
         ['REPEAT'] + range(task_info.get('NUMBER_REPEAT'))

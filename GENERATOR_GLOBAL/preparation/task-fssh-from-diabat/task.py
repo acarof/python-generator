@@ -20,7 +20,7 @@ def main(task_info, paths):
 
     task = {
         'KIND_RUN' : 'TONAME',
-        'FILE_INIT': '3-3-3-mer',
+        'FILE_INIT': '8-mer',
         'LENGTH_FS': 1,
         'INITIALIZATION': 'DIABATIC',
         'NUMBER_CONFIG'        : 1,

@@ -8,7 +8,7 @@ import importlib, imp
 from utils import *
 
 name_bucket = os.getcwd().split('/')[-1]
-if name_bucket != 'GENERATOR_GLOBAL':
+if "GENERATOR" not in os.getcwd():
     list = name_bucket.split('-')
     list[-1] = 'CLEAN'
     new_name =  '-'.join(list)
