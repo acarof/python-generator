@@ -24,6 +24,9 @@ except:
 
 # PATHS CONTAINS ALL THE PATHS
 paths = {}
+for directory in ['bin', 'initial', 'scripts','structures', 'tasks', 'templates', 'tools', 'topologies']:
+    dir = Dir(directory, paths)
+    dir.checkdir()
 
 
 # OPEN AND READ THE INPUT FILE

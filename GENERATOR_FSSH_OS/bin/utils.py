@@ -48,14 +48,38 @@ sed_dict = {'ENSEMBLE': 'NVE',
             }
 
 
+def abc_to_hmatrix(a, b, c, alpha, beta, gamma):
+    """ Box vectors from box vector lengths and box vector angles (in degrees)."""
+    alpha, beta, gamma = map(math.radians, (alpha, beta, gamma))
+    result = np.zeros((3, 3))
+
+    a = np.array((a, 0, 0))
+    print a
+    print alpha, beta, gamma
+    b = b * np.array((math.cos(gamma), math.sin(gamma), 0))
+    bracket = (math.cos(alpha) - math.cos(beta) * math.cos(gamma)) / math.sin(gamma)
+    c = c * np.array((math.cos(beta), bracket, math.sqrt(math.sin(beta) ** 2 - bracket ** 2)))
+
+    result[:, 0] = a
+    result[:, 1] = b
+    result[:, 2] = c
+    print result
+    return a, b, c
+
+
+
+
 class Dir(object):
     """
     """
 
-    def __init__(self, name, paths={}):
+    def __init__(self, name, paths={}, target = None):
         self._name = name
         self.path = os.getcwd() + '/' + self._name + '/'
-        paths.update({self._name: self.path})
+        if target is None:
+            paths.update({self._name: self.path})
+        else:
+            paths.update({ target : self.path})
 
     def clean(self):
         test = os.path.exists(self.path)
@@ -188,164 +212,60 @@ class InputFile(object):
             return None
 
 
-class OSCluster(object):
+class OSCrystal(object):
     """
         """
 
-    def __init__(self, structure_dict, paths, ndir = 0):
-        self._structure = structure_dict.get('SYSTEM')
-        self._filemol = structure_dict.get('FILEMOL')
-        self._vecta = structure_dict.get('VECTA')
-        self._vectb = structure_dict.get('VECTB')
-        self._vectc = structure_dict.get('VECTC')
+    def __init__(self, structure_dict, paths):
+        self.paths = paths
+        self._filemol = structure_dict.get('FILE_UNIT')
         self._sizecrystal = structure_dict.get('SIZE_CRYSTAL')
         self._coordcharge = structure_dict.get('COORD_CHARGE')
-        self._filecrystal = structure_dict.get('FILECRYSTAL')
-        self._templates_path = paths.get('templates')
-        self._bucket_path = paths.get('bucket')
-        self._output_path = paths.get('output')
-        self.ndir = ndir
-        self._write()
+        self._filecrystal = structure_dict.get('FILE_CRYSTAL')
+        self._vecta, self._vectb, self._vectc = abc_to_hmatrix( structure_dict['ABC'][0], structure_dict['ABC'][1], structure_dict['ABC'][2],
+                        structure_dict['ALPHA_BETA_GAMMA'][0], structure_dict['ALPHA_BETA_GAMMA'][1],
+                        structure_dict['ALPHA_BETA_GAMMA'][2]
+                        )
+        print structure_dict['ABC'][0], structure_dict['ABC'][1], structure_dict['ABC'][2],\
+                        structure_dict['ALPHA_BETA_GAMMA'][0], structure_dict['ALPHA_BETA_GAMMA'][1],\
+                        structure_dict['ALPHA_BETA_GAMMA'][2]
+        print self._vecta, self._vectb, self._vectc
 
-    def _write(self):
-        self.tmp = Dir('tmp-cluster-%s' % self.ndir)
-        self.tmp.rm_mkdir()
-        self._create_dir()
-        self._print_info()
-        self._get_templates()
-        os.chdir(self.tmp.path)
-        self._my_write()
-        os.system(' mv %s %s' % (self._filecrystal, self.parcel.path))
-        os.chdir(self._bucket_path)
 
-    def _get_templates(self):
-        os.system('cp %s/%s %s' % (self._templates_path, self._filemol, self.tmp.path))
 
-    def _my_write(self):
-        self._construct_organic_crystal()
-
-    def _create_dir(self):
-        os.chdir(self._output_path)
-        self.parcel = Dir(self._structure)
-        self.parcel.mkdir()
-        os.chdir(self._bucket_path)
-
-    def _print_info(self):
-        print """\n
-               MOLECULE FILE   = %s
-               CRYSTAL LATTICE a = %s
-               CRYSTAL LATTICE b = %s
-               CRYSTAL LATTICE c = %s
-               CRYSTAL SIZE    = %s
-               COORD CHARGE    = %s
-               CRYSTAL FILE    = %s
-               \n
-               """ \
-              % (self._filemol,
-                 str(self._vecta).strip('[]'),
-                 str(self._vectb).strip('[]'),
-                 str(self._vectc).strip('[]'),
-                 str(self._sizecrystal).strip('[]'),
-                 str(self._coordcharge).strip('[]'),
-                 self._filecrystal)
-
-    def _construct_organic_crystal(self):
-        molfile = open(self._filemol, 'r')
-        crystalfile = open(self._filecrystal, 'w')
-        lines = molfile.readlines()
-        molfile.close
-        for mol0_index in range(self._sizecrystal[0]):
-            for mol1_index in range(self._sizecrystal[1]):
-                for mol2_index in range(self._sizecrystal[2]):
-                    index3d = [mol0_index + 1, mol1_index + 1, mol2_index + 1]
-                    for line_index in range(len(lines)):
-                        l = string.strip(lines[line_index])
-                        info = re.split('\s+', l)
-                        atom_label = self._choose_atom_label(info[0], i3d=index3d, i3dcharge=self._coordcharge)
-                        atom_coord = [float(info[1]), float(info[2]), float(info[3])]
-                        vec_shift = mol0_index * array(self._vecta) + \
-                                    mol1_index * array(self._vectb) + \
-                                    mol2_index * array(self._vectc)
-                        result = '%s  %s\n' \
-                                 % (atom_label, str(atom_coord + vec_shift).strip('[]'))
-                        crystalfile.write(result)
-        crystalfile.close
-
-    def _choose_atom_label(self, atom, i3d=[-1, -1, -1], i3dcharge=[-1, -1, -1], imol=-1, icharge=-1):
-        if (imol == -1) and (icharge == -1):
-            if (atom == 'C'):
-                if (i3d == i3dcharge):
-                    atom_label = 'CP'
-                else:
-                    atom_label = 'CN'
+    def construct_organic_crystal(self):
+        with open('%s/%s' % (self.paths['structures'], self._filemol), 'r') as molfile:
+            if '.xyz' in self._filemol:
+                lines = molfile.readlines()[2:]
             else:
-                atom_label = atom
-        elif (imol != -1) and (icharge != -1):
-            if (atom == 'C'):
-                if (imol == icharge):
-                    atom_label = 'CP'
-                else:
-                    atom_label = 'CN'
-            else:
-                atom_label = atom
-        else:
-            atom_label = None
-            print "THERE IS A PROBLEM in choose_atom_label"
-        return atom_label
+                lines = molfile.readlines()
+        self._number_atoms_unit = len(lines)
+        with open('%s/%s' % (self.paths['crystal'], self._filecrystal), 'w') as crystalfile:
+            if '.xyz' in self._filecrystal:
+                header = """%s
+blabla
+""" % self._calculate_number_atoms()
+                crystalfile.write(header)
+            for mol0_index in range(self._sizecrystal[0]):
+                for mol1_index in range(self._sizecrystal[1]):
+                    for mol2_index in range(self._sizecrystal[2]):
+                        index3d = [mol0_index + 1, mol1_index + 1, mol2_index + 1]
+                        for line_index in range(len(lines)):
+                            l = string.strip(lines[line_index])
+                            info = re.split('\s+', l)
+                            atom_label = info[0]
+                            atom_coord = [float(info[1]), float(info[2]), float(info[3])]
+                            vec_shift = mol0_index * array(self._vecta) + \
+                                        mol1_index * array(self._vectb) + \
+                                        mol2_index * array(self._vectc)
+                            result = '%s  %s\n' \
+                                     % (atom_label, str(atom_coord + vec_shift).strip('[]'))
+                            crystalfile.write(result)
 
 
-class OSwSolvent(OSCluster):
-    """
-    """
 
-    def __init__(self, inputs, paths, ndir=0):
-        self._closest_dist = inputs.get('CLOSEST_DIST')
-        self._kind_solvent = inputs.get('SOLVENT')
-        self._density = inputs.get('DENSITY')
-        self._sizebox = inputs.get('SIZE_BOX')
-        super(OSwSolvent, self).__init__(inputs, paths, ndir)
-
-    def _my_write(self):
-        self._construct_organic_crystal()
-        self._add_solvent()
-
-    def _add_solvent(self):
-        filecoord = open(self._filecrystal, 'a+')
-        self._get_grid()
-        self._get_carbon_pos(filecoord)
-        list_of_list = [list(array(range(self._grid[i])) - int(self._grid[i] / 2)) for i in range(3)]
-        grid = [[i, j, k] for i in list_of_list[0]
-                for j in list_of_list[1]
-                for k in list_of_list[2]]
-
-        for pos in grid:
-            realpos = array(pos) * array(self._realgrid)
-            dist = self._get_os_dist(realpos)
-            if dist >= self._closest_dist:
-                result = "%s  %f  %f  %f \n" % (self._kind_solvent, realpos[0], realpos[1], realpos[2])
-                filecoord.write(result)
-        filecoord.close()
-
-    def _get_carbon_pos(self, filecoord):
-        self._carbon_pos = []
-        for line in filecoord.readlines():
-            if 'C' in line:
-                info = re.split('\s+', line)
-                self._carbon_pos.append([float(info[1]), float(info[2]), float(info[3])])
-
-    def _get_grid(self):
-        volume = prod(self._sizebox)
-        pre_natoms = self._density * volume
-        cubic_roots = int(power(pre_natoms, 1.0 / 3.0))
-        self._grid = [cubic_roots, cubic_roots, cubic_roots]
-        self._realgrid = array(self._sizebox) / array(self._grid)
-
-    def _get_os_dist(self, pos_solvent):
-        list = []
-        for pos_carbon in self._carbon_pos:
-            dist = norm(array(pos_carbon) - array(pos_solvent))
-            list.append(dist)
-        return min(list)
+    def _calculate_number_atoms(self):
+        return self._number_atoms_unit * self._sizecrystal[0] * self._sizecrystal[1] * self._sizecrystal[2]
 
 
 class CP2KRun(object):
@@ -490,250 +410,38 @@ class CP2KRun(object):
         return result
 
 
-class CP2KOS(CP2KRun):
+class FSSHOSCrystal(CP2KRun):
     """
     """
 
     def __init__(self, dict, paths, **kwargs):
-        super(CP2KOS, self).__init__(dict, paths, **kwargs)
-        self._sizecrystal = self._my_sed_dict.get('SIZE_CRYSTAL')
-        self._coordcharge = self._my_sed_dict.get('COORD_CHARGE')
-        self._mol_name = self._my_sed_dict.get('MOL_NAME')
-        self._name_organic = self._my_sed_dict.get('MOL_NAME')
-        self._filecrystal = self._my_sed_dict.get('FILECRYSTAL')
-        self._filemol = self._my_sed_dict.get('FILEMOL')
-        self._structure = self._my_sed_dict.get('SYSTEM')
-        self._constraint_length = self._my_sed_dict.get('CONSTRAINT_LENGTH')
-
-    def print_info(self):
-        print "Hey Hey"
-
-    def _complete_dict(self):
-        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
-        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
-        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
-        norm_max = max(norm_a, norm_b, norm_c)
-        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
-        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
-        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
-        n_max = max(n_a, n_b, n_c)
-        self._my_sed_dict.update({
-            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
-            'NATOM_MOL': sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
-            'NATOMS': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * \
-                      sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
-            'NORM_LATTICE': [norm_a, norm_b, norm_c],
-            'LBOXA': 10 * norm_max * n_max,
-            'LBOXB': 10 * norm_max * n_max,
-            'LBOXC': 10 * norm_max * n_max,
-            'PRINT': int(self._my_sed_dict.get('NPROD') / self._my_sed_dict.get('NCONFIG'))
-        })
-        if self._my_sed_dict.get('RCUT') is None:
-            self._my_sed_dict.update( { 'RCUT': 5 * norm_max * n_max })
-        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
-        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
-        self._restraint = self._my_sed_dict.get('RESTRAINT')
-
-    def _use_restart(self, ndir):
-        os.system('tail -%d run-%d/run-pos-1.xyz > COORD.tmp' % (self._my_sed_dict.get('NATOMS'), ndir) )
-        os.system('tail -%d run-%d/run-vel-1.xyz > preVELOC.tmp' % (self._my_sed_dict.get('NATOMS'), ndir) )
-        self._clean_velocities('preVELOC.tmp','VELOC.tmp')
-        os.system('mv *.tmp %s' % self.tmp.path)
-
-    def _get_new_coord(self):
-        os.system('cp %s/%s/%s %s/COORD.tmp' % (self.paths.get('output'), self._structure,
-                                                self._filecrystal, self.tmp.path))
-        self._create_velocities('%s/VELOC.tmp'% self.tmp.path,'%s/COORD.tmp' % self.tmp.path)
-
-
-    def _get_templates(self):
-        os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
-        os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
-        os.system('cp %s/FIST* %s' % (self.paths.get('templates'), self.tmp.path))
-        os.system('cp %s/%s %s' % (self.paths.get('templates'), self._filemol, self.tmp.path))
-
-    def _write_topo(self):
-        self._forcefield()
-        self._kind()
-        self._psf()
-        #self._colvar()
-        self._constraint()
-        self._write_file(self._template_file, 'run.inp')
-
-    def _forcefield(self):
-        os.system('cp %s_FF.inc FORCEFIELD.tmp' % self._mol_name)
-
-    def _kind(self):
-        fileout = open('KIND.tmp', 'w')
-        result = """\n
-                   &KIND CP
-                        ELEMENT C
-                &END KIND
-                &KIND H
-                        ELEMENT H
-                &END KIND
-                &KIND CN
-                        ELEMENT C
-                &END KIND
-        """
-        fileout.write(result)
-        fileout.close()
-
-    def _constraint(self):
-        fileout = open('CONSTRAINT.tmp', 'w')
-        fileout_colvar = open('COLVAR.tmp', 'w')
-        fileout.write('        &CONSTRAINT\n')
-        list_mol = [[i, j, k] for i in range(1, self._sizecrystal[0] + 1)
-                    for j in range(1, self._sizecrystal[1] + 1)
-                    for k in range(1, self._sizecrystal[2] + 1)
-                    ]
-        colvar = 0
-        list_mol2 = list_mol
-        for mol in list_mol:
-            list_mol2.remove(mol)
-            if (list_mol2 is not None):
-                for mol2 in list_mol2:
-                    top_vect = abs(array(mol) - array(mol2))
-                    top_dist = norm(top_vect)
-                    if (top_dist <  self._constraint_length ):
-                        colvar = colvar + 1
-                        result = """\n
-             &COLLECTIVE
-                  &RESTRAINT
-                         K              %f
-                  &END RESTRAINT
-                  COLVAR                %d
-                  INTERMOLECULAR
-                  TARGET      [angstrom]          %f
-             &END COLLECTIVE
-                         \n     """ \
-                                 % (self._restraint,
-                                    colvar,
-                                    dot(array(self._norm_lattice), top_vect))
-                        fileout.write(result)
-                        result = """\n
-                &COLVAR
-                     &DISTANCE
-                          &POINT
-                               ATOMS %s
-                               TYPE  GEO_CENTER
-                          &END POINT
-                          &POINT
-                               ATOMS %s
-                               TYPE  GEO_CENTER
-                          &END POINT
-                          POINTS 1 2
-                     &END DISTANCE
-                &END COLVAR
-                \n
-                """ % (
-                            self._list_carbon(mol),
-                            self._list_carbon(mol2))
-                        fileout_colvar.write(result)
-        fileout.write('        &END CONSTRAINT\n')
-        fileout.close()
-        fileout_colvar.close()
-
-    def _list_carbon(self, mol):
-        molfile = open(self._filemol, 'r')
-        lines = molfile.readlines()
-        list_carbon = []
-        num_mol = (mol[0] - 1) * self._sizecrystal[1] * self._sizecrystal[2] + \
-                  (mol[1] - 1) * self._sizecrystal[2] + \
-                  mol[2] - 1
-        for i in range(self._natom_mol):
-            line = lines[i]
-            if ('C' in line):
-                list_carbon.append(i + 1 + (num_mol) * self._natom_mol)
-        return '\t'.join(map(str, list_carbon))
-
-    def _get_pos_mol(self):
-        return (float(self._coordcharge[0]) - 1) * float(self._sizecrystal[1] * self._sizecrystal[2]) + \
-               (float(self._coordcharge[1]) - 1) * float(self._sizecrystal[2]) + \
-               float(self._coordcharge[2])
-
-    def _psf(self, pos_mol=-1, count=False, list_count=-1):
-        if pos_mol == -1:
-            pos_mol = self._get_pos_mol()
-        if count:
-            if list_count != - 1:
-                fileout = open('PSF-%d.tmp' % (list_count + 1), 'w')
-            else:
-                fileout = open('PSF-%d.tmp' % pos_mol, 'w')
-        else:
-            fileout = open('PSF.tmp', 'w')
-        number_mol = prod(self._sizecrystal)
-        for mol in range(int(number_mol)):
-            if ((mol + 1) == pos_mol):
-                name = self._name_organic + '_CHARGE.psf'
-            else:
-                name = self._name_organic + '_NEUTRE.psf'
-            result = """\n
-                    &MOLECULE
-                        NMOL              1
-                        CONN_FILE_NAME    ./%s
-                        CONN_FILE_FORMAT  PSF
-                   &END MOLECULE\n """ % name
-            fileout.write(result)
-        fileout.close()
-
-
-class CP2KOSCrystal(CP2KOS):
-    """
-    """
-
-    def __init__(self, dict, paths, **kwargs):
-        super(CP2KOSCrystal, self).__init__(dict, paths, **kwargs)
-        self._sizebox = self._my_sed_dict.get('SIZE_BOX')
-
-    def _constraint(self):
-        pass
-
-    def _complete_dict(self):
-        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
-        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
-        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
-        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
-        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
-        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
-        self._my_sed_dict.update({
-            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
-            'NATOM_MOL': sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
-            'NATOMS': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * \
-                      sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
-            'NORM_LATTICE': [norm_a, norm_b, norm_c],
-            'LBOXA': self._sizebox[0],
-            'LBOXB': self._sizebox[1],
-            'LBOXC': self._sizebox[2],
-            'PRINT': int(self._my_sed_dict.get('NPROD') / self._my_sed_dict.get('NCONFIG')),
-            'PERIODIC': 'XYZ'
-        })
-        if self._my_sed_dict.get('RCUT') is None:
-            self._my_sed_dict.update({'RCUT': 12})
-        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
-        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
-
-
-class CP2KOSCrystalFSSH(CP2KOSCrystal):
-    """
-    """
-
-
-    def __init__(self, dict, paths, **kwargs):
-        super(CP2KOSCrystalFSSH, self).__init__(dict, paths, **kwargs)
-        self._built_list_activated()
+        super(FSSHOSCrystal, self).__init__(dict, paths, **kwargs)
         self._init = self._my_sed_dict.get('INIT')
         self._printfrq = self._my_sed_dict.get('PRINTFRQ')
         self._sizecrystal = self._my_sed_dict.get('SIZE_CRYSTAL')
         self._coordcharge = self._my_sed_dict.get('COORD_CHARGE')
+        self._built_list_activated()
         self._mol_name = self._my_sed_dict.get('MOL_NAME')
         self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
         self._forcefield_file = '%s_FF.inc'  % (self._mol_name)
+        self._forcefield_format = '.inc'
+        if self._my_sed_dict.get('FORCEFIELD_FILE'):
+            self._forcefield_file = self._my_sed_dict.get('FORCEFIELD_FILE')
+            if 'prm' in self._forcefield_file:
+                self._forcefield_format = '.prm'
+        print self._forcefield_file
+        print self._my_sed_dict.get('FORCEFIELD_FILE')
         self._filemol = 'COORD.tmp'
         self._restraint = self._my_sed_dict.get('RESTRAINT')
         self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
         self._initial_path = paths.get('initial')
         self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
+        print self._my_sed_dict.get('VELOCITIES')
+        if self._my_sed_dict.get('VELOCITIES') is not None:
+            self._do_velocities = self._my_sed_dict.get('VELOCITIES')
+        else:
+            self._do_velocities = True
+
 
     def _built_list_activated(self):
         _vector_diff = np.array(self._my_sed_dict.get('FIRST_MOL_CHAIN')) \
@@ -753,7 +461,6 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
                         self._list_activated.append(n)
         print self._list_activated
 
-
     def _get_input(self, dir):
         os.system('cp %s/*.psf %s' % (self.paths.get('topologies'), dir.path))
 
@@ -768,8 +475,6 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
         self._aom()
         self._complete_main_input()
 
-
-
     def _complete_main_input(self):
         self._write_file('%s/%s' % (self.paths['templates'], self._template_file), '%s/run.inp' % self._dir.path)
         with open('%s/run.inp' % self._dir.path, 'ab+') as file_:
@@ -778,7 +483,6 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
                 result += "@INCLUDE FORCE_EVAL.include\n"
                 file_.write(result)
         #self._write_file(self._tem, 'FORCEEVAL.tmp', number=len(self._list_activated))
-
 
     def _kind(self):
         result = """
@@ -837,7 +541,6 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
                       ( self._nmol - index, self._mol_name + "_NEUTRE.psf")
         return result
 
-
     def _amend_text(self, text, number=1):
         result = ""
         for mol in range(1, number + 1):
@@ -856,11 +559,14 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
         with open('%s/TOPOLOGY.include' % self._dir.path, 'w') as file_:
             result = """
                 &CELL
-                        ABC                    sedLBOXA        sedLBOXB        sedLBOXC
-                        PERIODIC               sedPERIODIC
+                        ABC                    %s
+                        ALPHA_BETA_GAMMA       %s
+                        PERIODIC               XYZ
                 &END CELL
                 %s
                 &TOPOLOGY
+                        COORD_FILE_FORMAT XYZ
+                        COORD_FILE_NAME   coord-init.xyz
                         NUMBER_OF_ATOMS                   sedNATOMS
                         CONN_FILE_FORMAT  MOL_SET
                         &MOL_SET
@@ -874,42 +580,30 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
                         &END DUMP_PSF
                 &END TOPOLOGY
             """ %\
-            (self._kind(), self._new_psf() )
+            (
+             '    '.join(map(str, self._my_sed_dict['ABC'])),
+             '    '.join(map(str, self._my_sed_dict['ALPHA_BETA_GAMMA'])),
+             self._kind(),
+             self._new_psf() )
             file_.write( self._amend_text(result))
-
-
-
 
     def _get_new_coord(self):
         os.system('cp %s/pos-%d.init %s/COORD.init' % (self._initial_path, self._init, self._dir.path))
         self._clean_velocities('%s/vel-%d.init' % (self._initial_path, self._init), '%s/VELOC.init' % self._dir.path)
 
-
     def _complete_dict(self):
-        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
-        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
-        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
-        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
-        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
-        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
-        n_max = max(n_a, n_b, n_c)
-        norm_max = max(norm_a, norm_b, norm_c)
         self._my_sed_dict.update({
-            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
-            'NORM_LATTICE': [norm_a, norm_b, norm_c],
-            'NDIABAT': (len(self._list_activated) ) * self._my_sed_dict.get('NORBITALS'),
-            'LBOXA': self._sizebox[0],
-            'LBOXB': self._sizebox[1],
-            'LBOXC': self._sizebox[2],
-            'PERIODIC': 'XYZ'
+            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL'))*self._my_sed_dict['NMOL_UNIT'],
+            'NDIABAT': (len(self._list_activated) ) * self._my_sed_dict.get('NORBITALS')
         })
         if self._my_sed_dict.get('RCUT') is None:
             self._my_sed_dict.update({'RCUT': 12})
         self._my_sed_dict.update({
-            'FORCE_EVAL_ORDER': '1..%d' % (len(self._list_activated) + 1)
+            'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 1),
+            'NATOMS'           : self._my_sed_dict['NMOL']*self._my_sed_dict['NATOM_MOL']
         })
         self._nmol = self._my_sed_dict.get('NMOL')
-        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
+
 
 
     def _aom(self):
@@ -921,9 +615,26 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
                     for atom in range(self._natom_mol):
                         file_.write('XX   1    0   0.0   0.0\n')
 
-
     def _force_eval(self):
-            result = """
+        if self._forcefield_format == '.prm':
+            at_include = """
+            PARMTYPE CHM
+			PARM_FILE_NAME ../topologies/%s
+            """ % self._forcefield_file
+        else:
+            at_include = """
+            @INCLUDE FORCEFIELD.include
+            """
+        if self._do_velocities:
+            velocity = """
+        &VELOCITY
+            @INCLUDE VELOC.init
+        &END VELOCITY
+"""
+        else:
+            velocity = "# No initial velocities"
+
+        result = """
 &FORCE_EVAL
     METHOD  FIST
     &MM
@@ -931,15 +642,15 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
             &SPLINE
                 RCUT_NB         sedRCUT
             &END SPLINE
-            @INCLUDE FORCEFIELD.include
+%s
         &END FORCEFIELD
         &POISSON
             &EWALD
-                EWALD_TYPE  NONE
-                #EWALD_TYPE  EWALD
-                #ALPHA        sedALPHA
-                #GMAX         sedGMAX
-                #O_SPLINE     sedOSPLINE
+                #EWALD_TYPE  NONE
+                EWALD_TYPE  EWALD
+                ALPHA        sedALPHA
+                GMAX         sedGMAX
+                O_SPLINE     sedOSPLINE
             &END EWALD
         &END POISSON
         &PRINT
@@ -953,93 +664,39 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
         &END PRINT
     &END MM
     &SUBSYS
-        &COORD
-            @INCLUDE COORD.init
-        &END COORD
-        &VELOCITY
-            @INCLUDE VELOC.init
-        &END VELOCITY
+        %s
         @INCLUDE TOPOLOGY.include
     &END SUBSYS
 &END FORCE_EVAL
-            """
-            with open('%s/FORCE_EVAL.include' % self._dir.path, 'w') as file_:
+            """ % (at_include, velocity)
+        with open('%s/FORCE_EVAL.include' % self._dir.path, 'w') as file_:
                 file_.write( self._amend_text(result))
 
 
 
-
-class CP2KOSFSSH(CP2KOS):
+class FISTOSCrystal(FSSHOSCrystal):
     """
     """
 
     def __init__(self, dict, paths, **kwargs):
-        super(CP2KOSFSSH, self).__init__(dict, paths, **kwargs)
-        self._init = self._my_sed_dict.get('INIT')
-        self._printfrq = self._my_sed_dict.get('PRINTFRQ')
-        self._sizecrystal = self._my_sed_dict.get('SIZE_CRYSTAL')
-        self._coordcharge = self._my_sed_dict.get('COORD_CHARGE')
-        self._mol_name = self._my_sed_dict.get('MOL_NAME')
-        self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
-        self._forcefield_file = self._my_sed_dict.get('FORCEFIELD_FILE')
-        self._filemol = 'COORD.tmp'
-        self._restraint = self._my_sed_dict.get('RESTRAINT')
-        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
-        self._initial_path = paths.get('initial')
-        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
+        super(FISTOSCrystal, self).__init__(dict, paths, **kwargs)
 
-    def print_info(self):
-        print "Hey"
-
-    def _write_topo(self):
-        self._forcefield()
-        self._kind()
-        for mol in range(1, self._nmol + 1):
-            self._psf(mol, True)
-        #self._colvar()
-        self._constraint()
-        self._aom()
-        self._write_file(self._forcefield_file, 'FORCEEVAL.tmp', number=self._nmol)
 
     def _get_new_coord(self):
-        os.system('cp %s/pos-%d.init %s/COORD.tmp' % (self._initial_path, self._init, self.tmp.path))
-        self._clean_velocities('%s/vel-%d.init' % (self._initial_path, self._init ),'%s/VELOC.tmp' % self.tmp.path)
-
-    def _get_templates(self):
-        os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
-        os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
-        os.system('cp %s/FSSH* %s' % (self.paths.get('templates'), self.tmp.path))
+        os.system('cp %s/crystal.xyz  %s/coord-init.xyz' % (self.paths['crystal'], self._dir.path))
 
 
-    def _complete_dict(self):
-        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
-        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
-        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
-        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
-        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
-        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
-        n_max = max(n_a, n_b, n_c)
-        norm_max = max(norm_a, norm_b, norm_c)
-        self._my_sed_dict.update({
-            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
-            'NDIABAT': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * self._my_sed_dict.get('NORBITALS'),
-            'NORM_LATTICE': [norm_a, norm_b, norm_c],
-            'LBOXA': 10 * norm_max * n_max,
-            'LBOXB': 10 * norm_max * n_max,
-            'LBOXC': 10 * norm_max * n_max
-        })
-        if self._my_sed_dict.get('RCUT') is None:
-            self._my_sed_dict.update( { 'RCUT': 5 * norm_max * n_max })
-        self._my_sed_dict.update({
-            'FORCE_EVAL_ORDER': '1..%d' % (self._my_sed_dict.get('NDIABAT') + 1)
-        })
-        self._nmol = self._my_sed_dict.get('NMOL')
-        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
-        self._restraint = self._my_sed_dict.get('RESTRAINT')
+    def _built_list_activated(self):
+        self._list_activated = [ int((float(self._coordcharge[0]) - 1) * float(self._sizecrystal[1] * self._sizecrystal[2]) + \
+               (float(self._coordcharge[1]) - 1) * float(self._sizecrystal[2]) + \
+               float(self._coordcharge[2])) ]
+        print self._list_activated
 
     def _aom(self):
-        for mol in range(self._nmol):
-            os.system('cat %s_AOM.inc >> AOM_COEFF.tmp' % self._mol_name)
+        pass
+
+
+
 
 
 
