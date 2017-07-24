@@ -474,6 +474,22 @@ class FSSHOSCrystal(CP2KRun):
                 else:
                     return False
 
+    def _check_activate_mol(self, atom):
+        molecule = int( atom / self._my_sed_dict['NATOM_MOL'])
+        if molecule in self._list_activated:
+            return True
+        else:
+            return False
+
+    def _modified(self, line):
+        atom, x, y, z = line.split()
+        if atom == 'C':
+            label = 'CP'
+        else:
+            label = atom
+        return '%s   %s  %s  %s\n'  % (label, x, y, z)
+
+
     def _gather_vel_coord(self, restart_dict, path):
         for iprop in ['vel', 'pos']:
             with open('%s/run-%s-1.xyz'  % (restart_dict['RESTART_DIR'], iprop), 'r') as file_:
@@ -486,7 +502,10 @@ class FSSHOSCrystal(CP2KRun):
                             fileout.write(line)
                             activate = True
                         elif activate:
-                            fileout.write(line)
+                            if self._check_activate_mol(atom):
+                                fileout.write(self._modified(line))
+                            else:
+                                fileout.write(line)
                             atom = atom + 1
                             if atom > (self._my_sed_dict['NATOMS'] - 1):
                                 break
