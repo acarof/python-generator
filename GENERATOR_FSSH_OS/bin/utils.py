@@ -32,9 +32,9 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'PERIODIC': 'NONE',
             'CENTER_OF_MASS': 'T',
             'SELECT_FIRST_ADIABAT' : 'F',
-            'TRIVIAL' : 'TRIVIAL_HOP_CORRECT',
+            'SURF_HOP_CHOICE' : 'TRIVIAL_HOP_CORRECT',
             'T_THRESHOLD' : 0.003,
-            'DECO': 'NO_DECO_CORR',
+            'DECOHERENCE_CORRECTIONS': 'DAMPING',
             'EDC_C': 1.0,
             'EDC_E0': 0.1,
             'FIRST_ADIABAT': 1,
@@ -44,8 +44,11 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'CONSTRAINT_LENGTH' : 6,
             'PRINT_FSSH'        : 1,
             'K_CC_CHARGED'      : 0.263099,
-	        'SEED'              : 2000
+	        'SEED'              : 2000,
+            'REPRESENTATION'    : 'DIABATIC_BASIS',
+            'RK_PROPAGATION'    : 'DIABATIC_RK'
             }
+
 
 
 def abc_to_hmatrix(a, b, c, alpha, beta, gamma):
@@ -485,37 +488,21 @@ class FSSHOSCrystal(CP2KRun):
                         elif activate:
                             fileout.write(line)
                             atom = atom + 1
-                            if atom > self._my_sed_dict['NATOMS']:
+                            if atom > (self._my_sed_dict['NATOMS'] - 1):
                                 break
 
     def _built_list_activated(self):
-        _vector_diff = np.array(self._my_sed_dict.get('FIRST_MOL_CHAIN')) \
-                       - np.array(self._my_sed_dict.get('LAST_MOL_CHAIN'))
-        n = 0
-        self._list_activated = []
-        for mol0_index in range(self._sizecrystal[0]):
-            for mol1_index in range(self._sizecrystal[1]):
-                for mol2_index in range(self._sizecrystal[2]):
-                    n += 1
-                    index3d = [mol0_index + 1, mol1_index + 1, mol2_index + 1]
-                    index3diff = np.array(index3d) \
-                                 - np.array(self._my_sed_dict.get('FIRST_MOL_CHAIN'))
-                    index3difflast = np.array(index3d) \
-                                 - np.array(self._my_sed_dict.get('LAST_MOL_CHAIN'))
-                    if ((np.cross(index3diff, _vector_diff)) == np.array([0, 0, 0]) ).all():
-                        self._list_activated.append(n)
-        print self._list_activated
+        self._list_activated = self._my_sed_dict['LIST_ACTIVATED']
 
     def _get_input(self, dir):
-        pass
-        #os.system('cp %s/*.psf %s' % (self.paths.get('topologies'), dir.path))
+        os.system('cp %s/*.txt %s' % (self.paths.get('topologies'), dir.path))
 
     def _write_input(self):
         self._get_coord()
         self._write_topo()
 
     def _write_topo(self):
-        self._write_file('%s/%s' % (self.paths['topologies'], self._forcefield_file), '%s/FORCEFIELD.include' % self._dir.path) # CREATE FORCEFIELD.include
+        #self._write_file('%s/%s' % (self.paths['topologies'], self._forcefield_file), '%s/FORCEFIELD.include' % self._dir.path) # CREATE FORCEFIELD.include
         self._force_eval() # CREATE FORCE_EVAL.include
         self._topology() # CREATE TOPOLOGY,include
         self._aom()

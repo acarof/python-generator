@@ -38,3 +38,47 @@ def run_fist(system_info, cp2k_info, paths, steps, ndir = 0, restart_info = None
     return config.run(ndir), ndir
 
 
+
+def run_fssh( cp2k_info):
+    task_info = cp2k_info.get('INPUTS_DICT')
+    paths  = cp2k_info.get('PATHS_DICT')
+
+    if task_info['INITIALIZATION'] == 'DIABATIC':
+        run_fssh_from_diabat(cp2k_info, task_info, paths)
+    else:
+        print "NO METHOD IMPLEMENTED FOR INITIALIZATION"
+        sys.exit()
+
+
+def shorten_log_file(ndir):
+    with open('run-%s/run.log' % ndir) as oldlog, open('run-%s/new.log' % ndir, 'w') as newlog:
+        result = ' '.join([next(oldlog) for x in xrange(100)])
+        result += ' '.join(deque(oldlog, 100))
+        newlog.write(result)
+    os.system('mv run-%s/new.log run-%s/run.log' % (ndir, ndir))
+    os.system('rm run-%s/run-r-1.out' % ndir)
+    os.system('rm run-%s/run-mix-1.ener' % ndir)
+
+
+def run_fssh_from_diabat(cp2k_info, task_info, paths):
+    cp2k_info.update({'STEPS' : int(task_info['LENGTH_FS'] / cp2k_info['TIMESTEP'] ) } )
+    cp2k_info.update({'PRINT':  int(task_info['LENGTH_FS'] / cp2k_info['TIMESTEP']) } )
+    cp2k_info.update({'PRINT_FSSH': int( 1 / cp2k_info['TIMESTEP']) })
+
+    restart_info = {
+        'RESTART_DIR' : 'initial/from-%s' % task_info['FILE_INIT'],
+        'CONFIG'      : cp2k_info['INIT']
+    }
+
+    system = cp2k_info['SYSTEM']
+    if system == 'PBC_CRYSTAL':
+        #cp2k_info.update({ 'LIST_ACTIVATED' : task_info['LIST_ACTIVATED']})
+        from utils import FSSHOSCrystal as Config
+    else:
+        sys.exit()
+
+    config = Config(cp2k_info, paths, RESTART=restart_info)
+    print "GO FOR RUN %d" % cp2k_info['NDIR']
+    config.run(cp2k_info['NDIR'])
+    if task_info.get('LIGHT', False):
+        shorten_log_file(cp2k_info['NDIR'])
