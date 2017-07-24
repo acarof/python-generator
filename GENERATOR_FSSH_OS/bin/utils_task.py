@@ -24,23 +24,17 @@ def generate_initial_structure(system_info, paths):
     structure.construct_organic_crystal()
 
 
-def run_fist_nvt_nve(task_info, system_info, cp2k_info, paths):
+
+def run_fist(system_info, cp2k_info, paths, steps, ndir = 0, restart_info = None, velocities = True, ensemble = 'NVE'):
     system = system_info['SYSTEM']
     if system == 'PBC_CRYSTAL':
         from utils import FISTOSCrystal as Config
     else:
         raise SystemExit
 
-    ndir = 0
     print "GO FOR RUN %d" % ndir
     system_info.update(cp2k_info)
-    config_nvt = Config(system_info, paths, ENSEMBLE='NVT', STEPS=task_info['NEQ'], RESTART=None, VELOCITIES=False)
-    ndir = config_nvt.run(ndir)
+    config = Config(system_info, paths, ENSEMBLE=ensemble, STEPS=steps, RESTART= restart_info, VELOCITIES=velocities)
+    return config.run(ndir), ndir
 
-    restart_info = {
-        'RESTART_DIR' : 'run-%s' % config_nvt.ndir,
-        'CONFIG'      : task_info['NEQ']
-    }
-    config_nve = Config(system_info, paths, ENSEMBLE='NVE', STEPS=task_info['NPROD'], RESTART=restart_info)
-    ndir = config_nve.run(ndir)
 
