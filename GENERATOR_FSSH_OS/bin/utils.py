@@ -462,7 +462,8 @@ class FSSHOSCrystal(CP2KRun):
         print self._list_activated
 
     def _get_input(self, dir):
-        os.system('cp %s/*.psf %s' % (self.paths.get('topologies'), dir.path))
+        pass
+        #os.system('cp %s/*.psf %s' % (self.paths.get('topologies'), dir.path))
 
     def _write_input(self):
         self._get_coord()
@@ -506,8 +507,8 @@ class FSSHOSCrystal(CP2KRun):
                 result += """
                             &MOLECULE
                                 NMOL              %s
-                                CONN_FILE_NAME    ./%s
-                                CONN_FILE_FORMAT  PSF
+                                CONN_FILE_NAME    ../topologies/%s
+                                CONN_FILE_FORMAT  UPSF
                            &END MOLECULE
                    """ % \
                       ( molecule - index - 1, self._mol_name + "_NEUTRE.psf")
@@ -515,15 +516,15 @@ class FSSHOSCrystal(CP2KRun):
                            @IF ${ACTIVE_MOL} == %s
                                 &MOLECULE
                                     NMOL              1
-                                    CONN_FILE_NAME    ./%s
-                                    CONN_FILE_FORMAT  PSF
+                                    CONN_FILE_NAME    ../topologies/%s
+                                    CONN_FILE_FORMAT  UPSF
                                &END MOLECULE
                             @ENDIF
                             @IF ${ACTIVE_MOL} /= %s
                                 &MOLECULE
                                     NMOL              1
-                                    CONN_FILE_NAME    ./%s
-                                    CONN_FILE_FORMAT  PSF
+                                    CONN_FILE_NAME    ../topologies/%s
+                                    CONN_FILE_FORMAT  UPSF
                                &END MOLECULE
                             @ENDIF
                    """ % \
@@ -534,8 +535,8 @@ class FSSHOSCrystal(CP2KRun):
             result += """
                             &MOLECULE
                                 NMOL              %s
-                                CONN_FILE_NAME    ./%s
-                                CONN_FILE_FORMAT  PSF
+                                CONN_FILE_NAME    ../topologies/%s
+                                CONN_FILE_FORMAT  UPSF
                             &END MOLECULE
                     """ % \
                       ( self._nmol - index, self._mol_name + "_NEUTRE.psf")
@@ -561,6 +562,7 @@ class FSSHOSCrystal(CP2KRun):
                 &CELL
                         ABC                    %s
                         ALPHA_BETA_GAMMA       %s
+                        MULTIPLE_UNIT_CELL     %s
                         PERIODIC               XYZ
                 &END CELL
                 %s
@@ -583,6 +585,7 @@ class FSSHOSCrystal(CP2KRun):
             (
              '    '.join(map(str, self._my_sed_dict['ABC'])),
              '    '.join(map(str, self._my_sed_dict['ALPHA_BETA_GAMMA'])),
+             '    '.join(map(str, self._my_sed_dict['SIZE_CRYSTAL'])),
              self._kind(),
              self._new_psf() )
             file_.write( self._amend_text(result))
@@ -664,6 +667,9 @@ class FSSHOSCrystal(CP2KRun):
         &END PRINT
     &END MM
     &SUBSYS
+        #&COORD
+        #    @INCLUDE COORD.init
+        #&END COORD
         %s
         @INCLUDE TOPOLOGY.include
     &END SUBSYS
@@ -683,6 +689,7 @@ class FISTOSCrystal(FSSHOSCrystal):
 
 
     def _get_new_coord(self):
+        #os.system('tail -%s %s/crystal.xyz > %s/COORD.init' % (self._my_sed_dict['NATOMS'], self.paths['crystal'], self._dir.path))
         os.system('cp %s/crystal.xyz  %s/coord-init.xyz' % (self.paths['crystal'], self._dir.path))
 
 
