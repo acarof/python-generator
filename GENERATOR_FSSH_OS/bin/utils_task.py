@@ -37,6 +37,10 @@ def run_fist_nvt_nve(task_info, system_info, cp2k_info, paths):
     config_nvt = Config(system_info, paths, ENSEMBLE='NVT', STEPS=task_info['NEQ'], RESTART=None, VELOCITIES=False)
     ndir = config_nvt.run(ndir)
 
-    config_nve = Config(system_info, paths, ENSEMBLE='NVE', STEPS=task_info['NPROD'], RESTART=config_nvt.ndir)
+    restart_info = {
+        'RESTART_DIR' : 'run-%s' % config_nvt.ndir,
+        'CONFIG'      : task_info['NEQ']
+    }
+    config_nve = Config(system_info, paths, ENSEMBLE='NVE', STEPS=task_info['NPROD'], RESTART=restart_info)
     ndir = config_nve.run(ndir)
 

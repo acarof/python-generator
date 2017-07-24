@@ -443,6 +443,51 @@ class FSSHOSCrystal(CP2KRun):
             self._do_velocities = True
 
 
+    def _use_restart(self, restart_dict):
+        self._gather_vel_coord(restart_dict, self._dir.path)
+        self._clean_velocities('%s/vel-init.xyz' % self._dir.path, '%s/VELOC.init' % self._dir.path)
+        #os.system('tail -%d run-%d/run-pos-1.xyz > %s/pos-init.xyz' % (self._my_sed_dict.get('NATOMS') + 2, ndir, self._dir.path) )
+        #os.system('tail -%d run-%d/run-vel-1.xyz > %s/VELOC.tmp' % (self._my_sed_dict.get('NATOMS'), ndir, self._dir.path) )
+        #self._clean_velocities('%s/VELOC.tmp' % self._dir.path,'%s/VELOC.init' % self._dir.path)
+
+    def _clean_velocities(self, fileinname, fileoutname):
+        filein = open(fileinname)
+        fileout = open(fileoutname, 'w')
+        for line in filein.readlines()[2:]:
+            fileout.write( '\t'.join(map(str, line.split()[1:])) + '\n')
+        filein.close()
+        fileout.close()
+
+
+    def _check_line(self, string, line):
+        #print string
+        if line == -1:
+            return True
+        else:
+            if (re.findall(r"i = *([0-9]*)", string)):
+                if  int(re.findall(r"i = *([0-9]*)", string)[0]) == line:
+                    print 'Use config: %s' % line
+                    return True
+                else:
+                    return False
+
+    def _gather_vel_coord(self, restart_dict, path):
+        for iprop in ['vel', 'pos']:
+            with open('%s/run-%s-1.xyz'  % (restart_dict['RESTART_DIR'], iprop), 'r') as file_:
+                activate = False
+                atom = 0
+                with open('%s/%s-init.xyz' % (path, iprop), 'w') as fileout:
+                    fileout.write('%s\n' % self._my_sed_dict['NATOMS'])
+                    for ind, line in enumerate(file_.readlines()):
+                        if self._check_line(line, restart_dict['CONFIG']):
+                            fileout.write(line)
+                            activate = True
+                        elif activate:
+                            fileout.write(line)
+                            atom = atom + 1
+                            if atom > self._my_sed_dict['NATOMS']:
+                                break
+
     def _built_list_activated(self):
         _vector_diff = np.array(self._my_sed_dict.get('FIRST_MOL_CHAIN')) \
                        - np.array(self._my_sed_dict.get('LAST_MOL_CHAIN'))
@@ -568,7 +613,7 @@ class FSSHOSCrystal(CP2KRun):
                 %s
                 &TOPOLOGY
                         COORD_FILE_FORMAT XYZ
-                        COORD_FILE_NAME   coord-init.xyz
+                        COORD_FILE_NAME   pos-init.xyz
                         NUMBER_OF_ATOMS                   sedNATOMS
                         CONN_FILE_FORMAT  MOL_SET
                         &MOL_SET
@@ -606,7 +651,6 @@ class FSSHOSCrystal(CP2KRun):
             'NATOMS'           : self._my_sed_dict['NMOL']*self._my_sed_dict['NATOM_MOL']
         })
         self._nmol = self._my_sed_dict.get('NMOL')
-
 
 
     def _aom(self):
@@ -690,7 +734,7 @@ class FISTOSCrystal(FSSHOSCrystal):
 
     def _get_new_coord(self):
         #os.system('tail -%s %s/crystal.xyz > %s/COORD.init' % (self._my_sed_dict['NATOMS'], self.paths['crystal'], self._dir.path))
-        os.system('cp %s/crystal.xyz  %s/coord-init.xyz' % (self.paths['crystal'], self._dir.path))
+        os.system('cp %s/crystal.xyz  %s/pos-init.xyz' % (self.paths['crystal'], self._dir.path))
 
 
     def _built_list_activated(self):
@@ -704,463 +748,6 @@ class FISTOSCrystal(FSSHOSCrystal):
 
 
 
-
-
-
-class FSSHParcel(object):
-    """
-    """
-
-    def __init__(self, dict, paths):
-        self._my_sed_dict = sed_dict
-        self._my_sed_dict.update(dict)
-        self.paths = paths
-        self._timestep = self._my_sed_dict.get('TIMESTEP')
-        self._lengtheq = self._my_sed_dict.get('NEQ')
-        self._nprod = self._my_sed_dict.get('NPROD')
-        self._sizecrystal = self._my_sed_dict.get('SIZE_CRYSTAL')
-        self._coordcharge = self._my_sed_dict.get('COORD_CHARGE')
-        self._mol_name = self._my_sed_dict.get('MOL_NAME')
-        self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
-        self._filemol = self._my_sed_dict.get('FILEMOL')
-        self._system = self._my_sed_dict.get('SYSTEM')
-        self._restraint = self._my_sed_dict.get('RESTRAINT')
-        self._templates_path = paths.get('templates')
-        self._bucket_path = paths.get('bucket')
-        self._output_path = paths.get('output')
-        self._bin_path = paths.get('bin')
-        self._complete_dict()
-
-    def _complete_dict(self):
-        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
-        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
-        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
-        norm_max = max(norm_a, norm_b, norm_c)
-        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
-        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
-        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
-        n_max = max(n_a, n_b, n_c)
-        self._my_sed_dict.update({
-            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
-            'NATOM_MOL': sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL'))),
-            'NORM_LATTICE': [norm_a, norm_b, norm_c],
-            'FIRST_DIABAT' : int(self._get_pos_mol())
-        })
-        if self._my_sed_dict.get('RCUT') is None:
-            self._my_sed_dict.update( { 'RCUT': 5 * norm_max * n_max })
-        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
-        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
-        self._printfrq = self._my_sed_dict.get('PRINT')
-        self._nmol = self._my_sed_dict.get('NMOL')
-
-
-    def _get_pos_mol(self):
-        return (float(self._coordcharge[0]) - 1) * float(self._sizecrystal[1] * self._sizecrystal[2]) + \
-               (float(self._coordcharge[1]) - 1) * float(self._sizecrystal[2]) + \
-               float(self._coordcharge[2])
-
-    def gather(self, ndir):
-        self._create()
-        self.gather_vel_coord(ndir)
-        self.gather_templates_bin()
-        if (self._system == 'SOLVENT'):
-            self._prepare_input_solvent()
-        elif (self._system == 'CRYSTAL'):
-            self._prepare_input_crystal()
-        self._prepare_task()
-
-    def _prepare_input_crystal(self):
-        self._my_sed_dict.update({
-            'NATOMS': prod(self._my_sed_dict.get('SIZE_CRYSTAL')) * \
-                      sum(1 for line in open(self.paths.get('templates') + self._my_sed_dict.get('FILEMOL')))
-        })
-        self.task = """
-    task = {
-        'KIND_RUN'  : 'FSSH_OS',
-        'TEMPLATE_FILE' : 'FSSH_CORE.template',
-        'FORCEFIELD_FILE' : 'FSSH_FF.template',
-        'FILE_INIT' : 'initial',
-        'NUMBER_INIT' : %d,
-        'NUMBER_RANDOM' : 1,
-        'SYSTEM' : 'CRYSTAL',
-        'MOL_NAME' : '%s',
-        'NATOMS'       : %d,
-        'NATOM_MOL'    : %d,
-        'VECTA'        : %s,
-        'VECTB'        : %s,
-        'VECTC'        : %s,
-        'SIZE_CRYSTAL' : %s,
-        'COORD_CHARGE' : %s,
-        'STEPS'        : 1,
-        'PRINTFRQ'     : 1,
-        'TEST'      :   'NO',
-        'FIRST_DIABAT' : %s
-        }
-        """ % (
-            self._my_sed_dict.get('NCONFIG', '!!!'),
-            self._my_sed_dict.get('MOL_NAME', '!!!'),
-            self._my_sed_dict.get('NATOMS', '!!!'),
-            self._my_sed_dict.get('NATOM_MOL', '!!!'),
-            self._my_sed_dict.get('VECTA', '!!!'),
-            self._my_sed_dict.get('VECTB', '!!!'),
-            self._my_sed_dict.get('VECTC', '!!!'),
-            self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'),
-            self._my_sed_dict.get('COORD_CHARGE', '!!!'),
-            self._my_sed_dict.get('FIRST_DIABAT', '!!!')
-        )
-
-    def _prepare_input_solvent(self):
-        self._filecrystal = self._my_sed_dict.get('FILECRYSTAL')
-        self._structure = self._my_sed_dict.get('SYSTEM')
-        coordname = self.paths.get('output') + self._structure + '/' + self._filecrystal
-        self._my_sed_dict.update({
-            'NATOMS': sum(1 for line in open(coordname))
-        })
-        self.task = """
-    task = {
-        'KIND_RUN'  : 'FSSH_OS',
-        'TEMPLATE_FILE' : 'FSSH_CORE.template',
-        'FORCEFIELD_FILE' : 'FSSH_FF.template',
-        'FILE_INIT' : 'initial',
-        'PERIODIC' : 'XYZ',
-        'NUMBER_INIT' : %d,
-        'NUMBER_RANDOM' : 1,
-        'SYSTEM' : 'SOLVENT',
-        'MOL_NAME' :     '%s',
-        'NAME_SOLVENT' : '%s',
-        'SOLVENT'      : '%s',
-        'NATOMS'       : %d,
-        'NATOM_MOL'    : %d,
-        'SIZE_BOX'     : %s,
-        'VECTA'        : %s,
-        'VECTB'        : %s,
-        'VECTC'        : %s,
-        'SIZE_CRYSTAL' : %s,
-        'COORD_CHARGE' : %s,
-        'STEPS'        : 1,
-        'PRINTFRQ'     : 1,
-        'TEST'      :   'NO',
-        'RCUT'      :    %s,
-        'FIRST_DIABAT' : %s
-            }
-        """ % (
-            self._my_sed_dict.get('NCONFIG', '!!!'),
-            self._my_sed_dict.get('MOL_NAME', '!!!'),
-            self._my_sed_dict.get('NAME_SOLVENT', '!!!'),
-            self._my_sed_dict.get('SOLVENT'),
-            self._my_sed_dict.get('NATOMS', '!!!'),
-            self._my_sed_dict.get('NATOM_MOL', '!!!'),
-            self._my_sed_dict.get('SIZE_BOX', '!!!'),
-            self._my_sed_dict.get('VECTA', '!!!'),
-            self._my_sed_dict.get('VECTB', '!!!'),
-            self._my_sed_dict.get('VECTC', '!!!'),
-            self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'),
-            self._my_sed_dict.get('COORD_CHARGE', '!!!'),
-            self._my_sed_dict.get('RCUT'),
-            self._my_sed_dict.get('FIRST_DIABAT', '!!!')
-        )
-
-    def _check_line(self, string, line):
-        #print string
-        if line == -1:
-            return True
-        else:
-            if  int(re.findall(r"i = *([0-9]*)", string)[0]) == line:
-                print 'Use config: %s' % line
-                return True
-            else:
-                return False
-
-    def gather_vel_coord(self, ndir, output_path = None, line=-1):
-        if output_path is None:
-            output_path = self.initial.path
-        nsolvent = self._my_sed_dict.get('NATOMS') - (self._nmol * self._natom_mol)
-        os.chdir('run-%d' % ndir)
-        pos_mol = (self._coordcharge[0] - 1) * (self._sizecrystal[1] * self._sizecrystal[2]) + \
-                  (self._coordcharge[1] - 1) * (self._sizecrystal[2]) + \
-                  (self._coordcharge[2]) - 1
-        for iprop in ['vel', 'pos']:
-            filein = open('run-' + iprop + '-1.xyz', 'r')
-            lines = filein.readlines()
-            iconfig = 0
-            index = -1
-            #for istep in range(0, self._nprod + 1, self._printfrq):
-            for istep in range(0, self._nprod + 1, self._printfrq):
-                #print istep, self._nprod + 1, self._printfrq, range(0, self._nprod + 1, self._printfrq)
-                if self._check_line(lines[index + 2], line):
-                    index = index + 2
-                    iconfig = iconfig + 1
-                    filename = iprop + '-' + str(iconfig) + '.init'
-                    fileout = open(filename, 'w')
-                    for imol in range(self._nmol):
-                        for iatom in range(self._natom_mol):
-                            index = index + 1
-                            l = string.strip(lines[index])
-                            info = re.split('\s+', l)
-                            atom_label = self._choose_atom_label(info[0], imol=imol, icharge=pos_mol)
-                            atom_xyz = [float(info[1]), float(info[2]), float(info[3])]
-                            result = '%s  %s\n' \
-                                     % (atom_label, str(atom_xyz).strip('[]'))
-                            fileout.write(result)
-                    for atom in range(nsolvent):
-                        index += 1
-                        fileout.write(lines[index])
-                    fileout.close()
-                    os.system(' mv %s %s' % (filename, output_path))
-                else:
-                    index = index + 2
-                    for imol in range(self._nmol):
-                        for iatom in range(self._natom_mol):
-                            index = index + 1
-                    for atom in range(nsolvent):
-                        index += 1
-        os.chdir(self._bucket_path)
-
-    def gather_templates_bin(self):
-        os.system('cp %s/*  %s' % (self._templates_path, self.templates.path))
-        os.system('cp %s/*  %s' % (self._bin_path, self.bin.path))
-
-    def _create(self):
-        os.chdir(self._output_path)
-        self.parcel = Dir('TONAME')
-        self.parcel.mkdir()
-        self.parcel.chdir()
-        self.bin = Dir('bin')
-        self.bin.mkdir()
-        self.templates = Dir('templates')
-        self.templates.mkdir()
-        self.taskdir = Dir('task-fssh-os')
-        self.taskdir.mkdir()
-        self.supinitial = Dir('initial')
-        self.supinitial.mkdir()
-        self.supinitial.chdir()
-        self.initial = Dir(self._bucket_path.split('/')[-1])
-        self.initial.mkdir()
-        os.chdir(self._bucket_path)
-
-    def _choose_atom_label(self, atom, i3d=[-1, -1, -1], i3dcharge=[-1, -1, -1], imol=-1, icharge=-1):
-        if (imol == -1) and (icharge == -1):
-            if (atom == 'C'):
-                if (i3d == i3dcharge):
-                    atom_label = 'CP'
-                else:
-                    atom_label = 'CN'
-            else:
-                atom_label = atom
-        elif (imol != -1) and (icharge != -1):
-            if (atom == 'C'):
-                if (imol == icharge):
-                    atom_label = 'CP'
-                else:
-                    atom_label = 'CN'
-            else:
-                atom_label = atom
-        else:
-            print "THERE IS A PROBLEM in choose_atom_label"
-        return atom_label
-
-    def _prepare_task(self):
-        os.chdir(self.taskdir.path)
-        file = open('task.py', 'w')
-        result = """
- #!/usr/bin/python
-
-# standard modules
-import string, re, struct, sys, math, os, time
-import numpy
-
-# custom modules
-from utils import *
-
-
-
-def main(inputs, paths):
-
-    %s
-
-    inputs.update(task)
-
-    # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
-    bucket = Bucket(inputs)
-    bucket.name()
-    paths.update({'bucket': bucket.path})
-
-    task = Dir(inputs.get('INPUT_INFO'))
-    paths.update( {'task' : task.path} )
-
-    templates = Dir('templates', paths)
-    templates.checkdir()
-
-    bin = Dir('bin', paths)
-    bin.checkdir()
-
-    initial = Dir( 'initial/' + '%s' , paths)
-    initial.checkdir()
-    paths.update({'initial': initial.path})
-
-
-    # UPLOARD ADEQUATE MODULE
-    system = inputs.get('SYSTEM')
-    if system == 'CRYSTAL':
-        from utils import OSCluster as Structure
-        from utils import CP2KOSFSSH as Config
-    elif system == 'SOLVENT':
-        from utils import OSwSolvent as Structure
-        from utils import CP2KOSwSolventFSSH as Config
-    else:
-        sys.exit()
-
-
-    # RUN CP2K FOR number_init * number_random FSSH RUNS
-    number_init = inputs.get('NUMBER_INIT', 1)
-    number_random = inputs.get('NUMBER_RANDOM', 1)
-    ndir= 0
-
-    for init in range(1, number_init + 1):
-        for random in range(1, number_random + 1):
-            config = Config( inputs, paths, INIT = init)
-            ndir = config.run(ndir)
-
-        """ % (self.task, self._bucket_path.split('/')[-1])
-        file.write(result)
-        file.close()
-        os.chdir(self._bucket_path)
-
-
-    def create_system_info(self, output_path = None):
-        if output_path is None:
-            output_path = self.initial.path
-        file = open('%s/system.info' % output_path, 'w')
-        result = self._get_system_info()
-        file.write(result)
-        file.close()
-
-    def _get_system_info(self):
-        if (self._system == 'CRYSTAL'):
-            result = """
-        SYSTEM        CRYSTAL
-        MOL_NAME      %s
-        NATOMS        %d
-        NATOM_MOL     %d
-        VECTA         %s
-        VECTB         %s
-        VECTC         %s
-        SIZE_CRYSTAL  %s
-        COORD_CHARGE  %s
-        CC_CHARGED    %s
-        RESTRAINT     %s
-        RCUT          %s
-        """ % (
-            self._my_sed_dict.get('MOL_NAME', '!!!'),
-            self._my_sed_dict.get('NATOMS', '!!!'),
-            self._my_sed_dict.get('NATOM_MOL', '!!!'),
-            '    '.join(map(str, self._my_sed_dict.get('VECTA', '!!!'))),
-            '    '.join(map(str, self._my_sed_dict.get('VECTB', '!!!'))),
-            '    '.join(map(str, self._my_sed_dict.get('VECTC', '!!!'))),
-            '    '.join(map(str, self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'))),
-            '    '.join(map(str, self._my_sed_dict.get('COORD_CHARGE', '!!!'))),
-            self._my_sed_dict['CC_CHARGED'],
-            self._my_sed_dict['RESTRAINT'],
-            self._my_sed_dict.get('RCUT')
-            )
-        elif (self._system == 'SOLVENT'):
-            result = """
-                PERIODIC  XYZ
-                SYSTEM   SOLVENT
-                MOL_NAME      %s
-                NAME_SOLVENT  %s
-                SOLVENT       %s
-                NATOMS        %d
-                NATOM_MOL     %d
-                SIZE_BOX      %s
-                VECTA         %s
-                VECTB         %s
-                VECTC         %s
-                SIZE_CRYSTAL  %s
-                COORD_CHARGE  %s
-                RCUT          %s
-                CC_CHARGED    %s
-                RESTRAINT     %s
-                """ % (
-                self._my_sed_dict.get('MOL_NAME', '!!!'),
-                self._my_sed_dict.get('NAME_SOLVENT', '!!!'),
-                self._my_sed_dict.get('SOLVENT'),
-                self._my_sed_dict.get('NATOMS', '!!!'),
-                self._my_sed_dict.get('NATOM_MOL', '!!!'),
-                '    '.join(map(str, self._my_sed_dict.get('SIZE_BOX', '!!!'))),
-                '    '.join(map(str, self._my_sed_dict.get('VECTA', '!!!'))),
-                '    '.join(map(str, self._my_sed_dict.get('VECTB', '!!!'))),
-                '    '.join(map(str, self._my_sed_dict.get('VECTC', '!!!'))),
-                '    '.join(map(str, self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'))),
-                '    '.join(map(str, self._my_sed_dict.get('COORD_CHARGE', '!!!'))),
-                self._my_sed_dict.get('RCUT'),
-                self._my_sed_dict['CC_CHARGED'],
-            self._my_sed_dict['RESTRAINT']
-            )
-        elif (self._system == 'PBC_CRYSTAL'):
-            result = """
-                PERIODIC  XYZ
-                SYSTEM   PBC_CRYSTAL
-                MOL_NAME      %s
-                NATOMS        %d
-                NATOM_MOL     %d
-                SIZE_BOX      %s
-                VECTA         %s
-                VECTB         %s
-                VECTC         %s
-                SIZE_CRYSTAL  %s
-                COORD_CHARGE  %s
-                RCUT          %s
-                CC_CHARGED    %s
-                RESTRAINT     %s
-                """ % (
-                self._my_sed_dict.get('MOL_NAME', '!!!'),
-                self._my_sed_dict.get('NATOMS', '!!!'),
-                self._my_sed_dict.get('NATOM_MOL', '!!!'),
-                '    '.join(map(str, self._my_sed_dict.get('SIZE_BOX', '!!!'))),
-                '    '.join(map(str, self._my_sed_dict.get('VECTA', '!!!'))),
-                '    '.join(map(str, self._my_sed_dict.get('VECTB', '!!!'))),
-                '    '.join(map(str, self._my_sed_dict.get('VECTC', '!!!'))),
-                '    '.join(map(str, self._my_sed_dict.get('SIZE_CRYSTAL', '!!!'))),
-                '    '.join(map(str, self._my_sed_dict.get('COORD_CHARGE', '!!!'))),
-                self._my_sed_dict.get('RCUT'),
-                self._my_sed_dict['CC_CHARGED'],
-            self._my_sed_dict['RESTRAINT']
-            )
-        return result
-
-
-
-class FSSHParcelBO(FSSHParcel):
-    """
-    """
-
-    def __init__(self, dict, paths, output):
-        super(FSSHParcelBO, self).__init__(dict, paths)
-        self._nprod = self._my_sed_dict.get('STEPS')
-        self.initial = output
-
-
-    def _complete_dict(self):
-        norm_a = norm(array(self._my_sed_dict.get('VECTA')))
-        norm_b = norm(array(self._my_sed_dict.get('VECTB')))
-        norm_c = norm(array(self._my_sed_dict.get('VECTC')))
-        norm_max = max(norm_a, norm_b, norm_c)
-        n_a = self._my_sed_dict.get('SIZE_CRYSTAL')[0]
-        n_b = self._my_sed_dict.get('SIZE_CRYSTAL')[1]
-        n_c = self._my_sed_dict.get('SIZE_CRYSTAL')[2]
-        n_max = max(n_a, n_b, n_c)
-        self._my_sed_dict.update({
-            'NMOL': prod(self._my_sed_dict.get('SIZE_CRYSTAL')),
-            'NORM_LATTICE': [norm_a, norm_b, norm_c],
-            'FIRST_DIABAT' : int(self._get_pos_mol())
-        })
-        if self._my_sed_dict.get('RCUT') is None:
-            self._my_sed_dict.update( { 'RCUT': 5 * norm_max * n_max })
-        self._natom_mol = self._my_sed_dict.get('NATOM_MOL')
-        self._norm_lattice = self._my_sed_dict.get('NORM_LATTICE')
-        self._printfrq = self._my_sed_dict.get('PRINT')
-        self._nmol = self._my_sed_dict.get('NMOL')
 
 
 
