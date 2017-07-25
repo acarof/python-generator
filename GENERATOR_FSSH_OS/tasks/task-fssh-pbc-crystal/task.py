@@ -36,8 +36,8 @@ def main(task_info, paths):
     })
 
     cp2k_param = [
-        #[ 'PROPAGATION', 'FSSH'],
-        ['PROPAGATION', 'BORN_OPPENHEIMER'],
+        #[ 'PROPAGATION', 'FSSH', 'BORN_OPPENHEIMER'],
+        ['PROPAGATION', 'FSSH'],
         #['DECO', 'NO_DECO_CORR','INSTANT_COLLAPSE','DAMPING']
         [ 'DECO', 'DAMPING'],
         #['METHOD_RESCALING','NACV','SIMPLE_QSYS']
@@ -80,7 +80,7 @@ def main(task_info, paths):
     })
 
     print system_info['LIST_ACTIVATED']
-    system_info['LIST_ACTIVATED'] = [1, 2, 3]
+    #system_info['LIST_ACTIVATED'] = [1, 2, 3]
     #exit()
 
     # BUILD THE MEGA_LISTS

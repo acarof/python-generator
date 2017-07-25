@@ -747,7 +747,7 @@ class FISTOSCrystal(FSSHOSCrystal):
         self._list_activated = [ int((float(self._coordcharge[0]) - 1) * float(self._sizecrystal[1] * self._sizecrystal[2]) + \
                (float(self._coordcharge[1]) - 1) * float(self._sizecrystal[2]) + \
                float(self._coordcharge[2])) ]
-        print self._list_activated
+        print "Number charged molecule: ", self._list_activated
 
     def _aom(self):
         pass
