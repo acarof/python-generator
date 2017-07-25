@@ -1,0 +1,47 @@
+&GLOBAL
+  BLACS_GRID             SQUARE
+  PREFERRED_FFT_LIBRARY  FFTW
+  PRINT_LEVEL            LOW
+  PROGRAM_NAME           CP2K
+  PROJECT_NAME           run
+  RUN_TYPE               MD
+&END GLOBAL
+&MOTION
+	&MD
+        ENSEMBLE      sedENSEMBLE
+        STEPS         sedSTEPS
+        TIMESTEP      sedTIMESTEP
+        TEMPERATURE   sedTEMPERATURE
+        &THERMOSTAT
+            REGION  GLOBAL
+            &NOSE
+                 LENGTH      3
+                 YOSHIDA     3
+                 TIMECON     1000
+                 MTS         2
+            &END NOSE
+        &END THERMOSTAT
+   	&END MD
+  	&PRINT
+		&TRAJECTORY  LOW
+            FORMAT  XYZ
+            &EACH
+                MD          sedPRINT
+            &END EACH
+        &END TRAJECTORY
+        &VELOCITIES  LOW
+            FORMAT  XYZ
+            &EACH
+                MD          sedPRINT
+            &END EACH
+        &END VELOCITIES
+        &FORCES  LOW
+            FORMAT  XYZ
+            &EACH
+                MD          sedPRINT
+            &END EACH
+        &END FORCES
+        &RESTART_HISTORY OFF
+        &END RESTART_HISTORY
+   	&END PRINT
+&END MOTION
