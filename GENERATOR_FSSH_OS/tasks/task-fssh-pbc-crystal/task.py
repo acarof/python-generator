@@ -19,48 +19,41 @@ def main(task_info, paths):
     """
 
     task = {
-        'KIND_RUN' : 'TONAME',
-        'FILE_INIT': 'GENERATOR_FSSH_OS',
-        'LENGTH_FS': 1,
+        #################### CAN BE CHANGED ###############################################
+        'KIND_RUN' : 'TONAME',                      # NAME OF YOUR RUN
+        'FILE_INIT': 'GENERATOR_FSSH_OS',           # NAME OF THE RUN OF INITIALIZATION
+        'LENGTH_FS': 1,                             # LENGTH IN FS
+        ###################################################################################
         'INITIALIZATION': 'DIABATIC',
-        'NUMBER_CONFIG'        : 1,
-        'NUMBER_REPEAT'  :  1,
-        'LIGHT' : False,
-        #'LIST_ACTIVATED' : [1,2,3]
+        'NUMBER_CONFIG': 1,
+        'NUMBER_REPEAT': 1,
+        'LIGHT': False,
     }
     task_info.update(task)
+
+    cp2k_param = [
+        #################### CAN BE CHANGED ###############################################
+        ['PROPAGATION', 'FSSH'],    # METHOD OF PROPAGATION: FSSH OR BORN_OPPENEHIMER
+        ['SCALING', 0.06685],       # SCALING FACTOR IN HARTREE (C = 1.819 eV)
+        ['TIMESTEP', 0.1],          # TIMESTEP IN FS
+        ['REPEAT'] + range(task_info.get('NUMBER_REPEAT')), # NUMBER OF FSSH RUN PER STARTING POINT
+        ['INIT', 0],                                        # STARTING POINT (WARNING: NOT READY)
+        ###################################################################################
+        [ 'DECO', 'DAMPING'],
+        [ 'METHOD_RESCALING', 'NACV'],
+        [ 'METHOD_ADIAB_NACV', 'FAST'],
+        [ 'METHOD_REVERSAL', 'ALWAYS'],
+        ['EDC_E0', 0.1],
+        ['ELECTRONIC_STEPS', 5],
+        [ 'TEMPLATE_FILE', 'FSSH_PBC_CRYSTAL.template'],
+        ['FORCEFIELD_FILE', 'ANTRACENE_FF.prm'],
+        ['INITIALIZATION', 'DIABATIC'],
+    ]
 
     system_info = (InputFile('%s/system.info' % 'initial/from-%s' % task_info['FILE_INIT']).dict)
     system_info.update({
         'AOM_RADIUS' : 3.0
     })
-
-    cp2k_param = [
-        #[ 'PROPAGATION', 'FSSH', 'BORN_OPPENHEIMER'],
-        ['PROPAGATION', 'FSSH'],
-        #['DECO', 'NO_DECO_CORR','INSTANT_COLLAPSE','DAMPING']
-        [ 'DECO', 'DAMPING'],
-        #['METHOD_RESCALING','NACV','SIMPLE_QSYS']
-        [ 'METHOD_RESCALING', 'NACV'],
-        #[ 'METHOD_ADIAB_NACV', 'FAST','TOTAL']
-        [ 'METHOD_ADIAB_NACV', 'FAST'],
-        #['METHOD_REVERSAL', 'NEVER', 'ALWAYS', 'TRUHLAR', 'SUBOTNIK']
-        [ 'METHOD_REVERSAL', 'ALWAYS'],
-        #[ 'SCALING', 0.05, 0.03, 0.01, 0.008, 0.005, 0.003, 0.001, 0.0005, 0.0001, 0.00005],
-        [ 'SCALING', 0.00005],
-        #['SCALING', 0.003, 0.00005],
-        #[ 'TIMESTEP', 0.01, 0.05, 0.1, 0.5],
-        [ 'TIMESTEP', 0.1],
-        #['EDC_E0', 0.01, 0.1, 1.0],
-        ['EDC_E0', 0.1],
-        #['ELECTRONIC_STEPS', 5, 10, 50],
-        ['ELECTRONIC_STEPS', 5],
-        [ 'TEMPLATE_FILE', 'FSSH_PBC_CRYSTAL.template'],
-        ['FORCEFIELD_FILE', 'ANTRACENE_FF.prm'],
-        ['INITIALIZATION', 'DIABATIC'],
-        ['INIT', 0],
-        ['REPEAT'] + range(task_info.get('NUMBER_REPEAT'))
-    ]
 
 
     # FIND ACTIVE MOLECULES WITH GUIDO'S TOOL

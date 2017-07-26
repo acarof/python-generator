@@ -25,32 +25,37 @@ def main(inputs, paths):
     """
 
     task_info = {
+        #################### CAN BE CHANGED ###############################################
         'KIND_RUN': 'TONAME',   # NAME OF YOUR RUN
         'NEQ': 20,              # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
         'NPROD': 10,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE)
+        ###################################################################################
        # 'NCONFIG': 3            # NOT RELEVANT
     }
 
 
     system_info = {
-        'SYSTEM'              : 'PBC_CRYSTAL'            ,      # (do not change)
+        #################### CAN BE CHANGED ###############################################
+        'NUMBER_MOL_ACTIVE': 3,                 # NUMBER OF ACTIVE MOLECULES
+        'DIRECTION': [0, 1, 0],                 # DIRECTION TO PROPAGATE THE CHARGE
+        'RCUT': 8 ,                              # VDW RCUT
+        ###################################################################################
+        'SYSTEM': 'PBC_CRYSTAL',                                # (do not change)
         'MOL_NAME'            : 'ANTRACENE'          ,          # NAME OF THE MOLECULE
         'FILE_UNIT'           : 'ant_unitcell.xyz'     ,        # NAME OF THE .xyz FILE WITH THE UNITCELL
         'FILE_CRYSTAL'        : 'crystal.xyz',                  # NAME OF THE .xyz FILE TO PRINT THE CRYSTAL
         'ABC'                 : [8.562, 6.038, 11.184],         # ABC OF THE UNITCELL
         'ALPHA_BETA_GAMMA'    : [90.0, 124.70, 90.0],           # ALPHA_BETA_GAMMA OF THE UNITCELL
-        'DIRECTION'           : [0,     1,      0    ],         # DIRECTION TO PROPAGATE THE CHARGE
-        'NUMBER_MOL_ACTIVE'   : 3,                              # NUMBER OF ACTIVE MOLECULES
         'STARTING_POINT'      : [0.0,   0.0,    0.0],           # (do not change)
         'NATOM_MOL'           : 24,                             # NUMBER OF ATOMS PER MOLECULES
         'NMOL_UNIT'           : 2,                              # NUMBER OF MOLECULES PER UNIT_CELL
-        'RCUT'                : 8                               # VDW RCUT
     }
 
 
     cp2k_info = {
-        #[ 'TIMESTEP', 0.01, 0.05, 0.1, 0.5],
+        #################### CAN BE CHANGED ###############################################
          'TIMESTEP'      :       0.1,                           # TIMESTEP IN FS
+        ###################################################################################
          'TEMPLATE_FILE' : 'FIST_PBC_CRYSTAL.template',         # (do not change)
          'FORCEFIELD_FILE': 'ANTRACENE_FF.prm',                 # FORCEFIELD
     }
