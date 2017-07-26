@@ -1,0 +1,169 @@
+&GLOBAL
+  BLACS_GRID             SQUARE
+  PREFERRED_FFT_LIBRARY  FFTW
+  PRINT_LEVEL            LOW
+  PROGRAM_NAME           CP2K
+  PROJECT_NAME           run
+  RUN_TYPE               MD
+&END GLOBAL
+&MOTION
+	&MD
+        ENSEMBLE      sedENSEMBLE
+        STEPS         sedSTEPS
+        TIMESTEP      sedTIMESTEP
+        TEMPERATURE   sedTEMPERATURE
+        &THERMOSTAT
+            REGION  GLOBAL
+            &NOSE
+                 LENGTH      3
+                 YOSHIDA     3
+                 TIMECON     1000
+                 MTS         2
+            &END NOSE
+        &END THERMOSTAT
+   	&END MD
+  	&PRINT
+		&TRAJECTORY  LOW
+            FORMAT  XYZ
+            &EACH
+                MD          sedPRINT
+            &END EACH
+        &END TRAJECTORY
+        &VELOCITIES  LOW
+            FORMAT  XYZ
+            &EACH
+                MD          sedPRINT
+            &END EACH
+        &END VELOCITIES
+        &FORCES  LOW
+            FORMAT  XYZ
+            &EACH
+                MD          sedPRINT
+            &END EACH
+        &END FORCES
+        &RESTART_HISTORY OFF
+        &END RESTART_HISTORY
+   	&END PRINT
+&END MOTION
+&MULTIPLE_FORCE_EVALS
+   FORCE_EVAL_ORDER sedFORCE_EVAL_ORDER
+   MULTIPLE_SUBSYS
+&END
+&FORCE_EVAL
+        METHOD MIXED
+        &MIXED
+                MIXING_TYPE ADIABATIC
+                &ADIABATIC
+                        METHOD_PROPAGATION sedPROPAGATION
+                        METHOD_COUPLING    AOM
+                        DECOHERENCE_CORRECTIONS sedDECO
+                        EDC_C sedEDC_C
+                        EDC_E0 sedEDC_E0
+                        INITIALIZATION                        sedINITIALIZATION
+                        FIRST_DIABAT                          sedFIRST_DIABAT
+                        FIRST_ADIABAT                         sedFIRST_ADIABAT
+                        &AOM
+                             NUMBER_DIABATIC_STATES                sedNDIABAT
+                             NUMBER_ATOMS_PER_SITE                 sedNATOM_MOL
+                             NUMBER_ORBITALS                       sedNORBITALS
+                             CUT_OFF_BETWEEN_SITES [angstrom]      sedCUTOFF_SITES
+                             CUT_OFF_CONNECTIVITY                  sedCUTOFF_CONN
+                             SCALING_FACTOR   [hartree]            sedSCALING
+                             DECOHERENCE_CRITERION                 sedDECO_CRIT
+                             CBAR                                  sedCBAR
+                             ATOMIC_OVERLAP_CUTOFF                 sedCUTOFF_OVERLAP
+                             NUCLEAR_TIMESTEP  [fs]                sedTIMESTEP
+                             ELECTRONIC_PARTIAL_STEP               sedELECTRONIC_STEPS
+                             ANALYTICS                             sedANALYTICS
+                             CENTER_OF_MASS                        sedCENTER_OF_MASS
+                             METHOD_RESCALING                      sedMETHOD_RESCALING
+                             METHOD_ADIABATIC_NACV                 sedMETHOD_ADIAB_NACV
+                             METHOD_REVERSAL                       sedMETHOD_REVERSAL
+                             NACV_INCREMENT   [bohr]               sedNACV_INCREMENT
+
+@INCLUDE AOM_COEFF.include
+                        &END AOM
+                        &PRINT
+                            &COEFFICIENTS  LOW
+                               &EACH
+                                   MD          sedPRINT_FSSH
+                               &END EACH
+                            &END COEFFICIENTS
+                            #&POPULATIONS  LOW
+                            #   &EACH
+                            #       MD          sedPRINT
+                            #   &END EACH
+                            #&END POPULATIONS
+                            &HAMILTONIAN
+                               UNIT     hartree
+                               &EACH
+                                   MD          sedPRINT_FSSH
+                               &END EACH
+                            &END HAMILTONIAN
+                            #&DENSITY_MATRIX
+                            #   &EACH
+                            #       MD          sedPRINT
+                            #   &END EACH
+                            #&END DENSITY_MATRIX
+                            &HOP_NACV
+                               &EACH
+                                   MD          1
+                               &END EACH
+                            &END HOP_NACV
+                            &NACV
+                               &EACH
+                                   MD          sedPRINT
+                               &END EACH
+                            &END NACV
+                            &NACE
+                               &EACH
+                                   MD          sedPRINT
+                               &END EACH
+                            &END NACE
+                            #&STATE
+                            #   &EACH
+                            #       MD          sedPRINT
+                            #   &END EACH
+                            #&END STATE
+                            &EXACT_FORCES
+                               &EACH
+                                   MD          sedPRINT
+                               &END EACH
+                            &END EXACT_FORCES
+                            #&ACTIVE_STATE_INFO
+                            #   &EACH
+                            #       MD          sedPRINT
+                            #   &END EACH
+                            #&END ACTIVE_STATE_INFO
+                            &SH_INFO
+                               &EACH
+                                   MD          1
+                               &END EACH
+                            &END SH_INFO
+                            &ADIABAT_ENERGIES
+                               &EACH
+                                   MD          sedPRINT_FSSH
+                               &END EACH
+                            &END ADIABAT_ENERGIES
+                        &END PRINT
+                &END ADIABATIC
+                &PRINT
+                        &PROGRAM_RUN_INFO LOW
+                                        &EACH
+                                                MD 1
+                                        &END EACH
+                        &END PROGRAM_RUN_INFO
+                &END PRINT
+        &END MIXED
+   	&SUBSYS
+        &COORD
+            @INCLUDE COORD.init
+        &END COORD
+        &VELOCITY
+            @INCLUDE VELOC.init
+        &END VELOCITY
+        @SET ACTIVE_MOL 1
+        @INCLUDE TOPOLOGY-1.include
+   	&END SUBSYS
+&END FORCE_EVAL
+INCLUDE ALL_FORCE_EVAL.tmp
