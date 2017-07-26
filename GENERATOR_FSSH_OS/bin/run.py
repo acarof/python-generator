@@ -37,7 +37,7 @@ if "GENERATOR" not in os.getcwd():
 input.dict.update({'INPUT_INFO': input_info})
 input.dict.update({'NWORKER' : nworker})
 
-
+paths = {}
 # GET CP2K READY, get the correct machine to use by bin/machine.py
 paths.update(
    { 'cp2k' : machine.get_cp2k_path()

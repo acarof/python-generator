@@ -86,7 +86,6 @@ def main(inputs, paths):
     bucket.name()
     paths.update({'bucket': bucket.path})
     # PATHS CONTAINS ALL THE PATHS
-    paths = {}
     for directory in ['bin', 'initial', 'scripts', 'structures', 'tasks', 'templates', 'tools', 'topologies']:
         dir = Dir(directory, paths)
         dir.checkdir()

@@ -99,7 +99,6 @@ def main(task_info, paths):
     task = Dir(task_info.get('INPUT_INFO'))
     paths.update( {'task' : task.path} )
     # PATHS CONTAINS ALL THE PATHS
-    paths = {}
     for directory in ['bin', 'initial', 'scripts', 'structures', 'tasks', 'templates', 'tools', 'topologies']:
         dir = Dir(directory, paths)
         dir.checkdir()
