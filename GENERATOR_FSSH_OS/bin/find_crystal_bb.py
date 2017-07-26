@@ -78,6 +78,7 @@ def find_crystal_bb( abc, start, length, vector, radius):
 	print 'Any fractional unit cells need to be fully included, i.e. -2.1 unit cells means 3 in negative direction and +2.1 means 3 in positive direction'
 	print 'i.e.:   %s' % result
 	print 'Charged molecule:', coord_charge
+	return result, coord_charge
 
 
 def _built_list_activated(coord_charge, result, nmol_unit):
@@ -124,18 +125,13 @@ def find_molecules(coord_charge, size_crystal, length, vector, radius_aom = 0.0,
 		intermediate = np.linspace(0., length, length / stepwidth + 1)
 
 		start = coms[ _built_list_activated(coord_charge, size_crystal, nmol_unit)]
-		print start
 		active = [False] * len(molecules)
 		for step in intermediate:
-			#print step
 			this = start + step * vector
-			#print "this", this
 			for molecule in range(len(molecules)):
 				delta = coms[molecule] - this
-				#print "coms", molecule, coms[molecule]
 				if np.linalg.norm(delta) < radius_aom and np.dot(delta, vector) >= 0:
 					active[molecule] = True
-					print molecule
 
 		active = [ (_[0]) for _ in enumerate(active) if _[1] == True]
 		print 'Active molecule indices (0-based): ' + ' '.join(map(str, active))

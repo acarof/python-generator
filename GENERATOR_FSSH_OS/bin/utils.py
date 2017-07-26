@@ -475,7 +475,7 @@ class FSSHOSCrystal(CP2KRun):
                     return False
 
     def _check_activate_mol(self, atom):
-        molecule = int( atom / self._my_sed_dict['NATOM_MOL'])
+        molecule = int( atom / self._my_sed_dict['NATOM_MOL']) + 1 # WARNING: _list_activated in 1-basis
         if molecule in self._list_activated:
             return True
         else:
