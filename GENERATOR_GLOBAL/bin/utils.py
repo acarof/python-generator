@@ -32,9 +32,9 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'PERIODIC': 'NONE',
             'CENTER_OF_MASS': 'T',
             'SELECT_FIRST_ADIABAT' : 'F',
-            'TRIVIAL' : 'TRIVIAL_HOP_CORRECT',
+            'SURF_HOP_CHOICE' : 'TRIVIAL_HOP_CORRECT',
             'T_THRESHOLD' : 0.003,
-            'DECO': 'NO_DECO_CORR',
+            'DECOHERENCE_CORRECTIONS': 'DAMPING',
             'EDC_C': 1.0,
             'EDC_E0': 0.1,
             'FIRST_ADIABAT': 1,
@@ -44,7 +44,9 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'CONSTRAINT_LENGTH' : 6,
             'PRINT_FSSH'        : 1,
             'K_CC_CHARGED'      : 0.263099,
-	        'SEED'              : 2000
+	        'SEED'              : 2000,
+            'REPRESENTATION'    : 'DIABATIC_BASIS',
+            'RK_PROPAGATION'    : 'DIABATIC_RK'
             }
 
 
@@ -425,6 +427,7 @@ class CP2KRun(object):
     def _get_input(self, dir):
         os.system('mv %srun.inp %s' % (self.tmp.path, dir.path))
         os.system('cp %s/*psf %s' % (self.tmp.path, dir.path))
+        os.system('mv %s/*txt %s' % (self.tmp.path, dir.path))
 
     def _write_input(self):
         self.tmp = Dir('tmp-%d' % self.ndir)
@@ -875,6 +878,7 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/FSSH* %s' % (self.paths.get('templates'), self.tmp.path))
+        os.system('cp %s/*.txt %s' % (self.paths.get('templates'), self.tmp.path))
 
 
 

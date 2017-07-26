@@ -25,10 +25,10 @@ def main(task_info, paths):
         'LENGTH_FS': 1,
         'INITIALIZATION': 'ADIABATIC',
         'NUMBER_ADIABAT' : 2,
-        'NUMBER_CONFIG'        : 1,
+        'NUMBER_CONFIG'        : 100,
         'FIRST_CONFIG' : 200,
         'FINAL_CONFIG' : 500,
-        'NUMBER_REPEAT'  :  1,
+        'NUMBER_REPEAT'  :  10,
         'LIGHT' : True
     }
     task_info.update(task)

@@ -55,16 +55,18 @@ INCLUDE CONSTRAINT.tmp
         &MIXED
                 MIXING_TYPE ADIABATIC
                 &ADIABATIC
-                        METHOD_PROPAGATION sedPROPAGATION
-                        METHOD_COUPLING    AOM
-                        SURF_HOP_CHOICE   sedTRIVIAL
-                        DECOHERENCE_CORRECTIONS sedDECO
-                        EDC_C sedEDC_C
-                        EDC_E0 sedEDC_E0
+                        METHOD_PROPAGATION                    sedPROPAGATION
+                        METHOD_COUPLING                       AOM
+                        SURF_HOP_CHOICE                       sedSURF_HOP_CHOICE
+                        DECOHERENCE_CORRECTIONS               sedDECOHERENCE_CORRECTIONS
+                        EDC_C                                 sedEDC_C
+                        EDC_E0                                sedEDC_E0
                         INITIALIZATION                        sedINITIALIZATION
                         FIRST_DIABAT                          sedFIRST_DIABAT
                         FIRST_ADIABAT                         sedFIRST_ADIABAT
-			SEED                                  sedSEED
+                        SEED                                  sedSEED
+                        REPRESENTATION                        sedREPRESENTATION
+                        RK_PROPAGATION                        sedRK_PROPAGATION
                         &AOM
                              NUMBER_DIABATIC_STATES                sedNDIABAT
                              NUMBER_ATOMS_PER_SITE                 sedNATOM_MOL
