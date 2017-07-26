@@ -96,10 +96,13 @@ def main(task_info, paths):
     bucket = Bucket(task_info)
     bucket.name()
     paths.update({'bucket': bucket.path})
-
     task = Dir(task_info.get('INPUT_INFO'))
     paths.update( {'task' : task.path} )
-
+    # PATHS CONTAINS ALL THE PATHS
+    paths = {}
+    for directory in ['bin', 'initial', 'scripts', 'structures', 'tasks', 'templates', 'tools', 'topologies']:
+        dir = Dir(directory, paths)
+        dir.checkdir()
 
     # PREPARE THE MEGA_LIST FOR POOL
     for ndir in range(len(mega_list)):
