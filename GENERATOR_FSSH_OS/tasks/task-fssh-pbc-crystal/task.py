@@ -2,7 +2,7 @@
 
 # standard modules
 import string, re, struct, sys, math, os, time
-import numpy as np
+import numpy
 from multiprocessing import Pool, cpu_count
 import imp
 from itertools import product as iterprod
@@ -11,7 +11,7 @@ from itertools import product as iterprod
 # custom modules
 from utils import *
 from utils_task import *
-from find_crystal_bb import find_crystal_bb
+from find_crystal_bb import find_molecules
 
 
 def main(task_info, paths):
@@ -64,17 +64,20 @@ def main(task_info, paths):
 
 
     # FIND ACTIVE MOLECULES WITH GUIDO'S TOOL
+    length = 0.0
+    for x,y in zip(system_info['ABC'], system_info['DIRECTION']):
+        length += (x*y)**2
+    length= numpy.sqrt(length)*(system_info['NUMBER_MOL_ACTIVE'] - 1)
     system_info.update({
-        'LIST_ACTIVATED' : find_crystal_bb(
-            abc=system_info['ABC'] + system_info['ALPHA_BETA_GAMMA'],
-            start= system_info['STARTING_POINT'],
-            length = system_info['LENGTH'],
+        'LIST_ACTIVATED' : find_molecules(
+            coord_charge = system_info['COORD_CHARGE'],
+            size_crystal = system_info['SIZE_CRYSTAL'],
+            length = length,
             vector = system_info['DIRECTION'],
-            radius = system_info['RCUT'],
-            has_atoms = True,
             radius_aom = system_info['AOM_RADIUS'],
             psf_file = '%s/input-1.psf' % 'initial/from-%s' % task_info['FILE_INIT'],
-            xyz_file = '%s/crystal.xyz' % 'initial/from-%s' % task_info['FILE_INIT']
+            xyz_file = '%s/crystal.xyz' % 'initial/from-%s' % task_info['FILE_INIT'],
+            nmol_unit= system_info['NMOL_UNIT']
 
         )
     })
@@ -111,13 +114,14 @@ def main(task_info, paths):
                                  'PATHS_DICT' : paths,
                                  'INPUTS_DICT' : task_info
                                  })
+        mega_list[ndir].update(system_info)
 
 
     # RUN THE CALCULATIONS, SERIE OR PARALLEL ACCORDING TO THE NWORKER VARIABLE
     nworker = task_info['NWORKER']
     if nworker == 0:
         for cp2k_info in mega_list:
-            cp2k_info.update(system_info)
+            #cp2k_info.update(system_info)
             run_fssh(cp2k_info)
     else:
         from multiprocessing import Pool, cpu_count

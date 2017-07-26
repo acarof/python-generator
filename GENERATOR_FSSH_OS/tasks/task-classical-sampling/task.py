@@ -110,5 +110,5 @@ def main(inputs, paths):
     os.system('cp run-%s/input-1.psf %s' % (previous_dir, paths['output_initial_here']))
     os.system('cp %s/crystal.xyz %s' % (paths['crystal'], paths['output_initial_here']))
     prepare_system_info(system_info, paths['output_initial_here'])
-    for directory in ['bin', 'scripts',  'tasks', 'templates', 'tools', 'topologies']:
+    for directory in ['bin', 'scripts','structures', 'tasks', 'templates', 'tools', 'topologies']:
         os.system('cp -r %s %s' % (directory, paths['output_here']))

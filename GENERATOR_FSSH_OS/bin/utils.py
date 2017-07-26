@@ -744,9 +744,9 @@ class FISTOSCrystal(FSSHOSCrystal):
 
 
     def _built_list_activated(self):
-        self._list_activated = [ int((float(self._coordcharge[0]) - 1) * float(self._sizecrystal[1] * self._sizecrystal[2]) + \
+        self._list_activated = [ (int((float(self._coordcharge[0]) - 1) * float(self._sizecrystal[1] * self._sizecrystal[2]) + \
                (float(self._coordcharge[1]) - 1) * float(self._sizecrystal[2]) + \
-               float(self._coordcharge[2])) ]
+               float(self._coordcharge[2])) - 1)*self._my_sed_dict['NMOL_UNIT'] + 1 + 1]
         print "Number charged molecule: ", self._list_activated
 
     def _aom(self):
