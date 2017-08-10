@@ -36,7 +36,7 @@ def main(inputs, paths):
 
     system_info = {
         #################### CAN BE CHANGED ###############################################
-        'NUMBER_MOL_ACTIVE': 3,                 # NUMBER OF ACTIVE MOLECULES
+        'NUMBER_MOL_ACTIVE': 48,                 # NUMBER OF ACTIVE MOLECULES
         'DIRECTION': [0, 1, 0],                 # DIRECTION TO PROPAGATE THE CHARGE
         'RCUT': 8 ,                              # VDW RCUT
         ###################################################################################

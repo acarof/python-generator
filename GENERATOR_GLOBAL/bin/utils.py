@@ -993,6 +993,7 @@ class CP2KOSCrystalFSSH(CP2KOSCrystal):
         os.system('cp %s/%s*.inc %s' % (self.paths.get('templates'), self._mol_name, self.tmp.path))
         os.system('cp %s/%s %s' % (self.paths.get('templates'), self._template_file, self.tmp.path))
 
+
     def _get_input(self, dir):
         os.system('mv %srun.inp %s' % (self.tmp.path, dir.path))
         os.system('cp %s/*psf %s' % (self.tmp.path, dir.path))
@@ -1231,6 +1232,7 @@ class CP2KOSFSSH(CP2KOS):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/FSSH* %s' % (self.paths.get('templates'), self.tmp.path))
+        os.system('cp %s/*.txt %s' % (self.paths.get('templates'), self.tmp.path))
 
 
     def _complete_dict(self):

@@ -39,6 +39,9 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     else:
         sys.exit()
 
+    seed()
+    cp2k_info['SEED'] = randint(1, 1E9)
+
     config = Config(cp2k_info, paths)
     ndir = cp2k_info['NDIR']
     print "GO FOR RUN %d" % ndir
