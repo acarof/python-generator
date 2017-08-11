@@ -40,7 +40,8 @@ def main(inputs, paths):
         'NEQ': 20,              # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
         'NPROD': 100,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE),
         'TEMPERATURE' : [100],
-        'NCONFIG': 10            # NUMBER OF PRINTED SNAPSHOT
+        'NCONFIG': 10,            # NUMBER OF PRINTED SNAPSHOT
+        'PARALLEL' : True
 #        'TEMPERATURE' : [100, 140, 180, 220, 260, 300 ]
         ##################################################################################
     }
@@ -108,6 +109,7 @@ def main(inputs, paths):
     output.rm_mkdir()
     ndir = 0
 
+
     for temperature in task_info['TEMPERATURE']:
         output = Dir('output/from-%s-temp-%s' % (paths['bucket'].split('/')[-1], temperature), paths = paths, target = 'output_here')
         output.rm_mkdir()
@@ -122,7 +124,8 @@ def main(inputs, paths):
         generate_initial_structure(system_info, paths)
         ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps = task_info['NEQ'],
                                       ndir = ndir, restart_info = None, velocities = False, ensemble = 'NVT',
-                                      TEMPERATURE=temperature, nconfig = task_info['NCONFIG'])
+                                      TEMPERATURE=temperature, nconfig = task_info['NCONFIG'],
+                                      parallel = task_info['PARALLEL'], nworker = max(inputs['NWORKER'], 1) )
         print ndir, previous_dir
 
         restart_info = {
@@ -131,7 +134,8 @@ def main(inputs, paths):
         }
         ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps = task_info['NPROD'],
                                       ndir = ndir, restart_info = restart_info, velocities = True, ensemble = 'NVE',
-                                      TEMPERATURE=temperature, nconfig = task_info['NCONFIG'])
+                                      TEMPERATURE=temperature, nconfig = task_info['NCONFIG'],
+                                      parallel = task_info['PARALLEL'], nworker = max(inputs['NWORKER'], 1))
 
         os.system('cp run-%s/run-pos-1.xyz %s' % (previous_dir, paths['output_initial_here']))
         os.system('cp run-%s/run-vel-1.xyz %s' % (previous_dir, paths['output_initial_here']))

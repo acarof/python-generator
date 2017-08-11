@@ -282,7 +282,8 @@ class CP2KRun(object):
         self._my_sed_dict.update(**kwargs)
         self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
         self._timestep = self._my_sed_dict.get('TIMESTEP')
-	self._parallel = self._my_sed_dict.get('PARALLEL', False)
+        self._parallel = self._my_sed_dict.get('PARALLEL', False)
+
 
     def print_info(self):
         pass
@@ -330,15 +331,15 @@ class CP2KRun(object):
         complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
         print "CP2K STARTS AT: " + complete_time
         dir.chdir()
-	if self._parallel:
-        	val = os.system(self.paths.get('cp2k') + '  run.inp > run.log')
-	else:
-        	#inputfile = open('run.inp')
-        	logfile = open('run.log', 'w')
-        	val = subprocess.call([self.paths.get('cp2k'), '-i', 'run.inp'], stdout = logfile)
-        	#val = subprocess.Popen([ self.paths.get('cp2k'), '-i', 'run.inp', '-o', 'run.log'  ])
-
-        	#val = subprocess.call([self.paths.get('cp2k')], stdin=input, stdout=logfile)
+        if self._parallel:
+            print "nworker = ", self._my_sed_dict.get('NWORKER', -5)
+            val = os.system(self.paths.get('cp2k') + '  run.inp > run.log')
+        else:
+            #inputfile = open('run.inp')
+            logfile = open('run.log', 'w')
+            val = subprocess.call([self.paths.get('cp2k'), '-i', 'run.inp'], stdout = logfile)
+            #val = subprocess.Popen([ self.paths.get('cp2k'), '-i', 'run.inp', '-o', 'run.log'  ])
+            #val = subprocess.call([self.paths.get('cp2k')], stdin=input, stdout=logfile)
         os.chdir(self.paths.get('bucket'))
         complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
         print "CP2K FINISHES AT: " + complete_time
