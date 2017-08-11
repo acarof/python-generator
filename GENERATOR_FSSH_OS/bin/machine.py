@@ -18,6 +18,15 @@ path_cp2k_dict = {
     },
     'shuttle.phys.ucl.ac.uk': {
         'acarof' : '/scratch/acarof/bin/cp2k.sopt'
+    },
+    'mom3':{
+	'acarofmc' : '/home/e05/e05/acarofmc/flavoured-cptk/abiab_propagation/cp2k/exe/ARCHER/cp2k.sopt'
+    },
+    'mom2':{
+	'acarofmc' : '/home/e05/e05/acarofmc/flavoured-cptk/abiab_propagation/cp2k/exe/ARCHER/cp2k.sopt'
+    },
+    'mom5':{
+	'acarofmc' : '/home/e05/e05/acarofmc/flavoured-cptk/abiab_propagation/cp2k/exe/ARCHER/cp2k.popt'
     }
 }
 
