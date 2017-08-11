@@ -19,14 +19,20 @@ path_cp2k_dict = {
     'shuttle.phys.ucl.ac.uk': {
         'acarof' : '/scratch/acarof/bin/cp2k.sopt'
     },
-    'mom3':{
-	'acarofmc' : '/home/e05/e05/acarofmc/flavoured-cptk/abiab_propagation/cp2k/exe/ARCHER/cp2k.sopt'
+    'mom1':{
+	'acarofmc' : '/home/e05/e05/acarofmc/flavoured-cptk/abiab_propagation/cp2k/exe/ARCHER/cp2k'
     },
     'mom2':{
-	'acarofmc' : '/home/e05/e05/acarofmc/flavoured-cptk/abiab_propagation/cp2k/exe/ARCHER/cp2k.sopt'
+	'acarofmc' : '/home/e05/e05/acarofmc/flavoured-cptk/abiab_propagation/cp2k/exe/ARCHER/cp2k'
+    },
+    'mom3':{
+	'acarofmc' : '/home/e05/e05/acarofmc/flavoured-cptk/abiab_propagation/cp2k/exe/ARCHER/cp2k'
+    },
+    'mom4':{
+	'acarofmc' : '/home/e05/e05/acarofmc/flavoured-cptk/abiab_propagation/cp2k/exe/ARCHER/cp2k'
     },
     'mom5':{
-	'acarofmc' : '/home/e05/e05/acarofmc/flavoured-cptk/abiab_propagation/cp2k/exe/ARCHER/cp2k.popt'
+	'acarofmc' : '/home/e05/e05/acarofmc/flavoured-cptk/abiab_propagation/cp2k/exe/ARCHER/cp2k'
     }
 }
 
@@ -44,7 +50,8 @@ def get_cp2k_path():
     if path_cp2k_dict.get(hostname) is not None:
         if path_cp2k_dict[hostname].get(username) is not None:
             if not os.path.isfile(path_cp2k_dict[hostname][username]):
-                raise SystemExit('WARNING: check path for CP2K executable in bin/machine.py')
+                return path_cp2k_dict[hostname][username]
+                #raise SystemExit('WARNING: check path for CP2K executable in bin/machine.py')
             else:
                 return path_cp2k_dict[hostname][username]
         else:

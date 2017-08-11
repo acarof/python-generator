@@ -332,8 +332,9 @@ class CP2KRun(object):
         print "CP2K STARTS AT: " + complete_time
         dir.chdir()
         if self._parallel:
-            print "nworker = ", self._my_sed_dict.get('NWORKER', -5)
-            val = os.system(self.paths.get('cp2k') + '  run.inp > run.log')
+            nworker = self._my_sed_dict.get('NWORKER', 1)
+            #val = os.system(self.paths.get('cp2k') + '  run.inp > run.log')
+            val = os.system('aprun -n %s %s.popt run.inp > run.log' % (nworker, self.paths.get('cp2k')))
         else:
             #inputfile = open('run.inp')
             logfile = open('run.log', 'w')
