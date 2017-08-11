@@ -35,11 +35,11 @@ def main(task_info, paths):
         #################### CAN BE CHANGED ###############################################
         ['PROPAGATION', 'FSSH'],    # METHOD OF PROPAGATION: FSSH OR BORN_OPPENEHIMER
         ['SCALING', 0.06685],       # SCALING FACTOR IN HARTREE (C = 1.819 eV)
-        ['TIMESTEP', 0.1],          # TIMESTEP IN FS
+        ['TIMESTEP', 0.5],          # TIMESTEP IN FS
         ['REPEAT'] + range(task_info.get('NUMBER_REPEAT')), # NUMBER OF FSSH RUN PER STARTING POINT
         ['INIT', 0],                                        # STARTING POINT (WARNING: NOT READY)
         ###################################################################################
-        [ 'DECO', 'DAMPING'],
+        [ 'DECO', 'INSTANT_COLLAPSE'],
         [ 'METHOD_RESCALING', 'NACV'],
         [ 'METHOD_ADIAB_NACV', 'FAST'],
         [ 'METHOD_REVERSAL', 'ALWAYS'],

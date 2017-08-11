@@ -12,9 +12,10 @@ from utils import *
 
 def generate_initial_structure(system_info, paths):
     system = system_info['SYSTEM']
-    if system == 'PBC_CRYSTAL':
+    if system in ['PBC_CRYSTAL','NEUTRAL_CRYSTAL'] :
         from utils import OSCrystal as Structure
     else:
+        print "No structure generator for ", system
         raise SystemExit
 
     output_structure = Dir('initial/for-%s' % paths['bucket'].split('/')[-1], paths = paths, target = 'crystal')
@@ -25,16 +26,25 @@ def generate_initial_structure(system_info, paths):
 
 
 
-def run_fist(system_info, cp2k_info, paths, steps, ndir = 0, restart_info = None, velocities = True, ensemble = 'NVE'):
+def run_fist(system_info, cp2k_info, paths, steps, ndir = 0, restart_info = None, velocities = True, ensemble = 'NVE',
+             TEMPERATURE=300, nconfig = -1):
     system = system_info['SYSTEM']
     if system == 'PBC_CRYSTAL':
         from utils import FISTOSCrystal as Config
+    elif system == 'NEUTRAL_CRYSTAL':
+        from utils import FISTOSNeutralCrystal as Config
     else:
         raise SystemExit
 
+    if nconfig == -1:
+        my_print = steps
+    else:
+        my_print = max( steps/nconfig, 1)
+
     print "GO FOR RUN %d" % ndir
     system_info.update(cp2k_info)
-    config = Config(system_info, paths, ENSEMBLE=ensemble, STEPS=steps, RESTART= restart_info, VELOCITIES=velocities)
+    config = Config(system_info, paths, ENSEMBLE=ensemble, STEPS=steps, RESTART= restart_info, VELOCITIES=velocities,
+                    TEMPERATURE=TEMPERATURE, PRINT=my_print)
     return config.run(ndir), ndir
 
 
@@ -71,7 +81,7 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     }
 
     system = cp2k_info['SYSTEM']
-    if system == 'PBC_CRYSTAL':
+    if system in ['PBC_CRYSTAL', 'NEUTRAL_CRYSTAL']:
         #cp2k_info.update({ 'LIST_ACTIVATED' : task_info['LIST_ACTIVATED']})
         from utils import FSSHOSCrystal as Config
     else:
@@ -81,4 +91,4 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     print "GO FOR RUN %d" % cp2k_info['NDIR']
     config.run(cp2k_info['NDIR'])
     if task_info.get('LIGHT', False):
-        shorten_log_file(cp2k_info['NDIR'])
+        shorten_log_file(cp2k_info['NDIRc '])

@@ -223,7 +223,7 @@ class OSCrystal(object):
         self.paths = paths
         self._filemol = structure_dict.get('FILE_UNIT')
         self._sizecrystal = structure_dict.get('SIZE_CRYSTAL')
-        self._coordcharge = structure_dict.get('COORD_CHARGE')
+        #self._coordcharge = structure_dict.get('COORD_CHARGE')
         self._filecrystal = structure_dict.get('FILE_CRYSTAL')
         self._vecta, self._vectb, self._vectc = abc_to_hmatrix( structure_dict['ABC'][0], structure_dict['ABC'][1], structure_dict['ABC'][2],
                         structure_dict['ALPHA_BETA_GAMMA'][0], structure_dict['ALPHA_BETA_GAMMA'][1],
@@ -753,8 +753,20 @@ class FISTOSCrystal(FSSHOSCrystal):
         pass
 
 
+class FISTOSNeutralCrystal(FISTOSCrystal):
+    """
+    """
+
+    def __init__(self, dict, paths, **kwargs):
+        super(FISTOSNeutralCrystal, self).__init__(dict, paths, **kwargs)
 
 
+    def _built_list_activated(self):
+        self._list_activated = []
 
 
-
+    def _complete_main_input(self):
+        self._write_file('%s/%s' % (self.paths['templates'], self._template_file), '%s/run.inp' % self._dir.path)
+        with open('%s/run.inp' % self._dir.path, 'ab+') as file_:
+            result = "@INCLUDE FORCE_EVAL.include\n"
+            file_.write(result)

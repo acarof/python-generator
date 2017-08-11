@@ -19,6 +19,16 @@ def prepare_system_info(dict, path):
                 else:
                     file_.write('%s    %s\n' % (key, dict[key]))
 
+def prepare_future_task(path):
+    with open('%s/tasks/task-fssh-pbc-crystal/task.py' % path, 'w') as fileout, open('tasks/task-fssh-pbc-crystal/task.py') as filein:
+        for line in filein.readlines():
+            if "'FILE_INIT':" in line:
+                result = "        'FILE_INIT': '%s',           # NAME OF THE RUN OF INITIALIZATION\n" % path.split('/')[-2][5:]
+                fileout.write(result)
+            else:
+                fileout.write(line)
+
+
 def main(inputs, paths):
     print """
     START THE DIABAT OF SAMPLING OF AN ORGANIC CRYSTAL
@@ -28,19 +38,21 @@ def main(inputs, paths):
         #################### CAN BE CHANGED ###############################################
         'KIND_RUN': 'TONAME',   # NAME OF YOUR RUN
         'NEQ': 20,              # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
-        'NPROD': 10,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE)
-        ###################################################################################
-       # 'NCONFIG': 3            # NOT RELEVANT
+        'NPROD': 100,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE),
+        'TEMPERATURE' : [100],
+        'NCONFIG': 10            # NUMBER OF PRINTED SNAPSHOT
+#        'TEMPERATURE' : [100, 140, 180, 220, 260, 300 ]
+        ##################################################################################
     }
 
 
     system_info = {
         #################### CAN BE CHANGED ###############################################
-        'NUMBER_MOL_ACTIVE': 48,                 # NUMBER OF ACTIVE MOLECULES
+        'NUMBER_MOL_ACTIVE': 12,                 # NUMBER OF ACTIVE MOLECULES
         'DIRECTION': [0, 1, 0],                 # DIRECTION TO PROPAGATE THE CHARGE
         'RCUT': 8 ,                              # VDW RCUT
         ###################################################################################
-        'SYSTEM': 'PBC_CRYSTAL',                                # (do not change)
+        'SYSTEM': 'NEUTRAL_CRYSTAL',                                # (do not change)
         'MOL_NAME'            : 'ANTRACENE'          ,          # NAME OF THE MOLECULE
         'FILE_UNIT'           : 'ant_unitcell.xyz'     ,        # NAME OF THE .xyz FILE WITH THE UNITCELL
         'FILE_CRYSTAL'        : 'crystal.xyz',                  # NAME OF THE .xyz FILE TO PRINT THE CRYSTAL
@@ -94,32 +106,40 @@ def main(inputs, paths):
 
     output = Dir('output', paths = paths)
     output.rm_mkdir()
-    output = Dir('output/from-%s' % paths['bucket'].split('/')[-1], paths = paths, target = 'output_here')
-    output.rm_mkdir()
-    output_initial = Dir('output/from-%s/initial/' % paths['bucket'].split('/')[-1], paths = paths, target = 'output_initial')
-    output_initial.rm_mkdir()
-    output_initial = Dir('output/from-%s/initial/from-%s' % (paths['bucket'].split('/')[-1], paths['bucket'].split('/')[-1]),
-                         paths = paths, target = 'output_initial_here')
-    output_initial.rm_mkdir()
+    ndir = 0
+
+    for temperature in task_info['TEMPERATURE']:
+        output = Dir('output/from-%s-temp-%s' % (paths['bucket'].split('/')[-1], temperature), paths = paths, target = 'output_here')
+        output.rm_mkdir()
+        output_initial = Dir('output/from-%s-temp-%s/initial/' % (paths['bucket'].split('/')[-1], temperature), paths = paths, target = 'output_initial')
+        output_initial.rm_mkdir()
+        output_initial = Dir('output/from-%s-temp-%s/initial/from-%s-temp-%s' % (paths['bucket'].split('/')[-1], temperature, paths['bucket'].split('/')[-1], temperature),
+                             paths = paths, target = 'output_initial_here')
+        output_initial.rm_mkdir()
 
 
 
-    generate_initial_structure(system_info, paths)
-    ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps = task_info['NEQ'],
-                                  ndir = 0, restart_info = None, velocities = False, ensemble = 'NVT')
-    print ndir, previous_dir
+        generate_initial_structure(system_info, paths)
+        ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps = task_info['NEQ'],
+                                      ndir = ndir, restart_info = None, velocities = False, ensemble = 'NVT',
+                                      TEMPERATURE=temperature, nconfig = task_info['NCONFIG'])
+        print ndir, previous_dir
 
-    restart_info = {
-        'RESTART_DIR' : 'run-%s' % previous_dir,
-        'CONFIG'      : task_info['NEQ']
-    }
-    ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps = task_info['NPROD'],
-                                  ndir = ndir, restart_info = restart_info, velocities = True, ensemble = 'NVE')
+        restart_info = {
+            'RESTART_DIR' : 'run-%s' % previous_dir,
+            'CONFIG'      : task_info['NEQ']
+        }
+        ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps = task_info['NPROD'],
+                                      ndir = ndir, restart_info = restart_info, velocities = True, ensemble = 'NVE',
+                                      TEMPERATURE=temperature, nconfig = task_info['NCONFIG'])
 
-    os.system('cp run-%s/run-pos-1.xyz %s' % (previous_dir, paths['output_initial_here']))
-    os.system('cp run-%s/run-vel-1.xyz %s' % (previous_dir, paths['output_initial_here']))
-    os.system('cp run-%s/input-1.psf %s' % (previous_dir, paths['output_initial_here']))
-    os.system('cp %s/crystal.xyz %s' % (paths['crystal'], paths['output_initial_here']))
-    prepare_system_info(system_info, paths['output_initial_here'])
-    for directory in ['bin', 'scripts','structures', 'tasks', 'templates', 'tools', 'topologies']:
-        os.system('cp -r %s %s' % (directory, paths['output_here']))
+        os.system('cp run-%s/run-pos-1.xyz %s' % (previous_dir, paths['output_initial_here']))
+        os.system('cp run-%s/run-vel-1.xyz %s' % (previous_dir, paths['output_initial_here']))
+        os.system('cp run-%s/input-1.psf %s' % (previous_dir, paths['output_initial_here']))
+        os.system('cp %s/crystal.xyz %s' % (paths['crystal'], paths['output_initial_here']))
+        system_info.update({ 'TEMPERATURE' : temperature})
+        prepare_system_info(system_info, paths['output_initial_here'])
+        for directory in ['bin', 'scripts','structures', 'templates', 'tools', 'topologies']:
+            os.system('cp -r %s %s' % (directory, paths['output_here']))
+        os.system('mkdir -p %s/tasks/task-fssh-pbc-crystal' % paths['output_here'])
+        prepare_future_task(paths['output_here'])
