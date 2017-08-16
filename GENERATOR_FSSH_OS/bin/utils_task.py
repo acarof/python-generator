@@ -80,6 +80,9 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
         'CONFIG'      : cp2k_info['INIT']
     }
 
+    seed()
+    cp2k_info['SEED'] = randint(1, 1E9)
+
     system = cp2k_info['SYSTEM']
     if system in ['PBC_CRYSTAL', 'NEUTRAL_CRYSTAL']:
         #cp2k_info.update({ 'LIST_ACTIVATED' : task_info['LIST_ACTIVATED']})
@@ -91,4 +94,4 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     print "GO FOR RUN %d" % cp2k_info['NDIR']
     config.run(cp2k_info['NDIR'])
     if task_info.get('LIGHT', False):
-        shorten_log_file(cp2k_info['NDIRc '])
+        shorten_log_file(cp2k_info['NDIR'])

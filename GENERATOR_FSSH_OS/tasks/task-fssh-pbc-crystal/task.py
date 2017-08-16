@@ -1,10 +1,9 @@
 #!/usr/bin/python
 
 # standard modules
-import string, re, struct, sys, math, os, time
+#import string, re, struct, sys, math, os, time
 import numpy
-from multiprocessing import Pool, cpu_count
-import imp
+#import imp
 from itertools import product as iterprod
 
 
@@ -21,15 +20,20 @@ def main(task_info, paths):
     task = {
         #################### CAN BE CHANGED ###############################################
         'KIND_RUN' : 'TONAME',                      # NAME OF YOUR RUN
-        'FILE_INIT': 'GENERATOR_FSSH_OS',           # NAME OF THE RUN OF INITIALIZATION
-        'LENGTH_FS': 1,                             # LENGTH IN FS
-        ###################################################################################
-        'INITIALIZATION': 'DIABATIC',
+        'FILE_INIT': 'GENERATOR_FSSH_OS-temp-200',           # NAME OF THE RUN OF INITIALIZATION
+        'NCONFIG_INIT' : 500,
+        'NPROD_INIT'   : 2000000,
         'NUMBER_CONFIG': 1,
         'NUMBER_REPEAT': 1,
-        'LIGHT': False,
+        'LENGTH_FS': 20,                             # LENGTH IN FS
+        ###################################################################################
+        'INITIALIZATION': 'DIABATIC',
+        'LIGHT': True,
     }
     task_info.update(task)
+
+
+    list_config_init = range(0, task['NPROD_INIT'], task['NPROD_INIT'] / task['NCONFIG_INIT'])
 
     cp2k_param = [
         #################### CAN BE CHANGED ###############################################
@@ -37,8 +41,10 @@ def main(task_info, paths):
         ['SCALING', 0.06685],       # SCALING FACTOR IN HARTREE (C = 1.819 eV)
         ['TIMESTEP', 0.5],          # TIMESTEP IN FS
         ['REPEAT'] + range(task_info.get('NUMBER_REPEAT')), # NUMBER OF FSSH RUN PER STARTING POINT
-        ['INIT', 0],                                        # STARTING POINT (WARNING: NOT READY)
-        ###################################################################################
+         ###################################################################################
+        ['INIT'] + \
+        [ list_config_init[x] for x in
+         range(0, len(list_config_init), len(list_config_init) / task['NUMBER_CONFIG'])], # STARTING POINTS
         [ 'DECO', 'INSTANT_COLLAPSE'],
         [ 'METHOD_RESCALING', 'NACV'],
         [ 'METHOD_ADIAB_NACV', 'FAST'],
@@ -49,6 +55,7 @@ def main(task_info, paths):
         ['FORCEFIELD_FILE', 'ANTRACENE_FF.prm'],
         ['INITIALIZATION', 'DIABATIC'],
     ]
+
 
     system_info = (InputFile('%s/system.info' % 'initial/from-%s' % task_info['FILE_INIT']).dict)
     system_info.update({

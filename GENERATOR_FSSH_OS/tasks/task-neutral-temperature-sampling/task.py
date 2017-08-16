@@ -28,6 +28,43 @@ def prepare_future_task(path):
             else:
                 fileout.write(line)
 
+def do_run(dict_):
+    temperature = dict_['TEMPERATURE']
+    ndir = dict_['NDIR']
+    system_info = dict_['SYSTEM_INFO']
+    cp2k_info = dict_['CP2K_INFO']
+    paths     = dict_['PATHS']
+    task_info = dict_['TASK_INFO']
+    inputs = dict_['INPUTS']
+
+    ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps=task_info['NEQ'],
+                                  ndir=ndir, restart_info=None, velocities=False, ensemble='NVT',
+                                  TEMPERATURE=temperature, nconfig=task_info['NCONFIG'],
+                                  parallel=task_info['PARALLEL'], nworker=max(inputs['NCORE'], 1))
+    print ndir, previous_dir
+
+    restart_info = {
+        'RESTART_DIR': 'run-%s' % previous_dir,
+        'CONFIG': task_info['NEQ']
+    }
+    ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps=task_info['NPROD'],
+                                  ndir=ndir, restart_info=restart_info, velocities=True, ensemble='NVE',
+                                  TEMPERATURE=temperature, nconfig=task_info['NCONFIG'],
+                                  parallel=task_info['PARALLEL'], nworker=max(inputs['NCORE'], 1))
+
+    os.system('cp run-%s/run-pos-1.xyz %s' % (previous_dir, paths['output_initial_here-temp-%s' % temperature]))
+    os.system('cp run-%s/run-vel-1.xyz %s' % (previous_dir, paths['output_initial_here-temp-%s' % temperature]))
+    os.system('cp run-%s/input-1.psf %s' % (previous_dir, paths['output_initial_here-temp-%s' % temperature]))
+    os.system('cp %s/crystal.xyz %s' % (paths['crystal'], paths['output_initial_here-temp-%s' % temperature]))
+    system_info.update({'TEMPERATURE': temperature})
+    prepare_system_info(system_info, paths['output_initial_here-temp-%s' % temperature])
+    print paths['output_initial_here-temp-%s' % temperature]
+    for directory in ['bin', 'scripts', 'structures', 'templates', 'tools', 'topologies']:
+        os.system('cp -r %s %s' % (directory, paths['output_here-temp-%s' % temperature]))
+    os.system('mkdir -p %s/tasks/task-fssh-pbc-crystal' % paths['output_here-temp-%s' % temperature])
+    prepare_future_task(paths['output_here-temp-%s' % temperature])
+
+
 
 def main(inputs, paths):
     print """
@@ -37,11 +74,12 @@ def main(inputs, paths):
     task_info = {
         #################### CAN BE CHANGED ###############################################
         'KIND_RUN': 'TONAME',   # NAME OF YOUR RUN
-        'NEQ': 20,              # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
-        'NPROD': 100,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE),
-        'TEMPERATURE' : [100],
+        'NEQ': 10,              # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
+        'NPROD': 10,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE),
+        'TEMPERATURE' : [100, 140],
+#        'TEMPERATURE' : [100, 140, 180, 220, 260, 300],
         'NCONFIG': 10,            # NUMBER OF PRINTED SNAPSHOT
-        'PARALLEL' : True
+        'PARALLEL' : False
 #        'TEMPERATURE' : [100, 140, 180, 220, 260, 300 ]
         ##################################################################################
     }
@@ -49,7 +87,7 @@ def main(inputs, paths):
 
     system_info = {
         #################### CAN BE CHANGED ###############################################
-        'NUMBER_MOL_ACTIVE': 12,                 # NUMBER OF ACTIVE MOLECULES
+        'NUMBER_MOL_ACTIVE': 48,                 # NUMBER OF ACTIVE MOLECULES
         'DIRECTION': [0, 1, 0],                 # DIRECTION TO PROPAGATE THE CHARGE
         'RCUT': 8 ,                              # VDW RCUT
         ###################################################################################
@@ -68,7 +106,9 @@ def main(inputs, paths):
     cp2k_info = {
         #################### CAN BE CHANGED ###############################################
          'TIMESTEP'      :       0.5,                           # TIMESTEP IN FS
+         'GMAX'          :       104,                            # GMAX FOR EWALD
         ###################################################################################
+         'ALPHA'         :    3.5 / system_info['RCUT'],        # ALPHA FOR EWALD
          'TEMPLATE_FILE' : 'FIST_PBC_CRYSTAL.template',         # (do not change)
          'FORCEFIELD_FILE': 'ANTRACENE_FF.prm',                 # FORCEFIELD
     }
@@ -108,42 +148,40 @@ def main(inputs, paths):
     output = Dir('output', paths = paths)
     output.rm_mkdir()
     ndir = 0
-
+    generate_initial_structure(system_info, paths)
+    mega_list = []
 
     for temperature in task_info['TEMPERATURE']:
-        output = Dir('output/from-%s-temp-%s' % (paths['bucket'].split('/')[-1], temperature), paths = paths, target = 'output_here')
+        output = Dir('output/from-%s-temp-%s' % (paths['bucket'].split('/')[-1], temperature), paths = paths, target = 'output_here-temp-%s' % temperature)
         output.rm_mkdir()
-        output_initial = Dir('output/from-%s-temp-%s/initial/' % (paths['bucket'].split('/')[-1], temperature), paths = paths, target = 'output_initial')
+        output_initial = Dir('output/from-%s-temp-%s/initial/' % (paths['bucket'].split('/')[-1], temperature), paths = paths, target = 'output_initial-temp-%s' % temperature)
         output_initial.rm_mkdir()
         output_initial = Dir('output/from-%s-temp-%s/initial/from-%s-temp-%s' % (paths['bucket'].split('/')[-1], temperature, paths['bucket'].split('/')[-1], temperature),
-                             paths = paths, target = 'output_initial_here')
+                             paths = paths, target = 'output_initial_here-temp-%s' % temperature)
         output_initial.rm_mkdir()
+        mega_list.append(
+            {'TEMPERATURE' : temperature,
+             'NDIR'        : ndir,
+             'SYSTEM_INFO'  : system_info,
+             'CP2K_INFO' : cp2k_info,
+             'PATHS' : paths,
+             'TASK_INFO' : task_info,
+             'INPUTS' : inputs
+              }
+        )
+        ndir += 2
 
 
+    # RUN THE CALCULATIONS, SERIE OR PARALLEL ACCORDING TO THE NWORKER VARIABLE
+    nworker = inputs['NWORKER']
+    if nworker == 0:
+        for cp2k_info in mega_list:
+            #cp2k_info.update(system_info)
+            do_run(cp2k_info)
+    else:
+        from multiprocessing import Pool, cpu_count
+        if nworker == -1:
+            nworker = cpu_count()
+        pool = Pool(nworker)
+        pool.map( do_run, mega_list)
 
-        generate_initial_structure(system_info, paths)
-        ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps = task_info['NEQ'],
-                                      ndir = ndir, restart_info = None, velocities = False, ensemble = 'NVT',
-                                      TEMPERATURE=temperature, nconfig = task_info['NCONFIG'],
-                                      parallel = task_info['PARALLEL'], nworker = max(inputs['NWORKER'], 1) )
-        print ndir, previous_dir
-
-        restart_info = {
-            'RESTART_DIR' : 'run-%s' % previous_dir,
-            'CONFIG'      : task_info['NEQ']
-        }
-        ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps = task_info['NPROD'],
-                                      ndir = ndir, restart_info = restart_info, velocities = True, ensemble = 'NVE',
-                                      TEMPERATURE=temperature, nconfig = task_info['NCONFIG'],
-                                      parallel = task_info['PARALLEL'], nworker = max(inputs['NWORKER'], 1))
-
-        os.system('cp run-%s/run-pos-1.xyz %s' % (previous_dir, paths['output_initial_here']))
-        os.system('cp run-%s/run-vel-1.xyz %s' % (previous_dir, paths['output_initial_here']))
-        os.system('cp run-%s/input-1.psf %s' % (previous_dir, paths['output_initial_here']))
-        os.system('cp %s/crystal.xyz %s' % (paths['crystal'], paths['output_initial_here']))
-        system_info.update({ 'TEMPERATURE' : temperature})
-        prepare_system_info(system_info, paths['output_initial_here'])
-        for directory in ['bin', 'scripts','structures', 'templates', 'tools', 'topologies']:
-            os.system('cp -r %s %s' % (directory, paths['output_here']))
-        os.system('mkdir -p %s/tasks/task-fssh-pbc-crystal' % paths['output_here'])
-        prepare_future_task(paths['output_here'])

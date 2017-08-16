@@ -22,6 +22,10 @@ try:
 except:
     nworker = -1
 
+try:
+    ncore = int( sys.argv[3])
+except:
+    ncore = -1
 
 # OPEN AND READ THE INPUT FILE
 def read_input(path):
@@ -36,6 +40,7 @@ if "GENERATOR" not in os.getcwd():
     input.dict.update({'TEST': 'NO'})
 input.dict.update({'INPUT_INFO': input_info})
 input.dict.update({'NWORKER' : nworker})
+input.dict.update({'NCORE' : ncore})
 
 paths = {}
 # GET CP2K READY, get the correct machine to use by bin/machine.py

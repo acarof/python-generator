@@ -514,6 +514,9 @@ class FSSHOSCrystal(CP2KRun):
                             atom = atom + 1
                             if atom > (self._my_sed_dict['NATOMS'] - 1):
                                 break
+                    if not activate:
+                        print "No config %s found!" % restart_dict['CONFIG']
+                        raise SystemExit
 
     def _built_list_activated(self):
         self._list_activated = self._my_sed_dict['LIST_ACTIVATED']
@@ -705,7 +708,7 @@ class FSSHOSCrystal(CP2KRun):
         &POISSON
             &EWALD
                 #EWALD_TYPE  NONE
-                EWALD_TYPE  EWALD
+                EWALD_TYPE  SPME
                 ALPHA        sedALPHA
                 GMAX         sedGMAX
                 O_SPLINE     sedOSPLINE
