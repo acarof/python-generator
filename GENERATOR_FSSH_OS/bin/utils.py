@@ -710,7 +710,7 @@ class FSSHOSCrystal(CP2KRun):
                 #EWALD_TYPE  NONE
                 EWALD_TYPE  SPME
                 ALPHA        sedALPHA
-                GMAX         sedGMAX
+                GMAX         %s
                 O_SPLINE     sedOSPLINE
             &END EWALD
         &END POISSON
@@ -732,7 +732,9 @@ class FSSHOSCrystal(CP2KRun):
         @INCLUDE TOPOLOGY.include
     &END SUBSYS
 &END FORCE_EVAL
-            """ % (at_include, velocity)
+            """ % (at_include,
+                   '    '.join(map(str, self._my_sed_dict['GMAX'])),
+                   velocity)
         with open('%s/FORCE_EVAL.include' % self._dir.path, 'w') as file_:
                 file_.write( self._amend_text(result))
 

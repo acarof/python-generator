@@ -131,7 +131,12 @@ def main(inputs, paths):
         'COORD_CHARGE' : coord_charge,
         'LENGTH'       : length
     })
+    cp2k_info.update({
+        'GMAX' : [ int(x*y) + 1 for (x,y) in zip(
+            system_info['ABC'], system_info['SIZE_CRYSTAL']) ]
+    })
 
+    print 'GMAX = ', cp2k_info['GMAX']
 
     # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
     inputs.update(task_info)
