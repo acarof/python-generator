@@ -74,9 +74,9 @@ def main(inputs, paths):
     task_info = {
         #################### CAN BE CHANGED ###############################################
         'KIND_RUN': 'TONAME',   # NAME OF YOUR RUN
-        'NEQ': 10,              # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
-        'NPROD': 10,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE),
-        'TEMPERATURE' : [100, 140],
+        'NEQ': 100,              # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
+        'NPROD': 100,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE),
+        'TEMPERATURE' : [200],
 #        'TEMPERATURE' : [100, 140, 180, 220, 260, 300],
         'NCONFIG': 10,            # NUMBER OF PRINTED SNAPSHOT
         'PARALLEL' : False
@@ -87,11 +87,11 @@ def main(inputs, paths):
 
     system_info = {
         #################### CAN BE CHANGED ###############################################
-        'NUMBER_MOL_ACTIVE': 48,                 # NUMBER OF ACTIVE MOLECULES
+        'NUMBER_MOL_ACTIVE': 12,                 # NUMBER OF ACTIVE MOLECULES
         'DIRECTION': [0, 1, 0],                 # DIRECTION TO PROPAGATE THE CHARGE
         'RCUT': 8 ,                              # VDW RCUT
         ###################################################################################
-        'SYSTEM': 'NEUTRAL_CRYSTAL',                                # (do not change)
+        'SYSTEM': 'PBC_CRYSTAL',                                # (do not change)
         'MOL_NAME'            : 'ANTRACENE'          ,          # NAME OF THE MOLECULE
         'FILE_UNIT'           : 'ant_unitcell.xyz'     ,        # NAME OF THE .xyz FILE WITH THE UNITCELL
         'FILE_CRYSTAL'        : 'crystal.xyz',                  # NAME OF THE .xyz FILE TO PRINT THE CRYSTAL
@@ -106,7 +106,6 @@ def main(inputs, paths):
     cp2k_info = {
         #################### CAN BE CHANGED ###############################################
          'TIMESTEP'      :       0.5,                           # TIMESTEP IN FS
-         'GMAX'          :       104,                            # GMAX FOR EWALD
         ###################################################################################
          'ALPHA'         :    3.5 / system_info['RCUT'],        # ALPHA FOR EWALD
          'TEMPLATE_FILE' : 'FIST_PBC_CRYSTAL.template',         # (do not change)

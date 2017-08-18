@@ -58,9 +58,31 @@ class FSSHRun(object):
             return self._extract_adiabatic_population()
         elif property == 'Adiabatic-energies':
             return self._extract_adiabatic_energies()
+        elif property == 'MSD':
+            return self._extract_msd()
         else:
             print "Extraction of %s not implemented" % property
-            sys.exit()
+            raise SystemExit
+
+    def _extract_msd(self):
+        populations = self._extract_population()
+        com = self._extract_com()
+        result = {}
+        for time, pop in populations.items():
+            if com.get(time):
+                msd = 0.0
+                for (x,y) in zip(pop, com[time]):
+                    msd += x*y*y
+                result[time] = msd
+        return result
+
+    def _extract_com(self, filename = 'run-pos-1.xyz'):
+        populations = self._extract_population()
+        results = {}
+        for time, pop in populations.items():
+            results[time] = [ x*6.038 for x in range(len(pop))]
+        return results
+
 
     def _extract_state(self, filename='run-sh-1.log'):
         file = open('%s/%s' % (self.name, filename), 'r')
