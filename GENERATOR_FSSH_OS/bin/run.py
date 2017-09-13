@@ -14,7 +14,7 @@ import machine
 try:
     input_info = sys.argv[1]
 except:
-    print "A INPUT DIRECTORY IS REQUIRED!"
+    print "A TASK.py IS REQUIRED!"
     raise SystemExit
 
 try:
@@ -28,13 +28,7 @@ except:
     ncore = -1
 
 # OPEN AND READ THE INPUT FILE
-def read_input(path):
-   if os.path.isfile(path + '/input'):
-      input = InputFile(path + '/input')
-   else:
-      input = InputFile('NONE')
-   return input
-input = read_input(input_info)
+input = InputFile('NONE')
 input.dict.update({'INPUT_INFO': input_info})
 input.dict.update({'NWORKER' : nworker})
 input.dict.update({'NCORE' : ncore})
@@ -50,7 +44,7 @@ paths.update(
 # UPLOAD task.py as a MODULE
 task = Dir(input_info)
 paths.update( {'task' : task.path} )
-mod = imp.load_source('task', task.path + 'task.py')
+mod = imp.load_source('tasks', input_info)
 
 
 # RUN MAIN FUNCTION OF task.py
