@@ -116,10 +116,12 @@ def main(inputs, paths):
             radius = system_info['RCUT']
         )
     print "First molecules of the chain: ", coord_first
-    coord_charge = coord_first + floor(system_info['NUMBER_MOL_ACTIVE']/2) * system_info['DIRECTION']
+    coord_charge = [ int(x) for x in (numpy.array(coord_first) \
+                   + (numpy.ceil(system_info['NUMBER_MOL_ACTIVE']/2))* numpy.array(system_info['DIRECTION']))]
     print "Coord charge: ", coord_charge
     system_info.update({
         'SIZE_CRYSTAL' : size_crystal,
+        'COORD_FIRST' : coord_first,
         'COORD_CHARGE' : coord_charge,
         'LENGTH'       : length
     })

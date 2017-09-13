@@ -70,7 +70,7 @@ def main(task_info, paths):
     length= numpy.sqrt(length)*(system_info['NUMBER_MOL_ACTIVE'] - 1)
     system_info.update({
         'LIST_ACTIVATED' : find_molecules(
-            coord_charge = system_info['COORD_CHARGE'],
+            coord_first = system_info['COORD_FIRST'],
             size_crystal = system_info['SIZE_CRYSTAL'],
             length = length,
             vector = system_info['DIRECTION'],
@@ -79,10 +79,12 @@ def main(task_info, paths):
             xyz_file = '%s/crystal.xyz' % 'initial/from-%s' % task_info['FILE_INIT'],
             nmol_unit= system_info['NMOL_UNIT']
 
-        )
+        ),
+        'FIRST_DIABAT' :  int(numpy.ceil(system_info['NUMBER_MOL_ACTIVE']/2))
     })
 
     print system_info['LIST_ACTIVATED']
+    print "First diabat: ", system_info['FIRST_DIABAT']
     #system_info['LIST_ACTIVATED'] = [1, 2, 3]
     #exit()
 

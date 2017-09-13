@@ -70,15 +70,15 @@ def find_crystal_bb( abc, start, length, vector, radius):
 
 	print 'Number of unit cells needed in direction of the three lattice vectors (assumes start point is in unit cell):'
 	result = []
-	coord_charge = []
+	coord_first = []
 	for options in zip('abc', minfractionals, maxfractionals):
 		print 'Vector %s needs to go from %f to %f' % options
 		result.append( int(np.ceil(abs(options[2]))*np.copysign(1, options[2]) - np.ceil(abs(options[1]))*np.copysign(1, options[1])) )
-		coord_charge.append( int(np.ceil(abs(options[1]))))
+		coord_first.append( int(np.ceil(abs(options[1]))))
 	print 'Any fractional unit cells need to be fully included, i.e. -2.1 unit cells means 3 in negative direction and +2.1 means 3 in positive direction'
 	print 'i.e.:   %s' % result
-	print 'Charged molecule:', coord_charge
-	return result, coord_charge
+	print 'First molecule:', coord_first
+	return result, coord_first
 
 
 def _built_list_activated(coord_charge, result, nmol_unit):
@@ -89,7 +89,7 @@ def _built_list_activated(coord_charge, result, nmol_unit):
 		return result
 
 
-def find_molecules(coord_charge, size_crystal, length, vector, radius_aom = 0.0, psf_file = None, xyz_file = None, nmol_unit = -1 ):
+def find_molecules(coord_first, size_crystal, length, vector, radius_aom = 0.0, psf_file = None, xyz_file = None, nmol_unit = -1 ):
 
 		import MDAnalysis as mda
 		u = mda.Universe(psf_file, xyz_file)
@@ -124,7 +124,7 @@ def find_molecules(coord_charge, size_crystal, length, vector, radius_aom = 0.0,
 		vector = vector / np.linalg.norm(vector)
 		intermediate = np.linspace(0., length, length / stepwidth + 1)
 
-		start = coms[ _built_list_activated(coord_charge, size_crystal, nmol_unit)]
+		start = coms[ _built_list_activated(coord_first, size_crystal, nmol_unit)]
 		active = [False] * len(molecules)
 		for step in intermediate:
 			this = start + step * vector
