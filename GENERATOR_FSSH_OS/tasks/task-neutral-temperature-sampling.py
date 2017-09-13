@@ -37,32 +37,29 @@ def do_run(dict_):
     task_info = dict_['TASK_INFO']
     inputs = dict_['INPUTS']
 
-    ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps=task_info['NEQ'],
+    previous_dir = run_fist(system_info, cp2k_info, paths, steps=task_info['NEQ'],
                                   ndir=ndir, restart_info=None, velocities=False, ensemble='NVT',
                                   TEMPERATURE=temperature, nconfig=task_info['NCONFIG'],
-                                  parallel=task_info['PARALLEL'], nworker=max(inputs['NCORE'], 1))
-    print ndir, previous_dir
+                                  parallel=task_info['PARALLEL'], nworker=max(inputs['NCORE'], 1), name = 'eq')
+    print previous_dir
+    ndir += 1
 
     restart_info = {
-        'RESTART_DIR': 'run-%s' % previous_dir,
+        'RESTART_DIR': previous_dir,
         'CONFIG': task_info['NEQ']
     }
-    ndir, previous_dir = run_fist(system_info, cp2k_info, paths, steps=task_info['NPROD'],
+    previous_dir = run_fist(system_info, cp2k_info, paths, steps=task_info['NPROD'],
                                   ndir=ndir, restart_info=restart_info, velocities=True, ensemble='NVE',
                                   TEMPERATURE=temperature, nconfig=task_info['NCONFIG'],
-                                  parallel=task_info['PARALLEL'], nworker=max(inputs['NCORE'], 1))
+                                  parallel=task_info['PARALLEL'], nworker=max(inputs['NCORE'], 1), name = 'sample')
 
-    os.system('cp run-%s/run-pos-1.xyz %s' % (previous_dir, paths['output_initial_here-temp-%s' % temperature]))
-    os.system('cp run-%s/run-vel-1.xyz %s' % (previous_dir, paths['output_initial_here-temp-%s' % temperature]))
-    os.system('cp run-%s/input-1.psf %s' % (previous_dir, paths['output_initial_here-temp-%s' % temperature]))
-    os.system('cp %s/crystal.xyz %s' % (paths['crystal'], paths['output_initial_here-temp-%s' % temperature]))
+    os.system('cp %s/run-pos-1.xyz %s' % (previous_dir, paths['output_here-temp-%s' % temperature]))
+    os.system('cp %s/run-vel-1.xyz %s' % (previous_dir, paths['output_here-temp-%s' % temperature]))
+    os.system('cp %s/input-1.psf %s' % (previous_dir, paths['output_here-temp-%s' % temperature]))
+    os.system('cp %s/crystal.xyz %s' % (paths['crystal'], paths['output_here-temp-%s' % temperature]))
     system_info.update({'TEMPERATURE': temperature})
-    prepare_system_info(system_info, paths['output_initial_here-temp-%s' % temperature])
-    print paths['output_initial_here-temp-%s' % temperature]
-    for directory in ['bin', 'scripts', 'structures', 'templates', 'tools', 'topologies']:
-        os.system('cp -r %s %s' % (directory, paths['output_here-temp-%s' % temperature]))
-    os.system('mkdir -p %s/tasks/task-fssh-pbc-crystal' % paths['output_here-temp-%s' % temperature])
-    prepare_future_task(paths['output_here-temp-%s' % temperature])
+    prepare_system_info(system_info, paths['output_here-temp-%s' % temperature])
+    #prepare_future_task(paths['output_here-temp-%s' % temperature])
 
 
 
@@ -144,22 +141,13 @@ def main(inputs, paths):
         dir = Dir(directory, paths)
         dir.checkdir()
 
-
-
-    output = Dir('output', paths = paths)
-    output.rm_mkdir()
     ndir = 0
     generate_initial_structure(system_info, paths)
     mega_list = []
 
     for temperature in task_info['TEMPERATURE']:
-        output = Dir('output/from-%s-temp-%s' % (paths['bucket'].split('/')[-1], temperature), paths = paths, target = 'output_here-temp-%s' % temperature)
+        output = Dir('initial/from-%s-temp-%s' % (paths['bucket'].split('/')[-1], temperature), paths = paths, target = 'output_here-temp-%s' % temperature)
         output.rm_mkdir()
-        output_initial = Dir('output/from-%s-temp-%s/initial/' % (paths['bucket'].split('/')[-1], temperature), paths = paths, target = 'output_initial-temp-%s' % temperature)
-        output_initial.rm_mkdir()
-        output_initial = Dir('output/from-%s-temp-%s/initial/from-%s-temp-%s' % (paths['bucket'].split('/')[-1], temperature, paths['bucket'].split('/')[-1], temperature),
-                             paths = paths, target = 'output_initial_here-temp-%s' % temperature)
-        output_initial.rm_mkdir()
         mega_list.append(
             {'TEMPERATURE' : temperature,
              'NDIR'        : ndir,

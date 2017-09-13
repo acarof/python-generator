@@ -321,7 +321,10 @@ class CP2KRun(object):
 
     def run(self, ndir):
         self.ndir = ndir
-        dir = Dir('run-%d' % ndir)
+        if self._my_sed_dict.get('name'):
+            dir = Dir('run-%s-%d' % (self._my_sed_dict['name'], ndir))
+        else:
+            dir = Dir('run-%d' % ndir)
         self._dir = dir
         dir.rm_mkdir()
         self._complete_dict()
@@ -349,7 +352,7 @@ class CP2KRun(object):
             fail.rm_mkdir()
             os.system(' mv %s/* %s ' % (dir.path, fail.path))
             os.rmdir(dir.path)
-        return ndir + 1
+        return dir.path
 
     def _get_input(self, dir):
         os.system('mv %srun.inp %s' % (self.tmp.path, dir.path))

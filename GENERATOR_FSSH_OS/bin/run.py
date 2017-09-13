@@ -7,7 +7,6 @@ import importlib, imp
 
 # custom modules
 from utils import *
-import machine
 
 
 
