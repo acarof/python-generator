@@ -20,20 +20,23 @@ def main(task_info, paths):
     task = {
         #################### CAN BE CHANGED ###############################################
         'KIND_RUN' : 'TONAME',                      # NAME OF YOUR RUN
-        'FILE_INIT': 'GENERATOR_FSSH_OS-temp-100',           # NAME OF THE RUN OF INITIALIZATION
-        'NCONFIG_INIT' : 10,
-        'NPROD_INIT'   : 10,
-        'NUMBER_CONFIG': 10,
-        'NUMBER_REPEAT': 5,
-        'LENGTH_FS': 20,                             # LENGTH IN FS
+        'FILE_INIT': 'GENERATOR_FSSH_OS-temp-200',           # NAME OF THE RUN OF INITIALIZATION
+        #'NCONFIG_INIT' : 10,
+        #'NPROD_INIT'   : 10,
+        'NUMBER_CONFIG': 1,
+        'NUMBER_REPEAT': 1,
+        'LENGTH_FS': 1,                             # LENGTH IN FS
         ###################################################################################
         'INITIALIZATION': 'DIABATIC',
         'LIGHT': True,
     }
     task_info.update(task)
 
-
-    list_config_init = range(0, task['NPROD_INIT'], task['NPROD_INIT'] / task['NCONFIG_INIT'])
+    system_info = (InputFile('%s/system.info' % 'initial/from-%s' % task_info['FILE_INIT']).dict)
+    system_info.update({
+        'AOM_RADIUS' : 3.0
+    })
+    list_config_init = range(0, system_info['NPROD_INIT'], system_info['NPROD_INIT'] / system_info['NCONFIG_INIT'])
 
     cp2k_param = [
         #################### CAN BE CHANGED ###############################################
@@ -57,10 +60,7 @@ def main(task_info, paths):
     ]
 
 
-    system_info = (InputFile('%s/system.info' % 'initial/from-%s' % task_info['FILE_INIT']).dict)
-    system_info.update({
-        'AOM_RADIUS' : 3.0
-    })
+
 
 
     # FIND ACTIVE MOLECULES WITH GUIDO'S TOOL

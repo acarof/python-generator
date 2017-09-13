@@ -348,10 +348,16 @@ class CP2KRun(object):
         complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
         print "CP2K FINISHES AT: " + complete_time
         if val != 0:
-            fail = Dir('fail-%d' % ndir)
-            fail.rm_mkdir()
-            os.system(' mv %s/* %s ' % (dir.path, fail.path))
-            os.rmdir(dir.path)
+            failed = True
+            with open('%s/run.log' % dir.path) as logfile:
+                for line in logfile.readlines():
+                    if 'PROGRAM ENDED AT' in line:
+                        failed = False
+            if failed:
+                fail = Dir('fail-%d' % ndir)
+                fail.rm_mkdir()
+                os.system(' mv %s/* %s ' % (dir.path, fail.path))
+                os.rmdir(dir.path)
         return dir.path
 
     def _get_input(self, dir):
@@ -525,7 +531,8 @@ class FSSHOSCrystal(CP2KRun):
         self._list_activated = self._my_sed_dict['LIST_ACTIVATED']
 
     def _get_input(self, dir):
-        os.system('cp %s/*.txt %s' % (self.paths.get('topologies'), dir.path))
+        pass
+    #    os.system('cp %s/*.txt %s' % (self.paths.get('topologies'), dir.path))
 
     def _write_input(self):
         self._get_coord()

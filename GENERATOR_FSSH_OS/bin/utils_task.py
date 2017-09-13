@@ -68,6 +68,7 @@ def shorten_log_file(ndir):
     os.system('mv run-%s/new.log run-%s/run.log' % (ndir, ndir))
     os.system('rm run-%s/run-r-1.out' % ndir)
     os.system('rm run-%s/run-mix-1.ener' % ndir)
+    os.system('rm run-%s/core.*' % ndir)
 
 
 def run_fssh_from_diabat(cp2k_info, task_info, paths):

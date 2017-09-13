@@ -19,15 +19,6 @@ def prepare_system_info(dict, path):
                 else:
                     file_.write('%s    %s\n' % (key, dict[key]))
 
-def prepare_future_task(path):
-    with open('%s/tasks/task-fssh-pbc-crystal/task.py' % path, 'w') as fileout, open('tasks/task-fssh-pbc-crystal/task.py') as filein:
-        for line in filein.readlines():
-            if "'FILE_INIT':" in line:
-                result = "        'FILE_INIT': '%s',           # NAME OF THE RUN OF INITIALIZATION\n" % path.split('/')[-2][5:]
-                fileout.write(result)
-            else:
-                fileout.write(line)
-
 def do_run(dict_):
     temperature = dict_['TEMPERATURE']
     ndir = dict_['NDIR']
@@ -58,6 +49,8 @@ def do_run(dict_):
     os.system('cp %s/input-1.psf %s' % (previous_dir, paths['output_here-temp-%s' % temperature]))
     os.system('cp %s/crystal.xyz %s' % (paths['crystal'], paths['output_here-temp-%s' % temperature]))
     system_info.update({'TEMPERATURE': temperature})
+    system_info.update({'NPROD_INIT' : task_info['NPROD']})
+    system_info.update({'NCONFIG_INIT' : task_info['NCONFIG']})
     prepare_system_info(system_info, paths['output_here-temp-%s' % temperature])
     #prepare_future_task(paths['output_here-temp-%s' % temperature])
 
@@ -115,13 +108,16 @@ def main(inputs, paths):
     for x,y in zip(system_info['ABC'], system_info['DIRECTION']):
         length += (x*y)**2
     length= numpy.sqrt(length)*system_info['NUMBER_MOL_ACTIVE']
-    size_crystal, coord_charge = find_crystal_bb(
+    size_crystal, coord_first = find_crystal_bb(
             abc=system_info['ABC'] + system_info['ALPHA_BETA_GAMMA'],
             start= system_info['STARTING_POINT'],
             length = length,
             vector = system_info['DIRECTION'],
             radius = system_info['RCUT']
         )
+    print "First molecules of the chain: ", coord_first
+    coord_charge = coord_first + floor(system_info['NUMBER_MOL_ACTIVE']/2) * system_info['DIRECTION']
+    print "Coord charge: ", coord_charge
     system_info.update({
         'SIZE_CRYSTAL' : size_crystal,
         'COORD_CHARGE' : coord_charge,

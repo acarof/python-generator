@@ -67,6 +67,8 @@
                         REPRESENTATION                        sedREPRESENTATION
                         RK_PROPAGATION                        sedRK_PROPAGATION
                         &AOM
+                             PSIGMA_FILE_NAME                 ../topologies/S_psigma.txt
+                             PPI_FILE_NAME                    ../topologies/S_ppi.txt
                              NUMBER_DIABATIC_STATES                sedNDIABAT
                              NUMBER_ATOMS_PER_SITE                 sedNATOM_MOL
                              NUMBER_ORBITALS                       sedNORBITALS
