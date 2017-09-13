@@ -82,9 +82,7 @@ def main(inputs, paths):
 
     # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
     inputs.update(task_info)
-    bucket = Bucket(inputs)
-    bucket.name()
-    paths.update({'bucket': bucket.path})
+    paths.update({'bucket': os.getcwd()})
     # PATHS CONTAINS ALL THE PATHS
     for directory in ['bin', 'initial', 'scripts', 'structures', 'tasks', 'templates', 'tools', 'topologies']:
         dir = Dir(directory, paths)

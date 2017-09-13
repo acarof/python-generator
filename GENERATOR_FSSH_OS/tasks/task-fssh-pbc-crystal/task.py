@@ -100,9 +100,7 @@ def main(task_info, paths):
 
 
     # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
-    bucket = Bucket(task_info)
-    bucket.name()
-    paths.update({'bucket': bucket.path})
+    paths.update({'bucket': os.getcwd()})
     task = Dir(task_info.get('INPUT_INFO'))
     paths.update( {'task' : task.path} )
     # PATHS CONTAINS ALL THE PATHS

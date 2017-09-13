@@ -74,8 +74,8 @@ def main(inputs, paths):
     task_info = {
         #################### CAN BE CHANGED ###############################################
         'KIND_RUN': 'TONAME',   # NAME OF YOUR RUN
-        'NEQ': 100,              # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
-        'NPROD': 100,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE),
+        'NEQ': 10,              # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
+        'NPROD': 10,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE),
         'TEMPERATURE' : [200],
 #        'TEMPERATURE' : [100, 140, 180, 220, 260, 300],
         'NCONFIG': 10,            # NUMBER OF PRINTED SNAPSHOT
@@ -138,10 +138,7 @@ def main(inputs, paths):
     print 'GMAX = ', cp2k_info['GMAX']
 
     # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
-    inputs.update(task_info)
-    bucket = Bucket(inputs)
-    bucket.name()
-    paths.update({'bucket': bucket.path})
+    paths.update({'bucket': os.getcwd()})
     # PATHS CONTAINS ALL THE PATHS
     for directory in ['bin', 'initial', 'scripts', 'structures', 'tasks', 'templates', 'tools', 'topologies']:
         dir = Dir(directory, paths)
