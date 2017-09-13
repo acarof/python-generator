@@ -34,11 +34,20 @@ input.dict.update({'NWORKER' : nworker})
 input.dict.update({'NCORE' : ncore})
 
 paths = {}
-# GET CP2K READY, get the correct machine to use by bin/machine.py
+def create_cp2k_path():
+    print "The file cp2k.path doesn't exist, please provide the path for CP2K:"
+    path = raw_input('> ')
+    cp2k_path = open('bin/cp2k.path', 'w')
+    cp2k_path.write(path)
+    cp2k_path.close()
+    return open('bin/cp2k.path', 'r')
+try:
+    cp2k_path = open('bin/cp2k.path', 'r')
+except:
+    cp2k_path = create_cp2k_path()
 paths.update(
-   { 'cp2k' : machine.get_cp2k_path()
-     })
-#machine.source_cp2k()
+    {'cp2k' : cp2k_path.readline()}
+)
 
 
 # UPLOAD task.py as a MODULE
