@@ -281,54 +281,10 @@ class CP2KRun(object):
         complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
         print "CP2K STARTS AT: " + complete_time
         dir.chdir()
-
-        # This short function adds a module to your environment
-        #def add_module(moduleloc, modulename):
-        #    p = subprocess.Popen(
-        #        "{0}/bin/modulecmd python add {1}".format(moduleloc, modulename),
-        #        stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-        #    )
-        #    stdout, stderr = p.communicate()
-        #    exec stdout
-
-        # Get the location of the modules installation
-        #moduleloc = os.environ["MODULESHOME"]
-
-        # Make sure that the modules environment is setup correctly
-        #execfile("{0}/init/python".format(moduleloc))
-
-        # Add any modules required for the run
-        #add_module(moduleloc, "cp2k")
-
-        # Print a summary of the loaded modules
-        #print os.environ['LOADEDMODULES']
-
-        # Change to the directory the job was submitted from
-        #os.chdir(os.environ["PBS_O_WORKDIR"])
-
-        # Set the number of MPI tasks
-        mpiTasks = self._my_sed_dict.get('NWORKER', 1)
-
         # This section sets up a list with the aprun command
         runcommand = []
-        # aprun to launch jobs and command line options
         if self._archer:
-            runcommand.append("aprun")
-            runcommand.append("-n {0}".format(mpiTasks))
-            # Set the executable name and input and output files
-            execName = self.paths.get('cp2k')
-            inputName = "run.inp"
-            # Add executable name to the command
-            runcommand.append(execName)
-            print runcommand
-            p = subprocess.Popen(runcommand, stdin=subprocess.PIPE,
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            inputFile = open(inputName, 'r')
-            inputData = inputFile.read()
-            inputFile.close()
-            stdout, stderr = p.communicate(input=inputData)
-            with open('run.log', 'w') as logfile:
-                logfile.write(stdout)
+            stderr = 0
         else:
             execName = self.paths.get('cp2k')
             inputName = "run.inp"

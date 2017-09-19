@@ -9,6 +9,48 @@ from random import seed, randint
 from utils import *
 
 
+def find_nworker(list_):
+    try:
+        nworker = list_[1]
+    except:
+        return 0, True
+    try:
+        nworker = int(nworker)
+        return nworker, False
+    except:
+        if nworker == 'ARCHER':
+            return 0, True
+        else:
+            print "Arguments should be a number or ARCHER"
+            raise SystemExit
+
+
+
+
+def prepare_system_info(dict, path):
+    with open('%s/system.info' % path, 'w') as file_:
+        for key in dict:
+            if key not in ['TEMPLATE_FILE', 'FILE_CRYSTAL', 'FILE_UNIT', 'TIMESTEP']:
+                if isinstance(dict[key], (list, tuple)):
+                    file_.write('%s    %s\n' % (key, '  '.join(map(str, dict[key]))))
+                else:
+                    file_.write('%s    %s\n' % (key, dict[key]))
+
+
+def find_cp2k_path():
+    def create_cp2k_path():
+        print "The file cp2k.path doesn't exist, please provide the path for CP2K:"
+        path = raw_input('> ')
+        cp2k_path = open('bin/cp2k.path', 'w')
+        cp2k_path.write(path)
+        cp2k_path.close()
+        return open('bin/cp2k.path', 'r')
+    try:
+        cp2k_path = open('bin/cp2k.path', 'r')
+    except:
+        cp2k_path = create_cp2k_path()
+    return {'cp2k' : cp2k_path.readline()}
+
 
 def generate_initial_structure(system_info, paths):
     system = system_info['SYSTEM']
@@ -17,17 +59,13 @@ def generate_initial_structure(system_info, paths):
     else:
         print "No structure generator for ", system
         raise SystemExit
-
-    output_structure = Dir('initial/for-%s' % paths['bucket'].split('/')[-1], paths = paths, target = 'crystal')
-    output_structure.rm_mkdir()
-
     structure = Structure(system_info, paths)
     structure.construct_organic_crystal()
 
 
 
-def run_fist(system_info, cp2k_info, paths, steps, ndir = 0, restart_info = None, velocities = True, ensemble = 'NVE',
-             TEMPERATURE=300, nconfig = -1, archer= False, nworker = 1, name = None):
+def run_fist(system_info,  paths = {}, steps = 1, ndir = 0, restart_info = None, velocities = True, ensemble = 'NVE',
+             TEMPERATURE=300, nconfig = -1, archer= True, nworker = 1, name = None):
     system = system_info['SYSTEM']
     if system == 'PBC_CRYSTAL':
         from utils import FISTOSCrystal as Config
@@ -42,7 +80,6 @@ def run_fist(system_info, cp2k_info, paths, steps, ndir = 0, restart_info = None
         my_print = max( steps/nconfig, 1)
 
     print "GO FOR RUN %d" % ndir
-    system_info.update(cp2k_info)
     config = Config(system_info, paths, ENSEMBLE=ensemble, STEPS=steps, RESTART= restart_info, VELOCITIES=velocities,
                     TEMPERATURE=TEMPERATURE, PRINT=my_print, ARCHER = archer, NWORKER = nworker, name = name)
     return config.run(ndir)
