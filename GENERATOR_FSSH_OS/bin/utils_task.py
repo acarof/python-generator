@@ -27,7 +27,7 @@ def generate_initial_structure(system_info, paths):
 
 
 def run_fist(system_info, cp2k_info, paths, steps, ndir = 0, restart_info = None, velocities = True, ensemble = 'NVE',
-             TEMPERATURE=300, nconfig = -1, parallel = False, nworker = 1):
+             TEMPERATURE=300, nconfig = -1, archer= False, nworker = 1, name = None):
     system = system_info['SYSTEM']
     if system == 'PBC_CRYSTAL':
         from utils import FISTOSCrystal as Config
@@ -44,8 +44,8 @@ def run_fist(system_info, cp2k_info, paths, steps, ndir = 0, restart_info = None
     print "GO FOR RUN %d" % ndir
     system_info.update(cp2k_info)
     config = Config(system_info, paths, ENSEMBLE=ensemble, STEPS=steps, RESTART= restart_info, VELOCITIES=velocities,
-                    TEMPERATURE=TEMPERATURE, PRINT=my_print, PARALLEL = parallel, NWORKER = nworker)
-    return config.run(ndir), ndir
+                    TEMPERATURE=TEMPERATURE, PRINT=my_print, ARCHER = archer, NWORKER = nworker, name = name)
+    return config.run(ndir)
 
 
 
@@ -68,6 +68,7 @@ def shorten_log_file(ndir):
     os.system('mv run-%s/new.log run-%s/run.log' % (ndir, ndir))
     os.system('rm run-%s/run-r-1.out' % ndir)
     os.system('rm run-%s/run-mix-1.ener' % ndir)
+    os.system('rm run-%s/core.*' % ndir)
 
 
 def run_fssh_from_diabat(cp2k_info, task_info, paths):
@@ -76,7 +77,7 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     cp2k_info.update({'PRINT_FSSH': int( 1 / cp2k_info['TIMESTEP']) })
 
     restart_info = {
-        'RESTART_DIR' : 'initial/from-%s' % task_info['FILE_INIT'],
+        'RESTART_DIR' : task_info['FILE_INIT'],
         'CONFIG'      : cp2k_info['INIT']
     }
 

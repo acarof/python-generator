@@ -114,60 +114,6 @@ class Dir(object):
         os.chdir(self.path)
 
 
-class Bucket(object):
-    """
-        """
-
-    def __init__(self, bucket_dict):
-        self._method = bucket_dict.get('KIND_RUN')
-        if bucket_dict.get('MOL_NAME') is not None:
-            self._name = self._method + '-' + bucket_dict.get('MOL_NAME')
-        elif bucket_dict.get('TITLE') is not None:
-            self._name = self._method + '-' + bucket_dict.get('TITLE')
-        else:
-            self._name = self._method
-        is_test = bucket_dict.get('TEST')
-        if is_test == 'YES':
-            self.is_test = True
-        elif is_test == 'NO':
-            self.is_test = False
-        else:
-            print "TEST must be YES or NO."
-            sys.exit()
-
-    def _get_md5name(self):
-        complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
-        md5 = hashlib.md5()
-        md5.update(complete_time)
-        md5name = md5.hexdigest()
-        return md5name
-
-    def name(self):
-        if not self.is_test:
-            md5name = self._get_md5name()
-            # else:
-            #   md5name = 'TEST'
-            short_time = time.strftime("%y%m%d", time.localtime())
-            bucket_name = self._name + '-' + short_time + '-' + md5name
-            old_name = os.path.basename(os.getcwd())
-            if (bucket_name != old_name):
-                os.chdir('..')
-                os.system('mv %s %s' % (old_name, bucket_name))
-                os.chdir(bucket_name)
-        self.path = os.getcwd()
-
-    def checkdir(self, adir):
-        test = os.path.exists(adir)
-        if (not test):
-            print "THE DIRECTORY %s DOES NOT EXIST!" % adir
-            sys.exit()
-
-    def mkdir(self, adir):
-        test = os.path.exists(adir)
-        if (not test):
-            os.mkdir(adir)
-
-
 class InputFile(object):
     """
     """
@@ -213,6 +159,7 @@ class InputFile(object):
             return int(s)
         except ValueError:
             return None
+
 
 
 class OSCrystal(object):
@@ -321,7 +268,10 @@ class CP2KRun(object):
 
     def run(self, ndir):
         self.ndir = ndir
-        dir = Dir('run-%d' % ndir)
+        if self._my_sed_dict.get('name'):
+            dir = Dir('run-%s-%d' % (self._my_sed_dict['name'], ndir))
+        else:
+            dir = Dir('run-%d' % ndir)
         self._dir = dir
         dir.rm_mkdir()
         self._complete_dict()
@@ -331,26 +281,78 @@ class CP2KRun(object):
         complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
         print "CP2K STARTS AT: " + complete_time
         dir.chdir()
+
+        # This short function adds a module to your environment
+        #def add_module(moduleloc, modulename):
+        #    p = subprocess.Popen(
+        #        "{0}/bin/modulecmd python add {1}".format(moduleloc, modulename),
+        #        stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+        #    )
+        #    stdout, stderr = p.communicate()
+        #    exec stdout
+
+        # Get the location of the modules installation
+        #moduleloc = os.environ["MODULESHOME"]
+
+        # Make sure that the modules environment is setup correctly
+        #execfile("{0}/init/python".format(moduleloc))
+
+        # Add any modules required for the run
+        #add_module(moduleloc, "cp2k")
+
+        # Print a summary of the loaded modules
+        #print os.environ['LOADEDMODULES']
+
+        # Change to the directory the job was submitted from
+        #os.chdir(os.environ["PBS_O_WORKDIR"])
+
+        # Set the number of MPI tasks
+        mpiTasks = self._my_sed_dict.get('NWORKER', 1)
+
+        # This section sets up a list with the aprun command
+        runcommand = []
+        # aprun to launch jobs and command line options
         if self._archer:
-            pass
-            #nworker = self._my_sed_dict.get('NWORKER', 1)
-            #val = os.system(self.paths.get('cp2k') + '  run.inp > run.log')
-            #val = os.system('aprun -n %s %s.popt run.inp > run.log' % (nworker, self.paths.get('cp2k')))
+            runcommand.append("aprun")
+            runcommand.append("-n {0}".format(mpiTasks))
+            # Set the executable name and input and output files
+            execName = self.paths.get('cp2k')
+            inputName = "run.inp"
+            # Add executable name to the command
+            runcommand.append(execName)
+            print runcommand
+            p = subprocess.Popen(runcommand, stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            inputFile = open(inputName, 'r')
+            inputData = inputFile.read()
+            inputFile.close()
+            stdout, stderr = p.communicate(input=inputData)
+            with open('run.log', 'w') as logfile:
+                logfile.write(stdout)
         else:
-            #inputfile = open('run.inp')
-            logfile = open('run.log', 'w')
-            val = subprocess.call([self.paths.get('cp2k'), '-i', 'run.inp'], stdout = logfile)
-            #val = subprocess.Popen([ self.paths.get('cp2k'), '-i', 'run.inp', '-o', 'run.log'  ])
-            #val = subprocess.call([self.paths.get('cp2k')], stdin=input, stdout=logfile)
-        os.chdir(self.paths.get('bucket'))
-        complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
-        print "CP2K FINISHES AT: " + complete_time
-        if val != 0:
-            fail = Dir('fail-%d' % ndir)
-            fail.rm_mkdir()
-            os.system(' mv %s/* %s ' % (dir.path, fail.path))
-            os.rmdir(dir.path)
-        return ndir + 1
+            execName = self.paths.get('cp2k')
+            inputName = "run.inp"
+            outputName = "run.log"
+            # Add executable name to the command
+            runcommand.append(execName)
+            runcommand += ['-i', inputName]
+            print runcommand
+            logFile = open(outputName, 'w')
+            stderr = subprocess.call(runcommand, stdin=subprocess.PIPE,
+                                 stdout=logFile, stderr=subprocess.PIPE)
+        os.chdir(self.paths['bucket'])
+        if stderr != 0:
+            failed = True
+            with open('%s/run.log' % dir.path) as logfile:
+                for line in logfile.readlines():
+                    if 'PROGRAM ENDED AT' in line:
+                        failed = False
+            if failed:
+                fail = Dir('fail-%d' % ndir)
+                fail.rm_mkdir()
+                os.system(' mv %s/* %s ' % (dir.path, fail.path))
+                os.rmdir(dir.path)
+        return dir.path
 
     def _get_input(self, dir):
         os.system('mv %srun.inp %s' % (self.tmp.path, dir.path))
@@ -523,7 +525,8 @@ class FSSHOSCrystal(CP2KRun):
         self._list_activated = self._my_sed_dict['LIST_ACTIVATED']
 
     def _get_input(self, dir):
-        os.system('cp %s/*.txt %s' % (self.paths.get('topologies'), dir.path))
+        pass
+    #    os.system('cp %s/*.txt %s' % (self.paths.get('topologies'), dir.path))
 
     def _write_input(self):
         self._get_coord()
