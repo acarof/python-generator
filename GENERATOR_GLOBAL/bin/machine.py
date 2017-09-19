@@ -7,7 +7,7 @@ path_cp2k_dict = {
         'acarof' : '/scratch/acarof/bin/cp2k.sopt'
     },
     'scutum.phys.ucl.ac.uk'   : {
-        'acarof' : '/scratch/grudorff/antoine/bin/cp2k.sopt'
+        'acarof' : '/scratch/grudorff/antoine/bin/cp2kabiab.sopt'
     },
     'bulstake.phys.ucl.ac.uk'   : {
         'sgiannini' : '/scratch/sgiannini/bin/TRIVIAL_merged_code/cp2k.sopt',

@@ -282,7 +282,7 @@ class CP2KRun(object):
         self._my_sed_dict.update(**kwargs)
         self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
         self._timestep = self._my_sed_dict.get('TIMESTEP')
-        self._parallel = self._my_sed_dict.get('PARALLEL', False)
+        self._archer = self._my_sed_dict.get('ARCHER', False)
 
 
     def print_info(self):
@@ -331,10 +331,11 @@ class CP2KRun(object):
         complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
         print "CP2K STARTS AT: " + complete_time
         dir.chdir()
-        if self._parallel:
-            nworker = self._my_sed_dict.get('NWORKER', 1)
+        if self._archer:
+            pass
+            #nworker = self._my_sed_dict.get('NWORKER', 1)
             #val = os.system(self.paths.get('cp2k') + '  run.inp > run.log')
-            val = os.system('aprun -n %s %s.popt run.inp > run.log' % (nworker, self.paths.get('cp2k')))
+            #val = os.system('aprun -n %s %s.popt run.inp > run.log' % (nworker, self.paths.get('cp2k')))
         else:
             #inputfile = open('run.inp')
             logfile = open('run.log', 'w')

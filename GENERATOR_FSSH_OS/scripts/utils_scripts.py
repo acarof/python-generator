@@ -138,7 +138,7 @@ class FSSHRun(object):
                 elif 'DECOHERENCE!' in line:
                     results[state - 1] += 1
             file.close()
-            return result
+            return results
 
         def _extract_up_down_hop(filename='run-sh-1.log'):
             results = [0, 0]

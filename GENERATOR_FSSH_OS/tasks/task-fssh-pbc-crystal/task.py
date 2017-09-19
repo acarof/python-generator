@@ -20,12 +20,12 @@ def main(task_info, paths):
     task = {
         #################### CAN BE CHANGED ###############################################
         'KIND_RUN' : 'TONAME',                      # NAME OF YOUR RUN
-        'FILE_INIT': 'GENERATOR_FSSH_OS-temp-100',           # NAME OF THE RUN OF INITIALIZATION
-        'NCONFIG_INIT' : 10,
-        'NPROD_INIT'   : 10,
-        'NUMBER_CONFIG': 10,
-        'NUMBER_REPEAT': 5,
-        'LENGTH_FS': 20,                             # LENGTH IN FS
+        'FILE_INIT': 'GENERATOR_FSSH_OS-temp-10',           # NAME OF THE RUN OF INITIALIZATION
+        'NCONFIG_INIT' : 1,
+        'NPROD_INIT'   : 1,
+        'NUMBER_CONFIG': 1,
+        'NUMBER_REPEAT': 1,
+        'LENGTH_FS': 1,                             # LENGTH IN FS
         ###################################################################################
         'INITIALIZATION': 'DIABATIC',
         'LIGHT': True,

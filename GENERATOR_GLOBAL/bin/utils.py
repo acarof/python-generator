@@ -417,17 +417,17 @@ class CP2KRun(object):
         os.chdir(self.paths.get('bucket'))
         complete_time = time.strftime("%y%m%d%H%M%S", time.localtime())
         print "CP2K FINISHES AT: " + complete_time
-        if val != 0:
-            fail = Dir('fail-%d' % ndir)
-            fail.rm_mkdir()
-            os.system(' mv %s/* %s ' % (dir.path, fail.path))
-            os.rmdir(dir.path)
+        #if val != 0:
+        #    fail = Dir('fail-%d' % ndir)
+        #    fail.rm_mkdir()
+        #    os.system(' mv %s/* %s ' % (dir.path, fail.path))
+        #    os.rmdir(dir.path)
         return ndir + 1
 
     def _get_input(self, dir):
         os.system('mv %srun.inp %s' % (self.tmp.path, dir.path))
         os.system('cp %s/*psf %s' % (self.tmp.path, dir.path))
-        os.system('mv %s/*txt %s' % (self.tmp.path, dir.path))
+        #os.system('mv %s/*txt %s' % (self.tmp.path, dir.path))
 
     def _write_input(self):
         self.tmp = Dir('tmp-%d' % self.ndir)
@@ -878,7 +878,7 @@ class CP2KOSwSolventFSSH(CP2KOSwSolvent):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/FSSH* %s' % (self.paths.get('templates'), self.tmp.path))
-        os.system('cp %s/*.txt %s' % (self.paths.get('templates'), self.tmp.path))
+        #os.system('cp %s/*.txt %s' % (self.paths.get('templates'), self.tmp.path))
 
 
 
@@ -1232,7 +1232,7 @@ class CP2KOSFSSH(CP2KOS):
         os.system('cp %s/*.psf %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/*.inc %s' % (self.paths.get('templates'), self.tmp.path))
         os.system('cp %s/FSSH* %s' % (self.paths.get('templates'), self.tmp.path))
-        os.system('cp %s/*.txt %s' % (self.paths.get('templates'), self.tmp.path))
+        #os.system('cp %s/*.txt %s' % (self.paths.get('templates'), self.tmp.path))
 
 
     def _complete_dict(self):

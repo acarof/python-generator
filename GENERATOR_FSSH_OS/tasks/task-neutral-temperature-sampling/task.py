@@ -74,12 +74,12 @@ def main(inputs, paths):
     task_info = {
         #################### CAN BE CHANGED ###############################################
         'KIND_RUN': 'TONAME',   # NAME OF YOUR RUN
-        'NEQ': 100,              # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
-        'NPROD': 100,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE),
-        'TEMPERATURE' : [200],
+        'NEQ':   1,              # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
+        'NPROD': 1,            # NUMBER OF TIMESTEP FOR PRODUCTION (NVE),
+        'TEMPERATURE' : [10],
 #        'TEMPERATURE' : [100, 140, 180, 220, 260, 300],
-        'NCONFIG': 10,            # NUMBER OF PRINTED SNAPSHOT
-        'PARALLEL' : False
+        'NCONFIG': 1,            # NUMBER OF PRINTED SNAPSHOT
+        'ARCHER' : False
 #        'TEMPERATURE' : [100, 140, 180, 220, 260, 300 ]
         ##################################################################################
     }
@@ -87,9 +87,9 @@ def main(inputs, paths):
 
     system_info = {
         #################### CAN BE CHANGED ###############################################
-        'NUMBER_MOL_ACTIVE': 12,                 # NUMBER OF ACTIVE MOLECULES
+        'NUMBER_MOL_ACTIVE': 2,                 # NUMBER OF ACTIVE MOLECULES
         'DIRECTION': [0, 1, 0],                 # DIRECTION TO PROPAGATE THE CHARGE
-        'RCUT': 8 ,                              # VDW RCUT
+        'RCUT': 3,                              # VDW RCUT
         ###################################################################################
         'SYSTEM': 'PBC_CRYSTAL',                                # (do not change)
         'MOL_NAME'            : 'ANTRACENE'          ,          # NAME OF THE MOLECULE
@@ -139,14 +139,11 @@ def main(inputs, paths):
 
     # SET_UP THE DIRECTORY, CHECK ANY SUBDIR IS PRESENT
     inputs.update(task_info)
-    bucket = Bucket(inputs)
-    bucket.name()
-    paths.update({'bucket': bucket.path})
+    paths.update({'bucket': os.getcwd()})
     # PATHS CONTAINS ALL THE PATHS
     for directory in ['bin', 'initial', 'scripts', 'structures', 'tasks', 'templates', 'tools', 'topologies']:
         dir = Dir(directory, paths)
         dir.checkdir()
-
 
 
     output = Dir('output', paths = paths)

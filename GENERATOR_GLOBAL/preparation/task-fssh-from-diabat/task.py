@@ -20,12 +20,12 @@ def main(task_info, paths):
 
     task = {
         'KIND_RUN' : 'TONAME',
-        'FILE_INIT': '8-mer',
-        'LENGTH_FS': 10,
+        'FILE_INIT': 'GENERATOR_GLOBAL',
+        'LENGTH_FS': 3,
         'INITIALIZATION': 'DIABATIC',
         'NUMBER_CONFIG'        : 1,
         'NUMBER_REPEAT'  :  1,
-        'LIGHT' : True,
+        'LIGHT' : False,
         'FIRST_MOL_CHAIN' : [1, 1, 1],
         'LAST_MOL_CHAIN'  : [2, 1, 1]
     }
@@ -34,7 +34,7 @@ def main(task_info, paths):
 
     cp2k_param = [
         #[ 'PROPAGATION', 'FSSH'],
-        ['PROPAGATION', 'BORN_OPPENHEIMER'],
+        ['PROPAGATION', 'FSSH'],
         #['DECO', 'NO_DECO_CORR','INSTANT_COLLAPSE','DAMPING']
         [ 'DECO', 'DAMPING'],
         #['METHOD_RESCALING','NACV','SIMPLE_QSYS']

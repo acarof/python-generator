@@ -16,7 +16,7 @@ keywords = ['TEMPERATURE']
 dict_properties = {
     'Block-runs-average' : ['MSD']
 }
-number_blocks = 5
+number_blocks = 2
 
 #FIND THE TITLE
 if 'GENERATOR_FSSH_OS' in os.getcwd():

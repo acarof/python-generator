@@ -59,6 +59,7 @@ INCLUDE CONSTRAINT.tmp
                         METHOD_COUPLING                       AOM
                         SURF_HOP_CHOICE                       sedSURF_HOP_CHOICE
                         DECOHERENCE_CORRECTIONS               sedDECOHERENCE_CORRECTIONS
+                        DECO_TIME                             FORCES_BASED
                         EDC_C                                 sedEDC_C
                         EDC_E0                                sedEDC_E0
                         INITIALIZATION                        sedINITIALIZATION
@@ -68,6 +69,8 @@ INCLUDE CONSTRAINT.tmp
                         REPRESENTATION                        sedREPRESENTATION
                         RK_PROPAGATION                        sedRK_PROPAGATION
                         &AOM
+                             PSIGMA_FILE_NAME                 ../templates/S_psigma.txt
+                             PPI_FILE_NAME                    ../templates/S_ppi.txt
                              NUMBER_DIABATIC_STATES                sedNDIABAT
                              NUMBER_ATOMS_PER_SITE                 sedNATOM_MOL
                              NUMBER_ORBITALS                       sedNORBITALS
