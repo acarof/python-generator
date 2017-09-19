@@ -20,7 +20,7 @@ def main(task_info, paths):
     task = {
         #################### CAN BE CHANGED ###############################################
         'KIND_RUN' : 'TONAME',                      # NAME OF YOUR RUN
-        'FILE_INIT': 'GENERATOR_FSSH_OS-temp-200',           # NAME OF THE RUN OF INITIALIZATION
+        'FILE_INIT': 'initial/from-GENERATOR_FSSH_OS-temp-1',           # NAME OF THE RUN OF INITIALIZATION
         #'NCONFIG_INIT' : 10,
         #'NPROD_INIT'   : 10,
         'NUMBER_CONFIG': 1,
@@ -48,7 +48,8 @@ def main(task_info, paths):
         ['INIT'] + \
         [ list_config_init[x] for x in
          range(0, len(list_config_init), len(list_config_init) / task['NUMBER_CONFIG'])], # STARTING POINTS
-        [ 'DECO', 'INSTANT_COLLAPSE'],
+        [ 'DECOHERENCE_CORRECTIONS', 'INSTANT_COLLAPSE'],
+        [ 'DECO_TIME', 'FORCES_BASED']
         [ 'METHOD_RESCALING', 'NACV'],
         [ 'METHOD_ADIAB_NACV', 'FAST'],
         [ 'METHOD_REVERSAL', 'ALWAYS'],

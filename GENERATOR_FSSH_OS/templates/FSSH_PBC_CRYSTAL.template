@@ -58,6 +58,9 @@
                         METHOD_COUPLING                       AOM
                         SURF_HOP_CHOICE                       sedSURF_HOP_CHOICE
                         DECOHERENCE_CORRECTIONS               sedDECOHERENCE_CORRECTIONS
+                        DECO_TIME                             sedDECO_TIME
+                        THRESHOLD_TAU_FORCES                  sedTHRESHOLD_TAU_FORCES
+                        TEMPERATURE_FG_WIDTH                  sedTEMPERATURE
                         EDC_C                                 sedEDC_C
                         EDC_E0                                sedEDC_E0
                         INITIALIZATION                        sedINITIALIZATION
