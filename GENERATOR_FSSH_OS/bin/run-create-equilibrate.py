@@ -18,14 +18,14 @@ for directory in ['bin', 'structures', 'templates', 'topologies']:
 
 info = {
     #################### CAN BE CHANGED ###############################################
-    'NEQ': 1,                   # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
+    'NEQ': 10,                   # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
     'NCONFIG' : 1,
     'TEMPERATURE_LIST' : [100],
     'TIMESTEP': 0.5,            # TIMESTEP IN FS
 
     #################### CAN BE CHANGED ###############################################
-    'NUMBER_MOL_ACTIVE': 2,  # NUMBER OF ACTIVE MOLECULES
-    'DIRECTION': [1, 0, 0],  # DIRECTION TO PROPAGATE THE CHARGE
+    'NUMBER_MOL_ACTIVE': 12,  # NUMBER OF ACTIVE MOLECULES
+    'DIRECTION': [0, 1, 0],  # DIRECTION TO PROPAGATE THE CHARGE
     'RCUT': 8,  # VDW RCUT
 
     ###################################################################################
@@ -112,10 +112,10 @@ def do_run(dict_):
 
 
 # RUN THE CALCULATIONS, SERIE OR PARALLEL ACCORDING TO THE NWORKER VARIABLE
-if nworker == 0:
+if nworker == 1:
     for cp2k_info in mega_list:
         do_run(cp2k_info)
-else:
+elif nworker > 1:
     from multiprocessing import Pool
     pool = Pool(nworker)
     pool.map( do_run, mega_list)

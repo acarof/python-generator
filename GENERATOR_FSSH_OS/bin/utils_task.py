@@ -1,13 +1,11 @@
 # standard modules
-import string, re, struct, sys, math, os, time
-import numpy as np
-import imp
+import numpy
 from collections import deque
 from random import seed, randint
 
 # custom modules
 from utils import *
-
+from find_crystal_bb import find_molecules
 
 def find_nworker(list_):
     try:
@@ -25,12 +23,35 @@ def find_nworker(list_):
             raise SystemExit
 
 
+# FIND ACTIVE MOLECULES WITH GUIDO'S TOOL
+def add_list_activated(system_info, init):
+    length = 0.0
+    for x, y in zip(system_info['ABC'], system_info['DIRECTION']):
+        length += (x * y) ** 2
+    length = numpy.sqrt(length) * (system_info['NUMBER_MOL_ACTIVE'] - 1)
+    system_info.update({
+        'LIST_ACTIVATED': find_molecules(
+            coord_first=system_info['COORD_FIRST'],
+            size_crystal=system_info['SIZE_CRYSTAL'],
+            length=length,
+            vector=system_info['DIRECTION'],
+            radius_aom=system_info['AOM_RADIUS'],
+            psf_file='%s/input-1.psf'  % init,
+            xyz_file='%s/crystal.xyz'  % init,
+            nmol_unit=system_info['NMOL_UNIT']
+
+        ),
+        'FIRST_DIABAT': int(numpy.ceil(system_info['NUMBER_MOL_ACTIVE'] / 2))
+    })
+    print system_info['LIST_ACTIVATED']
+    print "First diabat: ", system_info['FIRST_DIABAT']
+    return system_info
 
 
 def prepare_system_info(dict, path):
     with open('%s/system.info' % path, 'w') as file_:
         for key in dict:
-            if key not in ['TEMPLATE_FILE', 'FILE_CRYSTAL', 'FILE_UNIT', 'TIMESTEP']:
+            if key not in ['TEMPLATE_FILE', 'FILE_CRYSTAL', 'FILE_UNIT', 'TIMESTEP', 'FILE_INIT']:
                 if isinstance(dict[key], (list, tuple)):
                     file_.write('%s    %s\n' % (key, '  '.join(map(str, dict[key]))))
                 else:
@@ -78,6 +99,7 @@ def run_fist(system_info,  paths = {}, steps = 1, ndir = 0, restart_info = None,
         my_print = steps
     else:
         my_print = max( steps/nconfig, 1)
+    print "here", nconfig, steps, my_print
 
     print "GO FOR RUN %d" % ndir
     config = Config(system_info, paths, ENSEMBLE=ensemble, STEPS=steps, RESTART= restart_info, VELOCITIES=velocities,
@@ -114,16 +136,17 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     cp2k_info.update({'PRINT_FSSH': int( 1 / cp2k_info['TIMESTEP']) })
 
     restart_info = {
-        'RESTART_DIR' : task_info['FILE_INIT'],
+        'RESTART_DIR' : cp2k_info['FILE_INIT'],
         'CONFIG'      : cp2k_info['INIT']
     }
 
+    print "restart_info"
+    print restart_info
     seed()
     cp2k_info['SEED'] = randint(1, 1E9)
 
     system = cp2k_info['SYSTEM']
     if system in ['PBC_CRYSTAL', 'NEUTRAL_CRYSTAL']:
-        #cp2k_info.update({ 'LIST_ACTIVATED' : task_info['LIST_ACTIVATED']})
         from utils import FSSHOSCrystal as Config
     else:
         sys.exit()
@@ -131,5 +154,5 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     config = Config(cp2k_info, paths, RESTART=restart_info)
     print "GO FOR RUN %d" % cp2k_info['NDIR']
     config.run(cp2k_info['NDIR'])
-    if task_info.get('LIGHT', False):
+    if task_info.get('LIGHT', False) and not cp2k_info.get('ARCHER', True):
         shorten_log_file(cp2k_info['NDIR'])

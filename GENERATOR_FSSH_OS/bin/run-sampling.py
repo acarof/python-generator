@@ -4,7 +4,6 @@ import numpy
 
 # custom modules
 from utils_task import *
-from find_crystal_bb import find_crystal_bb
 
 # SET-UP THE SYSTEM
 nworker, archer = find_nworker(sys.argv)
@@ -18,13 +17,12 @@ for directory in ['bin', 'structures', 'templates', 'topologies']:
 
 info = {
     #################### CAN BE CHANGED ###############################################
-    'NCONFIG' : 1,             # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
-    'NPROD' : 1,
-    'FILE_INIT': 'run-eq',  # NAME OF THE RUN OF INITIALIZATION
-    'TEMPERATURE_LIST' : [100],
+    'NCONFIG' : 100,             # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
+    'NPROD' : 100,
+    'FILE_INIT': ['run-eq-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
     'TIMESTEP': 0.5,  # TIMESTEP IN FS
-    ##################################################################################
 
+    ##################################################################################
     'TEMPLATE_FILE': 'FIST_PBC_CRYSTAL.template',  # (do not change)
 }
 
@@ -34,41 +32,42 @@ info = {
 # PREPARE MEGA_LIST FOR RUN IN PARALLEL
 ndir = 0
 mega_list = []
-for temperature in info['TEMPERATURE_LIST']:
-    system_info = (InputFile('%s-%s/system.info' % (info['FILE_INIT'], ndir)).dict)
-    info.update(system_info)
+for init in info['FILE_INIT']:
+    system_info = (InputFile('%s/system.info' % (init)).dict)
+    system_info.update({'TEMPLATE_FILE' : info['TEMPLATE_FILE']})
     mega_list.append(
-        {'TEMPERATURE' : temperature,
-         'NDIR'        : ndir,
-          'PATHS' : paths,
-         'INFO' : info,
+        {'NDIR'   : ndir,
+         'FILE_INIT' : init,
+         'PATHS'  : paths,
+         'INFO'   : info,
+         'SYSTEM' : system_info,
          'ARCHER' : archer,
          'RESTART_INFO' :  {
-        'RESTART_DIR': 'run-eq-%s' % ndir,
-        'CONFIG': info['NEQ']}
+               'RESTART_DIR': init,
+               'CONFIG': system_info['NEQ']}
           }
     )
     ndir += 1
 def do_run(dict_):
     info = dict_['INFO']
-    previous_dir = run_fist(system_info=dict_['INFO'],
+    system_info = dict_['SYSTEM']
+    previous_dir = run_fist(system_info=system_info,
                                   paths = dict_['PATHS'], steps=info['NPROD'],
-                                  ndir=dict_['NDIR'],restart_info=dict_['RESTART_INFO'], velocities=False, ensemble='NVE',
-                                  TEMPERATURE=dict_['TEMPERATURE'], nconfig=info['NCONFIG'],
+                                  ndir=dict_['NDIR'],restart_info=dict_['RESTART_INFO'], velocities=True, ensemble='NVE',
+                                  TEMPERATURE=system_info['TEMPERATURE'], nconfig=info['NCONFIG'],
                                   archer=dict_['ARCHER'], name = 'sample')
-    os.system('cp %s-%s/crystal.xyz %s' % (info['FILE_INIT'], dict_['NDIR'], previous_dir))
-    info.update({'TEMPERATURE': temperature})
-    info.update({'NPROD_INIT' : info['NPROD']})
-    info.update({'NCONFIG_INIT' : info['NCONFIG']})
-    prepare_system_info(info, previous_dir)
+    os.system('cp %s/crystal.xyz %s' % (dict_['FILE_INIT'], previous_dir))
+    system_info.update({'NPROD_INIT' : info['NPROD']})
+    system_info.update({'NCONFIG_INIT' : info['NCONFIG']})
+    prepare_system_info(system_info, previous_dir)
 
 
 
 # RUN THE CALCULATIONS, SERIE OR PARALLEL ACCORDING TO THE NWORKER VARIABLE
-if nworker == 0:
+if nworker == 1:
     for cp2k_info in mega_list:
         do_run(cp2k_info)
-else:
+elif nworker > 1:
     from multiprocessing import Pool
     pool = Pool(nworker)
     pool.map( do_run, mega_list)
