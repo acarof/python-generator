@@ -1,0 +1,19 @@
+The taskfarm job script (taskfarm.pbs) launches 24 concurrent instances per node
+of a serial executable on however many nodes are desired. To use it, modify the
+following lines in task.sh according to your needs:
+
+input_file=some_name_based_on_taskindex
+input_parameter=some_function_of_taskindex
+my_executable=path_to_executable
+
+The taskindex variable allows you to specify different input parameters and/or
+input files for each instance of your executable. Each instance produces its
+own output and error file.
+
+You should also uncomment the following line in task.sh:
+
+my_executable $input_file $input_parameters > ${taskindex}.out 2> ${taskindex}.err &
+
+Finally you will need to modify the budget line #PBS -A in taskfarm.pbs as well as
+job details like walltime, number of nodes, etc. 
+
