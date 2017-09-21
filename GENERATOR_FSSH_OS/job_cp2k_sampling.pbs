@@ -1,0 +1,20 @@
+#!/bin/bash --login
+
+#PBS -N pbs-sampling
+#PBS -l select=1
+#PBS -l walltime=0:05:00
+#PBS -A e358
+
+module load cp2k
+
+# Move to directory that script was submitted from
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+cd $PBS_O_WORKDIR
+
+DIR=run-sample-0
+cd $DIR
+
+CP2K_PATH=/home/e358/e358/acarof/src/CP2K/nonadiabatic/cp2k/exe/ARCHER/cp2k.popt
+
+aprun -n 24  ${CP2K_PATH} run.inp > run.log
+

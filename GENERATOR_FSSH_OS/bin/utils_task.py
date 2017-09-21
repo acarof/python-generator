@@ -151,7 +151,7 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     else:
         sys.exit()
 
-    config = Config(cp2k_info, paths, RESTART=restart_info)
+    config = Config(cp2k_info, paths, RESTART=restart_info, name = 'fssh')
     print "GO FOR RUN %d" % cp2k_info['NDIR']
     config.run(cp2k_info['NDIR'])
     if task_info.get('LIGHT', False) and not cp2k_info.get('ARCHER', True):
