@@ -25,24 +25,33 @@ def find_nworker(list_):
 
 # FIND ACTIVE MOLECULES WITH GUIDO'S TOOL
 def add_list_activated(system_info, init):
-    length = 0.0
-    for x, y in zip(system_info['ABC'], system_info['DIRECTION']):
-        length += (x * y) ** 2
-    length = numpy.sqrt(length) * (system_info['NUMBER_MOL_ACTIVE'] - 1)
-    system_info.update({
-        'LIST_ACTIVATED': find_molecules(
-            coord_first=system_info['COORD_FIRST'],
-            size_crystal=system_info['SIZE_CRYSTAL'],
-            length=length,
-            vector=system_info['DIRECTION'],
-            radius_aom=system_info['AOM_RADIUS'],
-            psf_file='%s/input-1.psf'  % init,
-            xyz_file='%s/crystal.xyz'  % init,
-            nmol_unit=system_info['NMOL_UNIT']
+    if system_info['SYSTEM'] == 'PBC_CRYSTAL':
+        length = 0.0
+        for x, y in zip(system_info['ABC'], system_info['DIRECTION']):
+            length += (x * y) ** 2
+        length = numpy.sqrt(length) * (system_info['NUMBER_MOL_ACTIVE'] - 1)
+        system_info.update({
+            'LIST_ACTIVATED': find_molecules(
+                coord_first=system_info['COORD_FIRST'],
+                size_crystal=system_info['SIZE_CRYSTAL'],
+                length=length,
+                vector=system_info['DIRECTION'],
+                radius_aom=system_info['AOM_RADIUS'],
+                psf_file='%s/input-1.psf'  % init,
+                xyz_file='%s/crystal.xyz'  % init,
+                nmol_unit=system_info['NMOL_UNIT']
 
-        ),
-        'FIRST_DIABAT': int(numpy.ceil(system_info['NUMBER_MOL_ACTIVE'] / 2))
-    })
+            ),
+            'FIRST_DIABAT': int(numpy.ceil(system_info['NUMBER_MOL_ACTIVE'] / 2)) + 1
+        })
+    elif system_info['SYSTEM'] == 'OS_SOLVENT':
+        nmol = prod(system_info.get('SIZE_CRYSTAL'))*system_info['NMOL_UNIT']
+        system_info['LIST_ACTIVATED'] = range(1, nmol+1)
+        if system_info['COORD_CHARGE'] == [0, 1, 1]:
+            system_info['FIRST_DIABAT'] = 1
+        else:
+            print "Only first diabat is possible!"
+            raise SystemExit
     print system_info['LIST_ACTIVATED']
     print "First diabat: ", system_info['FIRST_DIABAT']
     return system_info
@@ -77,11 +86,13 @@ def generate_initial_structure(system_info, paths):
     system = system_info['SYSTEM']
     if system in ['PBC_CRYSTAL','NEUTRAL_CRYSTAL'] :
         from utils import OSCrystal as Structure
+    elif system in ['OS_SOLVENT']:
+        from utils import OSSolvent as Structure
     else:
         print "No structure generator for ", system
         raise SystemExit
     structure = Structure(system_info, paths)
-    structure.construct_organic_crystal()
+    structure.construct()
 
 
 
@@ -92,6 +103,8 @@ def run_fist(system_info,  paths = {}, steps = 1, ndir = 0, restart_info = None,
         from utils import FISTOSCrystal as Config
     elif system == 'NEUTRAL_CRYSTAL':
         from utils import FISTOSNeutralCrystal as Config
+    elif system == 'OS_SOLVENT':
+        from utils import FISTOSCrystal as Config
     else:
         raise SystemExit
 
@@ -99,7 +112,6 @@ def run_fist(system_info,  paths = {}, steps = 1, ndir = 0, restart_info = None,
         my_print = steps
     else:
         my_print = max( steps/nconfig, 1)
-    print "here", nconfig, steps, my_print
 
     print "GO FOR RUN %d" % ndir
     config = Config(system_info, paths, ENSEMBLE=ensemble, STEPS=steps, RESTART= restart_info, VELOCITIES=velocities,
@@ -146,7 +158,7 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     cp2k_info['SEED'] = randint(1, 1E9)
 
     system = cp2k_info['SYSTEM']
-    if system in ['PBC_CRYSTAL', 'NEUTRAL_CRYSTAL']:
+    if system in ['PBC_CRYSTAL', 'NEUTRAL_CRYSTAL', 'OS_SOLVENT']:
         from utils import FSSHOSCrystal as Config
     else:
         sys.exit()
