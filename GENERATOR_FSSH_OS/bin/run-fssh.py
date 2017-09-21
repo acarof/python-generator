@@ -82,7 +82,7 @@ for ndir in range(len(mega_list)):
 
 
 # RUN THE CALCULATIONS, SERIE OR PARALLEL ACCORDING TO THE NWORKER VARIABLE
-if nworker == 1:
+if nworker < 2:
     for cp2k_info in mega_list:
         run_fssh(cp2k_info)
 elif nworker > 1:

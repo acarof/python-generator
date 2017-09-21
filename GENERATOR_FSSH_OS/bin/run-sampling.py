@@ -64,7 +64,7 @@ def do_run(dict_):
 
 
 # RUN THE CALCULATIONS, SERIE OR PARALLEL ACCORDING TO THE NWORKER VARIABLE
-if nworker == 1:
+if nworker < 2:
     for cp2k_info in mega_list:
         do_run(cp2k_info)
 elif nworker > 1:
