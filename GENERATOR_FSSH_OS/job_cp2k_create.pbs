@@ -1,6 +1,6 @@
 #!/bin/bash --login
 
-#PBS -N pbs-cp2k-sampling
+#PBS -N pbs-cp2k-create
 #PBS -l select=1
 #PBS -l walltime=0:05:00
 #PBS -A e358
@@ -18,7 +18,7 @@ basedir=$PBS_O_WORKDIR
 CP2K_PATH=/home/e358/e358/acarof/src/CP2K/nonadiabatic/cp2k/exe/ARCHER/cp2k.popt
 START_RUN=0
 LAST_RUN=0
-KIND=sample
+KIND=eq
 
 
 for (( i=$START_RUN; i<=$LAST_RUN; i++ ))

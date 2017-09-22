@@ -1,7 +1,7 @@
 #!/bin/bash --login
 
-#PBS -N pbs-eq
-#PBS -l select=6
+#PBS -N pbs-cp2k-fssh
+#PBS -l select=1
 #PBS -l walltime=0:05:00
 #PBS -A e358
 
@@ -16,11 +16,15 @@ cd $PBS_O_WORKDIR
 basedir=$PBS_O_WORKDIR
 
 CP2K_PATH=/home/e358/e358/acarof/src/CP2K/nonadiabatic/cp2k/exe/ARCHER/cp2k.popt
+START_RUN=0
+LAST_RUN=0
+KIND=fssh
 
-for i in {0..5}; do
-  DIR=run-eq-${i}
-  cd $basedir/run-eq-$i/
-  aprun -n 24  ${CP2K_PATH} run.inp > run.log &
+
+for (( i=$START_RUN; i<=$LAST_RUN; i++ ))
+do
+  cd $basedir/run-${KIND}-$i/
+  aprun -n 1  ${CP2K_PATH} run.inp > run.log &
 done
 
 # Wait for all simulations to complete

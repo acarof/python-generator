@@ -1,5 +1,5 @@
 #!/bin/bash --login
-#PBS -N pbs-taskfarm
+#PBS -N pbs-taskfarm-fssh
 #PBS -l select=1
 #PBS -l walltime=00:05:00
 #PBS -A e358
@@ -15,6 +15,9 @@ module load cp2k
 # Move to directory that script was submitted from
 export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
 cd $PBS_O_WORKDIR
+
+CP2K_PATH=/home/e358/e358/acarof/src/CP2K/nonadiabatic/cp2k/exe/ARCHER/cp2k.sopt
+cp ${CP2K_PATH} .
 
 TASK=task-for-fssh-taskfarm.sh
 

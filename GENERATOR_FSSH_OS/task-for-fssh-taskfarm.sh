@@ -7,20 +7,12 @@
 core=$?
 taskindex=$(((node-1)*CORES_PER_NODE + core))
 
-
 # Uncomment to debug
 echo -e "task $taskindex running on core $core on node $node"
 
-
-
-DIR=run-fssh-${taskindex}
-cd $DIR
+cd run-fssh-${taskindex}
 
 # Use the .sopt for FSSH
-#CP2K_PATH=/home/e358/e358/acarof/src/CP2K/nonadiabatic/cp2k/exe/ARCHER/cp2k.sopt
-CP2K_PATH=/home/e358/e358/acarof/src/CP2K/nonadiabatic/cp2k/exe/ARCHER/
-ls $CP2K_PATH
-
-#${CP2K_PATH} run.inp > run.log
+../cp2k.sopt run.inp > run.log
 
 exit 0

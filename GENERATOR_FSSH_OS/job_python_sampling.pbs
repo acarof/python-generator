@@ -1,6 +1,6 @@
 #!/bin/bash --login
 
-#PBS -N pbs-python
+#PBS -N pbs-python-sample
 #PBS -l select=serial=true:ncpus=1
 #PBS -l walltime=00:05:00
 #PBS -A e358
