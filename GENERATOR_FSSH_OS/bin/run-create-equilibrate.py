@@ -105,7 +105,7 @@ def do_run(dict_):
                                   TEMPERATURE=dict_['TEMPERATURE'], nconfig=info['NCONFIG'],
                                   archer=dict_['ARCHER'], name = 'eq')
     os.system('cp %s/%s %s' % ( paths['crystal'], info['FILE_CRYSTAL'], previous_dir  ))
-    info.update({'TEMPERATURE': temperature})
+    info.update({'TEMPERATURE': dict_['TEMPERATURE']})
     info.update({'NEQ' : info['NEQ']})
     prepare_system_info(info, previous_dir)
 

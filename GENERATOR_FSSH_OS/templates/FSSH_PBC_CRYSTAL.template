@@ -26,19 +26,19 @@
 		&TRAJECTORY  LOW
             FORMAT  XYZ
             &EACH
-                MD          sedPRINT
+                MD          sedPRINT_FSSH
             &END EACH
         &END TRAJECTORY
         &VELOCITIES  LOW
             FORMAT  XYZ
             &EACH
-                MD          sedPRINT
+                MD          sedPRINT_FSSH
             &END EACH
         &END VELOCITIES
         &FORCES  LOW
             FORMAT  XYZ
             &EACH
-                MD          sedPRINT
+                MD          sedPRINT_FSSH
             &END EACH
         &END FORCES
         &RESTART_HISTORY OFF
@@ -103,21 +103,21 @@
                                    MD          sedPRINT_FSSH
                                &END EACH
                             &END HAMILTONIAN
-                            &HOP_NACV
-                               &EACH
-                                   MD          1
-                               &END EACH
-                            &END HOP_NACV
-                            &NACV
-                               &EACH
-                                   MD          sedPRINT
-                               &END EACH
-                            &END NACV
-                            &NACE
-                               &EACH
-                                   MD          sedPRINT
-                               &END EACH
-                            &END NACE
+                            #&HOP_NACV
+                            #   &EACH
+                            #       MD          1
+                            #   &END EACH
+                            #&END HOP_NACV
+                            #&NACV
+                            #   &EACH
+                            #       MD          sedPRINT
+                            #   &END EACH
+                            #&END NACV
+                            #&NACE
+                            #   &EACH
+                            #       MD          sedPRINT
+                            #   &END EACH
+                            #&END NACE
                             &SH_INFO
                                &EACH
                                    MD          1
