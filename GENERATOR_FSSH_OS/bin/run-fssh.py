@@ -39,7 +39,7 @@ cp2k_param = [
     ###################################################################################
     ['DECOHERENCE_CORRECTIONS', 'DAMPING'],
     ['DECO_TIME', 'FORCES_BASED'],
-    ['THRESHOLD_TAU_FORCES',  2.0],
+    ['THRESHOLD_TAU_FORCES',  1E-20],
     ['TEMPERATURE_FG_WIDTH',  298],
     ['METHOD_RESCALING', 'NACV'],
     ['METHOD_ADIAB_NACV', 'FAST'],
