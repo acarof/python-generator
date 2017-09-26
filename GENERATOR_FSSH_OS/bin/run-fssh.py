@@ -21,9 +21,9 @@ for directory in ['bin', 'structures', 'templates', 'topologies']:
 info = {
     #################### CAN BE CHANGED ###############################################
     'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
-    'NUMBER_CONFIG': 100,
+    'NUMBER_CONFIG': 48,
     'NUMBER_REPEAT': 1,
-    'LENGTH_FS': 10,  # LENGTH IN FS
+    'LENGTH_FS':   1000,  # LENGTH IN FS
     'AOM_RADIUS' : 3.0,
     ###################################################################################
     'INITIALIZATION': 'DIABATIC',

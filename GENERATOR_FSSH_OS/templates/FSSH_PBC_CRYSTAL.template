@@ -23,24 +23,24 @@
         &END THERMOSTAT
    	&END MD
   	&PRINT
-		&TRAJECTORY  LOW
+	 &TRAJECTORY  LOW
             FORMAT  XYZ
             &EACH
-                MD          sedPRINT_FSSH
+                MD          sedSTEPS
             &END EACH
         &END TRAJECTORY
-        &VELOCITIES  LOW
-            FORMAT  XYZ
-            &EACH
-                MD          sedPRINT_FSSH
-            &END EACH
-        &END VELOCITIES
-        &FORCES  LOW
-            FORMAT  XYZ
-            &EACH
-                MD          sedPRINT_FSSH
-            &END EACH
-        &END FORCES
+        #&VELOCITIES  LOW
+        #    FORMAT  XYZ
+        #    &EACH
+        #        MD          sedPRINT_FSSH
+        #    &END EACH
+        #&END VELOCITIES
+        #&FORCES  LOW
+        #    FORMAT  XYZ
+        #    &EACH
+        #        MD          sedPRINT_FSSH
+        #    &END EACH
+        #&END FORCES
         &RESTART_HISTORY OFF
         &END RESTART_HISTORY
    	&END PRINT
@@ -123,11 +123,11 @@
                                    MD          1
                                &END EACH
                             &END SH_INFO
-                            &ADIABAT_ENERGIES
-                               &EACH
-                                   MD          sedPRINT_FSSH
-                               &END EACH
-                            &END ADIABAT_ENERGIES
+                            #&ADIABAT_ENERGIES
+                            #   &EACH
+                            #       MD          sedPRINT_FSSH
+                            #   &END EACH
+                            #&END ADIABAT_ENERGIES
                         &END PRINT
                 &END ADIABATIC
                 &PRINT
