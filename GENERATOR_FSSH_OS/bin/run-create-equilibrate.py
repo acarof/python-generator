@@ -160,7 +160,6 @@ trimer_ethylene = {
     'SIZE_CRYSTAL' : [3, 1, 1],
     'COORD_CHARGE' : [0, 1, 1], # WARNING, in O-BASIS. FIRST MOLECULE IS [0, 0, 0]
     'SIZE_BOX'     : [30.0, 30.0, 30.0],
-    'NUMBER_MOL_ACTIVE': 2,  # NUMBER OF ACTIVE MOLECULES
 
     ###################################################################################
     'SYSTEM': 'OS_SOLVENT',  # (do not change)
