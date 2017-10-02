@@ -385,10 +385,16 @@ class CP2KRun(object):
                     if 'PROGRAM ENDED AT' in line:
                         failed = False
             if failed:
+                print "##################"
+                print " "
+                print "Run %s failed!" % dir.path
                 fail = Dir('fail-%d' % ndir)
                 fail.rm_mkdir()
                 os.system(' mv %s/* %s ' % (dir.path, fail.path))
                 os.rmdir(dir.path)
+                print "Run %s is now moved to %s" % (dir.path, fail.path)
+                print " "
+                print "##################"
         return dir.path
 
     def _get_input(self, dir):
