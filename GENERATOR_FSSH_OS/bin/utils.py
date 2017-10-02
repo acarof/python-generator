@@ -4,7 +4,7 @@ import subprocess
 from numpy import dot, array, prod, power
 from numpy.linalg import norm
 import numpy as np
-from shutil import copyfile
+
 
 sed_dict = {'ENSEMBLE': 'NVE',
             'TIMESTEP': 0.5,

@@ -2,18 +2,33 @@
 import numpy
 from collections import deque
 from random import seed, randint
+import subprocess
 
 # custom modules
 from utils import *
 from find_crystal_bb import find_molecules
 
 
+def check_cp2k_path(path):
+    runcommand = []
+    execName = path
+    runcommand.append(execName)
+    runcommand += ['--version']
+    print runcommand
+    stderr = subprocess.call(runcommand, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if stderr == 0:
+        return True
+    else:
+        return False
 
 def set_up(list_):
     nworker, archer = find_nworker(sys.argv)
     print "nworker is: %s and archer is: %s" % (nworker, archer)
     if not archer:
         paths = find_cp2k_path()
+        if not check_cp2k_path(paths['cp2k']):
+            print "CP2K at: %s is not working. Program stops!" % paths['cp2k']
     else:
         paths = {}
     paths.update({'bucket': os.getcwd()})
@@ -21,6 +36,8 @@ def set_up(list_):
         dir = Dir(directory, paths)
         dir.checkdir()
     return paths, nworker, archer
+
+
 
 
 def find_nworker(list_):
