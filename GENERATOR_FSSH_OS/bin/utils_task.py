@@ -41,19 +41,33 @@ def set_up(list_):
 
 
 def find_nworker(list_):
-    try:
-        nworker = list_[1]
-    except:
+    if len(list_) == 1:
         return 0, True
-    try:
-        nworker = int(nworker)
-        return nworker, False
-    except:
-        if nworker == 'ARCHER':
-            return 0, True
+    elif len(list_) == 2:
+        arg = list_[1]
+        try:
+            nworker = int(arg)
+            return nworker, False
+        except:
+            if arg == 'ARCHER':
+                return 0, True
+            else:
+                print "Arguments should be a number or ARCHER"
+                raise SystemExit
+    elif len(list_) == 3:
+        if list_[1] == 'ARCHER':
+            try:
+                nworker = int(list_[2])
+                return nworker, True
+            except:
+                print "Second argument should be a integer"
+                raise SystemExit
         else:
-            print "Arguments should be a number or ARCHER"
+            print "First argument of two should be 'ARCHER' "
             raise SystemExit
+    else:
+        print "At max 2 arguments can be given"
+        raise SystemExit
 
 
 # FIND ACTIVE MOLECULES WITH GUIDO'S TOOL

@@ -16,7 +16,7 @@ anthracene = {
     #################### CAN BE CHANGED ###############################################
     'NEQ': 10,                   # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
     'NCONFIG' : 1,
-    'TEMPERATURE_LIST' : [100],
+    'TEMPERATURE_LIST' : [ 100],
     'TIMESTEP': 0.5,            # TIMESTEP IN FS
 
     #################### CAN BE CHANGED ###############################################
