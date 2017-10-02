@@ -6,13 +6,7 @@ import numpy
 from utils_task import *
 
 # SET-UP THE SYSTEM
-nworker, archer = find_nworker(sys.argv)
-print "nworker is: %s and archer is: %s" % (nworker, archer)
-paths = find_cp2k_path()
-paths.update({'bucket': os.getcwd()})
-for directory in ['bin', 'structures', 'templates', 'topologies']:
-    dir = Dir(directory, paths)
-    dir.checkdir()
+paths, nworker, archer = set_up(sys.argv)
 
 
 info = {
