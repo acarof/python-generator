@@ -1,6 +1,6 @@
 #!/bin/bash --login
 
-#PBS -N pbs-cp2k-fssh
+#PBS -N pbs-cp-fssh
 #PBS -l select=1
 #PBS -l walltime=00:05:00
 #PBS -A e358
