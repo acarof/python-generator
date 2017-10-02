@@ -9,21 +9,16 @@ from utils_task import *
 
 
 # SET-UP THE SYSTEM
-nworker, archer = find_nworker(sys.argv)
-print "nworker is: %s and archer is: %s" % (nworker, archer)
-paths = find_cp2k_path()
-paths.update({'bucket': os.getcwd()})
-for directory in ['bin', 'structures', 'templates', 'topologies']:
-    dir = Dir(directory, paths)
-    dir.checkdir()
+paths, nworker, archer = set_up(sys.argv)
 
 
 info = {
     #################### CAN BE CHANGED ###############################################
-    'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
-    'NUMBER_CONFIG': 48,
+    #'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
+    'FILE_INIT': ['run-eq-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
+    'NUMBER_CONFIG': 10,
     'NUMBER_REPEAT': 1,
-    'LENGTH_FS':   1000,  # LENGTH IN FS
+    'LENGTH_FS':   10,  # LENGTH IN FS
     'AOM_RADIUS' : 3.0,
     ###################################################################################
     'INITIALIZATION': 'DIABATIC',

@@ -1,16 +1,7 @@
 # standard modules
-import string, re, struct, sys, math, os, time
-import numpy as np
-import importlib, imp
-#import matplotlib.pyplot as plt
-#from scipy.optimize import curve_fit
-#from operator import itemgetter
-from multiprocessing import Pool, cpu_count
-#from scipy.integrate import quad
 
 # custom modudules
 from utils_scripts import *
-from marcus import *
 from datetime import datetime
 
 
@@ -32,27 +23,34 @@ def average_dict(dict1, number):
         result[key] = np.array( dict1[key] ) / number
     return result
 
-def print_list(list_, property, tuple, time_):
-    filename = property + '-' + '-'.join(tuple) + '-' + str(time_) + '.dat'
-    file = open(filename, 'w')
-    for index, element in enumerate(list_):
-        line = '%s   %s\n' % ( index + 1, '   '.join(map(str, element)))
-        file.write(line)
-    file.close()
-    return filename
-
-def print_dict( dict_, property, tuple):
+def print_list(list_, property, tuple, dest = '.'):
     filename = property + '-' + '-'.join(tuple) + '.dat'
-    file = open(filename, 'w')
+    with open('%s/%s' % (dest, filename), 'w') as file:
+        for element in list_:
+            line = '%s\n' % element
+            file.write(line)
+
+
+def print_histo(property, values, bins, dest = '.', tuple = ''):
+    filename = property + '-' + '-'.join(tuple) + '.dat'
+    with open('%s/%s' % (dest, filename), 'w') as file:
+        file.write('#  Bins   Values')
+        for bin, value in zip( bins, values):
+            file.write('%s   %s\n' % (bin, value))
+
+
+def print_dict( dict_, property, tuple, dest = '.'):
+    filename = property + '-' + '-'.join(tuple) + '.dat'
+    file = open('%s/%s' % (dest, filename), 'w')
     for time in sorted(dict_):
         line = '%f  %s\n' % (time, '   '.join(map(str, dict_[time])) )
         file.write(line)
     file.close()
     return filename
 
-def print_list_dict( list_, property, tuple):
+def print_list_dict( list_, property, tuple, dest = '.'):
     filename = property + '-' + '-'.join(tuple) + '.dat'
-    file = open(filename, 'w')
+    file = open('%s/%s' % (dest, filename), 'w')
     for time in sorted(list_[0]):
         result = []
         for dict_ in list_:
@@ -74,7 +72,7 @@ def append_two_dict(dict1, dict2):
     return result
 
 
-def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, list_time=[]):
+def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, nbin = 10, min_ = 0, max_=0):
     real_start_time = datetime.now()
     start_time = datetime.strftime( real_start_time, "%Y %m %d %H:%M:%S ")
     print "One worker for: %s starts at %s" % (tuple, start_time)
@@ -130,6 +128,14 @@ def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, list
                 properties_dict[property] = []
                 properties_dict[property + 'info'] = ''
             properties_dict[property + 'info'] += line
+        for property in dict_properties.get('Histogram', []):
+            prop = dir.extract(property)
+            if properties_dict.get(property) is None:
+                properties_dict[property] = np.array( [0] * nbin )
+                properties_dict[property + 'bins'] = np.linspace(min_, max_, nbin)
+            for time in prop:
+                properties_dict[property]+= np.array( bin_list(nbin, min_, max_, prop[time]) )
+
     real_end_time = datetime.now()
     end_time = datetime.strftime( real_end_time, "%Y %m %d %H:%M:%S ")
     print "One worker for: %s ends at %s" % (tuple, end_time)
@@ -140,6 +146,22 @@ def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, list
     return properties_dict
 
 
+
+def bin_list(nbin, min_, max_, list_):
+    histo = [0] * nbin
+    step = (max_ - min_) / nbin
+    for element in list_:
+        length = element - min_
+        ind = int(length/step)
+        if 0 < ind and ind < nbin:
+            histo[ind-1] += 1
+        else:
+            print "One element not is the list:", element
+    return histo
+
+
+
+
 def print_run_dict(run_dict, keywords):
     filename = 'List-run.dat'
     file = open(filename, 'w')
@@ -148,4 +170,41 @@ def print_run_dict(run_dict, keywords):
         file.write(line)
     file.close()
     return filename
+
+def create_file(property, title, text,  label='None', dest = '.', tuple = 'None'):
+    if tuple is not 'None':
+        filename = '%s-%s.dat' % (property, '-'.join(tuple))
+    else:
+        filename = '%s-%s.dat' % (property, title)
+    file = open('%s/%s' % (dest, filename), 'w')
+    unit = units.get(property)
+    if (label == 'Mean'):
+        replace = (unit,) * 4
+        header = '# Run  Mean (%s)  Std (%s)  Drift (%s/fs)   QMean (%s) \n' % replace
+    elif (label == 'Spec'):
+        header = headers.get(property)
+    elif (label == 'Initial'):
+        header = '# Run   Initial value (%s)\n' % unit
+    else:
+        header = None
+    if header is not None:
+        file.write(header)
+    file.write(text)
+    file.close()
+    return  filename
+
+
+def statistics(prop):
+    times = []
+    props = []
+    for time in sorted(prop):
+        times.append(time)
+        props.append(prop.get(time))
+    mean = np.mean(props)
+    std = np.std(props)
+    drift = np.polyfit(times, props, 1)[0][0]
+    qmean = np.sqrt(np.mean(np.square(props)))
+    return [mean, std, drift, qmean]
+
+
 

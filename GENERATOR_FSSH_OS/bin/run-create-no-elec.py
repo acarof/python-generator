@@ -14,8 +14,8 @@ paths, nworker, archer = set_up(sys.argv)
 
 anthracene = {
     #################### CAN BE CHANGED ###############################################
-    'NEQ': 10,                   # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
-    'NCONFIG' : 1,
+    'NEQ': 100,                   # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
+    'NCONFIG' : 100,
     'TEMPERATURE_LIST' : [100],
     'TIMESTEP': 0.5,            # TIMESTEP IN FS
 
@@ -23,9 +23,11 @@ anthracene = {
     'NUMBER_MOL_ACTIVE': 12,  # NUMBER OF ACTIVE MOLECULES
     'DIRECTION': [0, 1, 0],  # DIRECTION TO PROPAGATE THE CHARGE
     'RCUT': 8,  # VDW RCUT
+    'STRUCTURE_FILE'  : 'structures/12anthracene/',
+    'AOM_RADIUS' : 3.0,
 
     ###################################################################################
-    'SYSTEM': 'PBC_CRYSTAL',  # (do not change)
+    'SYSTEM': 'PBC_CRYSTAL_NO_ELEC',  # (do not change)
     'MOL_NAME': 'ANTRACENE',  # NAME OF THE MOLECULE
     'FILE_UNIT': 'ant_unitcell.xyz',  # NAME OF THE .xyz FILE WITH THE UNITCELL
     'FILE_CRYSTAL': 'crystal.xyz',  # NAME OF THE .xyz FILE TO PRINT THE CRYSTAL
@@ -43,7 +45,7 @@ if info.get('ELECTROSTATICS', True):
     info.update({'ALPHA'         :    3.5 / info['RCUT'] })        # ALPHA FOR EWALD})
 
 
-if  info['SYSTEM'] == 'PBC_CRYSTAL':
+if  info['SYSTEM'] == 'PBC_CRYSTAL_NO_ELEC':
     # FIND CRYSTAL SIZE WITH GUIDO'S TOOL
     length = 0.0
     for x, y in zip(info['ABC'], info['DIRECTION']):
@@ -73,10 +75,30 @@ if  info['SYSTEM'] == 'PBC_CRYSTAL':
     print 'GMAX = ', info['GMAX']
 
 
+
+
 # GENERATE THE STRUCTURE
 output_structure = Dir('structures/from-create-%s' % paths['bucket'].split('/')[-1], paths=paths, target='crystal')
 output_structure.rm_mkdir()
 generate_initial_structure(info, paths)
+
+if info['SYSTEM'] == 'PBC_CRYSTAL_NO_ELEC':
+    #info.update({'AOM_RADIUS' : info['AOM_RADIUS']})
+    info.update({
+        'LIST_ACTIVATED': find_molecules(
+            coord_first=info['COORD_FIRST'],
+            size_crystal=info['SIZE_CRYSTAL'],
+            length=length,
+            vector=info['DIRECTION'],
+            radius_aom=info['AOM_RADIUS'],
+            psf_file='%s/input-1.psf' % info['STRUCTURE_FILE'],
+            xyz_file='%s/crystal.xyz' % info['STRUCTURE_FILE'],
+            nmol_unit=info['NMOL_UNIT']
+
+        ),
+        'FIRST_DIABAT': int(numpy.ceil(info['NUMBER_MOL_ACTIVE'] / 2)) + 1
+    })
+
 
 
 # PREPARE MEGA_LIST FOR RUN IN PARALLEL
@@ -101,6 +123,8 @@ def do_run(dict_):
     os.system('cp %s/%s %s' % ( paths['crystal'], info['FILE_CRYSTAL'], previous_dir  ))
     info.update({'TEMPERATURE': dict_['TEMPERATURE']})
     info.update({'NEQ' : info['NEQ']})
+    info.update({'NPROD_INIT' : info['NEQ']})
+    info.update({'NCONFIG_INIT' : info['NCONFIG']})
     prepare_system_info(info, previous_dir)
 
 

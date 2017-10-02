@@ -7,6 +7,22 @@ from random import seed, randint
 from utils import *
 from find_crystal_bb import find_molecules
 
+
+
+def set_up(list_):
+    nworker, archer = find_nworker(sys.argv)
+    print "nworker is: %s and archer is: %s" % (nworker, archer)
+    if not archer:
+        paths = find_cp2k_path()
+    else:
+        paths = {}
+    paths.update({'bucket': os.getcwd()})
+    for directory in ['bin', 'structures', 'templates', 'topologies']:
+        dir = Dir(directory, paths)
+        dir.checkdir()
+    return paths, nworker, archer
+
+
 def find_nworker(list_):
     try:
         nworker = list_[1]
@@ -84,7 +100,7 @@ def find_cp2k_path():
 
 def generate_initial_structure(system_info, paths):
     system = system_info['SYSTEM']
-    if system in ['PBC_CRYSTAL','NEUTRAL_CRYSTAL'] :
+    if system in ['PBC_CRYSTAL','NEUTRAL_CRYSTAL', 'PBC_CRYSTAL_NO_ELEC'] :
         from utils import OSCrystal as Structure
     elif system in ['OS_SOLVENT']:
         from utils import OSSolvent as Structure
@@ -101,6 +117,8 @@ def run_fist(system_info,  paths = {}, steps = 1, ndir = 0, restart_info = None,
     system = system_info['SYSTEM']
     if system == 'PBC_CRYSTAL':
         from utils import FISTOSCrystal as Config
+    elif system == 'PBC_CRYSTAL_NO_ELEC':
+        from utils import FISTOSCrystalNoelec as Config
     elif system == 'NEUTRAL_CRYSTAL':
         from utils import FISTOSNeutralCrystal as Config
     elif system == 'OS_SOLVENT':
@@ -160,6 +178,8 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     system = cp2k_info['SYSTEM']
     if system in ['PBC_CRYSTAL', 'NEUTRAL_CRYSTAL', 'OS_SOLVENT']:
         from utils import FSSHOSCrystal as Config
+    elif system == 'PBC_CRYSTAL_NO_ELEC':
+        from utils import FSSHOSCrystalNoelec as Config
     else:
         sys.exit()
 

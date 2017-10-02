@@ -841,6 +841,68 @@ class FSSHOSCrystal(CP2KRun):
                 file_.write( self._amend_text(result))
 
 
+
+
+class FSSHOSCrystalNoelec(FSSHOSCrystal):
+    """
+    """
+
+    def __init__(self, dict, paths, **kwargs):
+        super(FSSHOSCrystalNoelec, self).__init__(dict, paths, **kwargs)
+
+    def _new_psf(self):
+        result = ""
+        index = 0
+        for molecule in self._list_activated:
+            if (molecule - index - 1) != 0:
+                result += """
+                             &MOLECULE
+                                 NMOL              %s
+                                 CONN_FILE_NAME    ../topologies/%s
+                                 CONN_FILE_FORMAT  UPSF
+                            &END MOLECULE
+                    """ % \
+                          (molecule - index - 1, self._mol_name + "_NO_CHARGE.psf")
+            result += """
+                            @IF ${ACTIVE_MOL} == %s
+                                 &MOLECULE
+                                     NMOL              1
+                                     CONN_FILE_NAME    ../topologies/%s
+                                     CONN_FILE_FORMAT  UPSF
+                                &END MOLECULE
+                             @ENDIF
+                             @IF ${ACTIVE_MOL} /= %s
+                                 &MOLECULE
+                                     NMOL              1
+                                     CONN_FILE_NAME    ../topologies/%s
+                                     CONN_FILE_FORMAT  UPSF
+                                &END MOLECULE
+                             @ENDIF
+                    """ % \
+                      (molecule, self._mol_name + "_CHARGE.psf",
+                       molecule, self._mol_name + "_NEUTRE.psf")
+            index = molecule
+        if (index != self._nmol):
+            result += """
+                             &MOLECULE
+                                 NMOL              %s
+                                 CONN_FILE_NAME    ../topologies/%s
+                                 CONN_FILE_FORMAT  UPSF
+                             &END MOLECULE
+                     """ % \
+                      (self._nmol - index, self._mol_name + "_NO_CHARGE.psf")
+        if self._my_sed_dict['SYSTEM'] == 'OS_SOLVENT':
+            result += """
+                             &MOLECULE
+                                 NMOL              %s
+                                 CONN_FILE_NAME    ../topologies/%s
+                                 CONN_FILE_FORMAT  UPSF
+                             &END MOLECULE
+                     """ % \
+                      (self._nsolvent, self._my_sed_dict['SOLVENT'].title() + ".psf")
+        return result
+
+
 class FISTOSCrystal(FSSHOSCrystal):
     """
     """
@@ -865,6 +927,81 @@ class FISTOSCrystal(FSSHOSCrystal):
 
 
 
+
+class FISTOSCrystalNoelec(FISTOSCrystal):
+    """
+    """
+
+
+    def __init__(self, dict, paths, **kwargs):
+        super(FISTOSCrystalNoelec, self).__init__(dict, paths, **kwargs)
+
+
+    def _built_list_activated(self):
+        self._list_activated = self._my_sed_dict['LIST_ACTIVATED']
+
+    def _new_psf(self):
+        result = ""
+        index = 0
+        for molecule in self._list_activated:
+            if (molecule - index - 1) != 0:
+                result += """
+                             &MOLECULE
+                                 NMOL              %s
+                                 CONN_FILE_NAME    ../topologies/%s
+                                 CONN_FILE_FORMAT  UPSF
+                            &END MOLECULE
+                    """ % \
+                          (molecule - index - 1, self._mol_name + "_NO_CHARGE.psf")
+            result += """
+                            @IF ${ACTIVE_MOL} == %s
+                                 &MOLECULE
+                                     NMOL              1
+                                     CONN_FILE_NAME    ../topologies/%s
+                                     CONN_FILE_FORMAT  UPSF
+                                &END MOLECULE
+                             @ENDIF
+                             @IF ${ACTIVE_MOL} /= %s
+                                 &MOLECULE
+                                     NMOL              1
+                                     CONN_FILE_NAME    ../topologies/%s
+                                     CONN_FILE_FORMAT  UPSF
+                                &END MOLECULE
+                             @ENDIF
+                    """ % \
+                      (molecule, self._mol_name + "_CHARGE.psf",
+                       molecule, self._mol_name + "_NEUTRE.psf")
+            index = molecule
+        if (index != self._nmol):
+            result += """
+                             &MOLECULE
+                                 NMOL              %s
+                                 CONN_FILE_NAME    ../topologies/%s
+                                 CONN_FILE_FORMAT  UPSF
+                             &END MOLECULE
+                     """ % \
+                      (self._nmol - index, self._mol_name + "_NO_CHARGE.psf")
+        if self._my_sed_dict['SYSTEM'] == 'OS_SOLVENT':
+            result += """
+                             &MOLECULE
+                                 NMOL              %s
+                                 CONN_FILE_NAME    ../topologies/%s
+                                 CONN_FILE_FORMAT  UPSF
+                             &END MOLECULE
+                     """ % \
+                      (self._nsolvent, self._my_sed_dict['SOLVENT'].title() + ".psf")
+        return result
+
+
+    def _complete_main_input(self):
+        self._write_file('%s/%s' % (self.paths['templates'], self._template_file), '%s/run.inp' % self._dir.path)
+        with open('%s/run.inp' % self._dir.path, 'ab+') as file_:
+            molecule = (int((float(self._coordcharge[0]) - 1) * float(self._sizecrystal[1] * self._sizecrystal[2]) + \
+               (float(self._coordcharge[1]) - 1) * float(self._sizecrystal[2]) + \
+               float(self._coordcharge[2])) - 1)*self._my_sed_dict['NMOL_UNIT'] + 1 + 1
+            result = "@SET  ACTIVE_MOL %s\n" % molecule
+            result += "@INCLUDE FORCE_EVAL.include\n"
+            file_.write(result)
 
 
 
