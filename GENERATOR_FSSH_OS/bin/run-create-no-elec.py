@@ -20,7 +20,7 @@ anthracene = {
     'TIMESTEP': 0.5,            # TIMESTEP IN FS
 
     #################### CAN BE CHANGED ###############################################
-    'NUMBER_MOL_ACTIVE': 12,  # NUMBER OF ACTIVE MOLECULES
+    'NUMBER_MOL_ACTIVE': 2,  # NUMBER OF ACTIVE MOLECULES
     'DIRECTION': [0, 1, 0],  # DIRECTION TO PROPAGATE THE CHARGE
     'RCUT': 8,  # VDW RCUT
     'STRUCTURE_FILE'  : 'structures/12anthracene/',
@@ -84,6 +84,10 @@ generate_initial_structure(info, paths)
 
 if info['SYSTEM'] == 'PBC_CRYSTAL_NO_ELEC':
     #info.update({'AOM_RADIUS' : info['AOM_RADIUS']})
+    length = 0.0
+    for x, y in zip(info['ABC'], info['DIRECTION']):
+        length += (x * y) ** 2
+    length = numpy.sqrt(length) * (info['NUMBER_MOL_ACTIVE'] - 1)
     info.update({
         'LIST_ACTIVATED': find_molecules(
             coord_first=info['COORD_FIRST'],
