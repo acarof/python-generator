@@ -14,4 +14,4 @@ export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
 # Change to the directory that the job was submitted from
 cd $PBS_O_WORKDIR
 
-python bin/run-fssh.py ARCHER 1
+python bin/run-fssh.py ARCHER 24

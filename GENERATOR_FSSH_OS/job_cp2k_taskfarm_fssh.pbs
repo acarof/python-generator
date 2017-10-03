@@ -1,9 +1,9 @@
 #!/bin/bash --login
 
 #PBS -N pbs-farm-fssh
-#PBS -l select=2
-#PBS -l walltime=02:00:00
-#PBS -A e358
+#PBS -l select=1
+#PBS -l walltime=00:05:00
+#PBS -A e05-softm-blu
 
 # Don't change
 export PMI_NO_FORK=1

@@ -13,7 +13,7 @@ echo -e "task $taskindex running on core $core on node $node"
 cd run-fssh-${taskindex}
 
 # Use the .sopt for FSSH
-/work/e358/e358/acarof/src/nonadiabatic-cp2k/cp2k/exe/ARCHER/cp2k.sopt run.inp > run.log &
+/work/e05/e05/acarofmc/src/CP2K/nonadiabatic-cp2k/cp2k/exe/ARCHER/cp2k.sopt run.inp > run.log &
 
 wait
 echo -e "task $taskindex finishes on core $core on node $node"

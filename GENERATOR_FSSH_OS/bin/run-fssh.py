@@ -82,6 +82,7 @@ if nworker < 2:
         run_fssh(cp2k_info)
 elif nworker > 1:
     from multiprocessing import Pool
+    print "Use multiprocessing"
     pool = Pool(nworker)
     pool.map(run_fssh, mega_list)
 
