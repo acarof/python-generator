@@ -15,7 +15,7 @@ paths, nworker, archer = set_up(sys.argv)
 anthracene = {
     #################### CAN BE CHANGED ###############################################
     'NEQ': 100,                   # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
-    'NCONFIG' : 100,
+    'NCONFIG' : 1,
     'TEMPERATURE_LIST' : [100],
     'TIMESTEP': 0.5,            # TIMESTEP IN FS
 

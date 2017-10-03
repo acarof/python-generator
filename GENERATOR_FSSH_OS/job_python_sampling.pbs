@@ -3,7 +3,7 @@
 #PBS -N pbs-py-sample
 #PBS -l select=serial=true:ncpus=1
 #PBS -l walltime=00:05:00
-#PBS -A e358
+#PBS -A e05-softm-blu
 
 module load anaconda
 source activate forgenerator

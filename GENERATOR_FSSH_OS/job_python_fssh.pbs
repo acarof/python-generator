@@ -1,9 +1,9 @@
 #!/bin/bash --login
 
 #PBS -N pbs-py-fssh
-#PBS -l select=serial=true:ncpus=1
+#PBS -l select=serial=true:ncpus=24
 #PBS -l walltime=00:05:00
-#PBS -A e358
+#PBS -A e05-softm-blu
 
 module load anaconda
 source activate forgenerator
@@ -14,4 +14,4 @@ export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
 # Change to the directory that the job was submitted from
 cd $PBS_O_WORKDIR
 
-python bin/run-fssh.py ARCHER
+python bin/run-fssh.py ARCHER 1
