@@ -913,7 +913,7 @@ class FSSHOSCrystal(CP2KRun):
 
     def _list_carbon(self, mol):
         with open('%s/pos-init.xyz' % self._dir.path, 'r') as molfile:
-            lines = molfile.readlines()
+            lines = molfile.readlines()[2:]
             list_carbon = []
             num_mol = (mol[0] - 1) * self._sizecrystal[1] * self._sizecrystal[2] + \
                       (mol[1] - 1) * self._sizecrystal[2] + \
