@@ -29,7 +29,8 @@ def set_up(list_):
         paths = find_cp2k_path()
         if not check_cp2k_path(paths['cp2k']):
             print "CP2K at: %s is not working. Program stops!" % paths['cp2k']
-            raise SystemExit
+            raise SystemExits
+
     else:
         paths = {}
     paths.update({'bucket': os.getcwd()})

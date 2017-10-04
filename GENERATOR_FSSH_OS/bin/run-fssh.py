@@ -15,7 +15,7 @@ paths, nworker, archer = set_up(sys.argv)
 info = {
     #################### CAN BE CHANGED ###############################################
     #'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
-    'FILE_INIT': ['run-eq-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
+    'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
     'NUMBER_CONFIG': 10,
     'NUMBER_REPEAT': 1,
     'LENGTH_FS':   10,  # LENGTH IN FS

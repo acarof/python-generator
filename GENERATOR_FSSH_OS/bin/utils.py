@@ -1,5 +1,4 @@
-import string, re, struct, sys, math, os, time
-import hashlib
+import string, re, sys, math, os, time
 import subprocess
 from numpy import dot, array, prod, power
 from numpy.linalg import norm
@@ -724,10 +723,12 @@ class FSSHOSCrystal(CP2KRun):
                                 FILENAME ./input
                         &END DUMP_PSF
                 &END TOPOLOGY
+                %s
             """ %\
             (self._get_cell(),
              self._kind(),
-             self._new_psf() )
+             self._new_psf(),
+             self._get_colvar())
             file_.write( self._amend_text(result))
 
     def _get_new_coord(self):
@@ -846,6 +847,82 @@ class FSSHOSCrystal(CP2KRun):
         with open('%s/FORCE_EVAL.include' % self._dir.path, 'w') as file_:
                 file_.write( self._amend_text(result))
 
+    def _get_colvar(self):
+        if self._my_sed_dict['SYSTEM'] == 'OS_SOLVENT':
+            norm_a = norm(array(self._my_sed_dict.get('VECT_A')))
+            norm_b = norm(array(self._my_sed_dict.get('VECT_B')))
+            norm_c = norm(array(self._my_sed_dict.get('VECT_C')))
+            constraint_length = self._my_sed_dict.get('CONSTRAINT_LENGTH')
+            norm_lattice = [norm_a, norm_b, norm_c]
+            with open('%s/CONSTRAINT.include' % self._dir.path, 'w') as fileout:
+                fileout.write('        &CONSTRAINT\n')
+                colvar_return = """
+                """
+                list_mol = [[i, j, k] for i in range(1, self._sizecrystal[0] + 1)
+                            for j in range(1, self._sizecrystal[1] + 1)
+                            for k in range(1, self._sizecrystal[2] + 1)
+                            ]
+                colvar = 0
+                list_mol2 = list_mol
+                for mol in list_mol:
+                    list_mol2.remove(mol)
+                    if (list_mol2 is not None):
+                        for mol2 in list_mol2:
+                            top_vect = abs(array(mol) - array(mol2))
+                            top_dist = norm(top_vect)
+                            if (top_dist <  constraint_length ):
+                                colvar = colvar + 1
+                                result = """\n
+                     &COLLECTIVE
+                          &RESTRAINT
+                                 K              %f
+                          &END RESTRAINT
+                          COLVAR                %d
+                          INTERMOLECULAR
+                          TARGET      [angstrom]          %f
+                     &END COLLECTIVE
+                                 \n     """ \
+                                         % (self._restraint,
+                                            colvar,
+                                            dot(array(norm_lattice), top_vect ))
+                                fileout.write(result)
+                                result = """\n
+                        &COLVAR
+                             &DISTANCE
+                                  &POINT
+                                       ATOMS %s
+                                       TYPE  GEO_CENTER
+                                  &END POINT
+                                  &POINT
+                                       ATOMS %s
+                                       TYPE  GEO_CENTER
+                                  &END POINT
+                                  POINTS 1 2
+                             &END DISTANCE
+                        &END COLVAR
+                        \n
+                        """ % (
+                                    self._list_carbon(mol),
+                                    self._list_carbon(mol2))
+                                colvar_return += result
+                fileout.write('        &END CONSTRAINT\n')
+                return colvar_return
+        else:
+            open('%s/CONSTRAINT.include' % self._dir.path, 'w').write(" ")
+            return " "
+
+    def _list_carbon(self, mol):
+        with open('%s/pos-init.xyz' % self._dir.path, 'r') as molfile:
+            lines = molfile.readlines()
+            list_carbon = []
+            num_mol = (mol[0] - 1) * self._sizecrystal[1] * self._sizecrystal[2] + \
+                      (mol[1] - 1) * self._sizecrystal[2] + \
+                      mol[2] - 1
+            for i in range(self._natom_mol):
+                line = lines[i]
+                if ('C' in line):
+                    list_carbon.append(i + 1 + (num_mol) * self._natom_mol)
+            return '\t'.join(map(str, list_carbon))
 
 
 
