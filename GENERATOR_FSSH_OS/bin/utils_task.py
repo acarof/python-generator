@@ -29,7 +29,8 @@ def set_up(list_):
         paths = find_cp2k_path()
         if not check_cp2k_path(paths['cp2k']):
             print "CP2K at: %s is not working. Program stops!" % paths['cp2k']
-            raise SystemExit
+            raise SystemExits
+
     else:
         paths = {}
     paths.update({'bucket': os.getcwd()})
@@ -173,12 +174,11 @@ def run_fist(system_info,  paths = {}, steps = 1, ndir = 0, restart_info = None,
 def run_fssh( cp2k_info):
     task_info = cp2k_info.get('INPUTS_DICT')
     paths  = cp2k_info.get('PATHS_DICT')
-
-    if task_info['INITIALIZATION'] == 'DIABATIC':
-        run_fssh_from_diabat(cp2k_info, task_info, paths)
-    else:
-        print "NO METHOD IMPLEMENTED FOR INITIALIZATION"
-        sys.exit()
+    #if task_info['INITIALIZATION'] == 'DIABATIC':
+    run_fssh_from_diabat(cp2k_info, task_info, paths)
+    #else:
+    #    print "NO METHOD IMPLEMENTED FOR INITIALIZATION"
+    #    sys.exit()
 
 
 def shorten_log_file(ndir):

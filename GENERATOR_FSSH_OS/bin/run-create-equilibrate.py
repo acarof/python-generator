@@ -10,8 +10,6 @@ from find_crystal_bb import find_crystal_bb
 paths, nworker, archer = set_up(sys.argv)
 
 
-
-
 anthracene = {
     #################### CAN BE CHANGED ###############################################
     'NEQ': 10,                   # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
@@ -38,6 +36,7 @@ anthracene = {
     ##################################################################################
     'TEMPLATE_FILE' : 'FIST_PBC_CRYSTAL.template',         # (do not change)
 }
+
 info = anthracene
 if info.get('ELECTROSTATICS', True):
     info.update({'ALPHA'         :    3.5 / info['RCUT'] })        # ALPHA FOR EWALD})
@@ -121,11 +120,11 @@ anthracene = {
     #################### CAN BE CHANGED ###############################################
     'NEQ': 10,                   # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
     'NCONFIG' : 1,
-    'TEMPERATURE_LIST' : [100],
+    'TEMPERATURE_LIST' : [ 100],
     'TIMESTEP': 0.5,            # TIMESTEP IN FS
 
     #################### CAN BE CHANGED ###############################################
-    'NUMBER_MOL_ACTIVE': 12,  # NUMBER OF ACTIVE MOLECULES
+    'NUMBER_MOL_ACTIVE': 2,  # NUMBER OF ACTIVE MOLECULES
     'DIRECTION': [0, 1, 0],  # DIRECTION TO PROPAGATE THE CHARGE
     'RCUT': 8,  # VDW RCUT
 
