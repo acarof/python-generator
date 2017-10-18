@@ -1,0 +1,43 @@
+#!/bin/bash --login
+
+#PBS -N pbs-cp-fssh
+#PBS -l select=1
+#PBS -l walltime=00:05:00
+#PBS -A e358
+
+module load cp2k
+
+# Move to directory that script was submitted from
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+cd $PBS_O_WORKDIR
+
+# The base directory is the directory that the job was submitted from.
+# All simulations are in subdirectories of this directory.
+basedir=$PBS_O_WORKDIR
+
+CP2K_PATH=/home/e358/e358/acarof/src/CP2K/nonadiabatic/cp2k/exe/ARCHER/cp2k.sopt
+START_RUN=0
+LAST_RUN=0
+KIND=fssh
+
+
+for (( i=$START_RUN; i<=$LAST_RUN; i++ ))
+do
+  cd $basedir/run-${KIND}-$i/
+  aprun -n 1  ${CP2K_PATH} run.inp > run.log &
+done
+
+# Wait for all simulations to complete
+wait
+
+for (( i=$START_RUN; i<=$LAST_RUN; i++ ))
+do
+  cd $basedir/run-${KIND}-$i/
+  rm *restart*
+  rm run-r-1.out
+  rm run-mix-1.ener
+  rm input-1.psf
+done
+
+
+

@@ -1,0 +1,22 @@
+#!/bin/bash --login
+
+#PBS -N clean
+#PBS -l select=1
+#PBS -l walltime=00:01:00
+
+# Make sure you change this to your budget code
+#PBS -A e05-softm-blu
+
+module load anaconda-compute
+#source activate forgenerator
+#module load pc-numpy
+#module load cp2k
+
+# Make sure any symbolic links are resolved to absolute path 
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+
+# Change to the directory that the job was submitted from 
+# (remember this should be on the /work filesystem) 
+cd $PBS_O_WORKDIR
+
+python bin/clean.py

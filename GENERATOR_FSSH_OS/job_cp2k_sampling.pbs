@@ -1,0 +1,33 @@
+#!/bin/bash --login
+
+#PBS -N pbs-cp-sampl
+#PBS -l select=1
+#PBS -l walltime=0:05:00
+#PBS -A e05-softm-blu
+
+module load cp2k
+
+# Move to directory that script was submitted from
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+cd $PBS_O_WORKDIR
+
+# The base directory is the directory that the job was submitted from.
+# All simulations are in subdirectories of this directory.
+basedir=$PBS_O_WORKDIR
+
+CP2K_PATH=/work/e05/e05/acarofmc/src/CP2K/nonadiabatic-cp2k/cp2k/exe/ARCHER/cp2k.popt
+START_RUN=0
+LAST_RUN=0
+KIND=sample
+
+
+for (( i=$START_RUN; i<=$LAST_RUN; i++ ))
+do
+  cd $basedir/run-${KIND}-$i/
+  aprun -n 24  ${CP2K_PATH} run.inp > run.log &
+done
+
+# Wait for all simulations to complete
+wait
+
+
