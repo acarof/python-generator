@@ -1,7 +1,7 @@
 #!/bin/bash --login
 
 #PBS -N pbs-farm-fssh
-#PBS -l select=1
+#PBS -l select=250
 #PBS -l walltime=00:05:00
 #PBS -A e05-softm-blu
 
@@ -9,6 +9,10 @@
 export PMI_NO_FORK=1
 export CORES_PER_EXE=1
 export CORES_PER_NODE=24
+
+export repeat=1
+export sleeptimehere=1800  # in second
+export CP2K_PATH=/work/e05/e05/acarofmc/src/CP2K/nonadiabatic-cp2k/cp2k/exe/ARCHER/cp2k.sopt
 
 module load cp2k
 module load leave_time
