@@ -11,8 +11,8 @@ paths, nworker, archer = set_up(sys.argv)
 
 info = {
     #################### CAN BE CHANGED ###############################################
-    'NCONFIG' : 100,             # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVT)
-    'NPROD' : 100,
+    'NCONFIG' : 10,                     # NUMBER OF CONFIGS TO WRITE
+    'NPROD' : 100,                      # NUMBER OF TIMESTEP FOR EQUILIBRATION (NVE)
     'FILE_INIT': ['run-eq-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
     'TIMESTEP': 0.5,  # TIMESTEP IN FS
 
