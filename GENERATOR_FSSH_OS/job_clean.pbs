@@ -2,7 +2,7 @@
 
 #PBS -N clean
 #PBS -l select=1
-#PBS -l walltime=00:01:00
+#PBS -l walltime=00:10:00
 
 # Make sure you change this to your budget code
 #PBS -A e05-softm-blu

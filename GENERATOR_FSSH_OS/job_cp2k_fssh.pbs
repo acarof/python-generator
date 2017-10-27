@@ -2,8 +2,8 @@
 
 #PBS -N pbs-cp-fssh
 #PBS -l select=1
-#PBS -l walltime=00:05:00
-#PBS -A e358
+#PBS -l walltime=02:00:00
+#PBS -A e05-softm-blu
 
 module load cp2k
 
@@ -15,7 +15,7 @@ cd $PBS_O_WORKDIR
 # All simulations are in subdirectories of this directory.
 basedir=$PBS_O_WORKDIR
 
-CP2K_PATH=/home/e358/e358/acarof/src/CP2K/nonadiabatic/cp2k/exe/ARCHER/cp2k.sopt
+CP2K_PATH=/work/e05/e05/acarofmc/bin/cp2k.sopt
 START_RUN=0
 LAST_RUN=0
 KIND=fssh

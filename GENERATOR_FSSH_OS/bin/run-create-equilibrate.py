@@ -18,7 +18,7 @@ anthracene = {
     'TIMESTEP': 0.5,            # TIMESTEP IN FS
 
     #################### CAN BE CHANGED ###############################################
-    'NUMBER_MOL_ACTIVE': 2,  # NUMBER OF ACTIVE MOLECULES
+    'NUMBER_MOL_ACTIVE': 12,  # NUMBER OF ACTIVE MOLECULES
     'DIRECTION': [0, 1, 0],  # DIRECTION TO PROPAGATE THE CHARGE
     'RCUT': 8,  # VDW RCUT
 
