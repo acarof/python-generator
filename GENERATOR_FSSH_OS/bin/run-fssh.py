@@ -15,7 +15,7 @@ paths, nworker, archer = set_up(sys.argv)
 info = {
     #################### CAN BE CHANGED ###############################################
     #'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
-    'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
+    'FILE_INIT': ['run-sample-%s' % x for x in range(2)],  # NAME OF THE RUN OF INITIALIZATION
     'NUMBER_CONFIG': 10,
     'NUMBER_REPEAT': 1,
     'LENGTH_FS':   10,  # LENGTH IN FS
@@ -30,7 +30,7 @@ cp2k_param = [
     ['SCALING', 0.06685],  # SCALING FACTOR IN HARTREE (C = 1.819 eV)
     ['TIMESTEP', 0.5],  # TIMESTEP IN FS
     ['REPEAT'] + range(info.get('NUMBER_REPEAT')),  # NUMBER OF FSSH RUN PER STARTING POINT
-    ['FILE_INIT'] + info['FILE_INIT'],
+    #['FILE_INIT'] + info['FILE_INIT'],
     ###################################################################################
     ['DECOHERENCE_CORRECTIONS', 'DAMPING'],
     ['DECO_TIME', 'FORCES_BASED'],
@@ -51,9 +51,10 @@ mega_list = []
 for init in info['FILE_INIT']:
     system_info = (InputFile('%s/system.info' % init).dict)
     system_info.update({'AOM_RADIUS' : info['AOM_RADIUS']})
+    system_info.update({'FILE_INIT' : init})
     system_info = add_list_activated(system_info, init)
     list_config_init = range(0, system_info['NPROD_INIT'], system_info['NPROD_INIT'] / system_info['NCONFIG_INIT'])
-    cp2k_param_here = cp2k_param
+    cp2k_param_here = list(cp2k_param)
     cp2k_param_here.append(['INIT'] + [list_config_init[x] for x in
      range(0, len(list_config_init), len(list_config_init) / info['NUMBER_CONFIG'])])
     second_list = [sublist[1:] for sublist in cp2k_param_here]
@@ -62,7 +63,7 @@ for init in info['FILE_INIT']:
         subdict = {}
         for index in range(len(sublist)):
             subdict.update({
-                cp2k_param[index][0]: sublist[index]
+                cp2k_param_here[index][0]: sublist[index]
             })
         subdict.update(system_info)
         subdict.update({'ARCHER' : archer})
@@ -72,7 +73,6 @@ for ndir in range(len(mega_list)):
                             'PATHS_DICT': paths,
                             'INPUTS_DICT': info
                             })
-
 
 
 
