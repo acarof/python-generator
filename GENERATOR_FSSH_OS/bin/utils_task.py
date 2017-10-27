@@ -182,14 +182,14 @@ def run_fssh( cp2k_info):
 
 
 def shorten_log_file(ndir):
-    with open('run-%s/run.log' % ndir) as oldlog, open('run-%s/new.log' % ndir, 'w') as newlog:
+    with open('run-fssh-%s/run.log' % ndir) as oldlog, open('run-fssh-%s/new.log' % ndir, 'w') as newlog:
         result = ' '.join([next(oldlog) for x in xrange(100)])
         result += ' '.join(deque(oldlog, 100))
         newlog.write(result)
-    os.system('mv run-%s/new.log run-%s/run.log' % (ndir, ndir))
-    os.system('rm run-%s/run-r-1.out' % ndir)
-    os.system('rm run-%s/run-mix-1.ener' % ndir)
-    os.system('rm run-%s/core.*' % ndir)
+    os.system('mv run-fssh-%s/new.log run-fssh-%s/run.log' % (ndir, ndir))
+    os.system('rm run-fssh-%s/run-r-1.out' % ndir)
+    os.system('rm run-fssh-%s/run-mix-1.ener' % ndir)
+    os.system('rm run-fssh-%s/core.*' % ndir)
 
 
 def run_fssh_from_diabat(cp2k_info, task_info, paths):
