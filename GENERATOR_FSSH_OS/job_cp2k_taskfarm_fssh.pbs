@@ -9,18 +9,18 @@
 export PMI_NO_FORK=1
 export CORES_PER_EXE=1
 export CORES_PER_NODE=24
+export CORES_PER_JOB=`qstat -f $PBS_JOBID | awk '/Resource_List.ncpus/ {print $3}'`
+export LOGFILE=$PBS_JOBNAME.log${PBS_JOBID}
 
-export repeat=1
-export sleeptimehere=1800  # in second
 export CP2K_PATH=/work/e05/e05/acarofmc/src/CP2K/nonadiabatic-cp2k/cp2k/exe/ARCHER/cp2k.sopt
-
-module load cp2k
-module load leave_time
-
 
 # Move to directory that script was submitted from
 export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
 cd $PBS_O_WORKDIR
+
+# LOAD MODULE
+module load cp2k
+
 
 TASK=task-for-fssh-taskfarm.sh
 

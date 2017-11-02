@@ -17,8 +17,8 @@ info = {
     #'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
     'FILE_INIT_TITLE': 'TASK345-DIMER-BO-Long200ps_0.1fs_0.2lambda-171002-3ea76b49287023fbfed1817018642dd4',  # NAME OF THE RUN OF INITIALIZATION
     'NUMBER_CONFIG': 1,
-    'NUMBER_REPEAT': 10,
-    'LENGTH_FS':   1000,  # LENGTH IN FS
+    'NUMBER_REPEAT': 24,
+    'LENGTH_FS':   200,  # LENGTH IN FS
     'AOM_RADIUS' : 3.0,
     #'SCALING' : [0.03, 0.02, 0.01, 0.008, 0.003, 0.0005],
     'SCALING' : [0.03],
