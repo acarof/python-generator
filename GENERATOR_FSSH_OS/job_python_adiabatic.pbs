@@ -2,7 +2,7 @@
 
 #PBS -N pbs-py-fssh
 #PBS -l select=serial=true:ncpus=24
-#PBS -l walltime=00:05:00
+#PBS -l walltime=00:30:00
 #PBS -A e05-softm-blu
 
 module load anaconda

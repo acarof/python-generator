@@ -1,0 +1,25 @@
+#!/bin/bash --login
+
+#PBS -N pbs-py-archive
+#PBS -l select=serial=true:ncpus=24
+#PBS -l walltime=01:00:00
+#PBS -A e05-softm-blu
+
+
+# Make sure any symbolic links are resolved to absolute path
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+
+# Change to the directory that the job was submitted from
+cd $PBS_O_WORKDIR
+
+FILES=*
+for f in $FILES
+do
+  echo "Processing $f file..."
+  if [[ $f == *"run-"* ]]; then
+     tar -czvf $f.tar.gz $f
+     echo "It's there!"
+     rm -rf $f
+  fi
+  # take action on each file. $f store current file name
+done
