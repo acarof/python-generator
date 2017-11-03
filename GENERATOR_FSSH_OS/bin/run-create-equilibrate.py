@@ -18,9 +18,10 @@ anthracene = {
     'TIMESTEP': 0.5,            # TIMESTEP IN FS
 
     #################### CAN BE CHANGED ###############################################
-    'NUMBER_MOL_ACTIVE': 2,  # NUMBER OF ACTIVE MOLECULES
+    'NUMBER_MOL_ACTIVE': 12,  # NUMBER OF ACTIVE MOLECULES
     'DIRECTION': [0, 1, 0],  # DIRECTION TO PROPAGATE THE CHARGE
     'RCUT': 8,  # VDW RCUT
+    'COORD_CHARGE' : 'FIRST',
 
     ###################################################################################
     'SYSTEM': 'PBC_CRYSTAL',  # (do not change)
@@ -56,8 +57,15 @@ if  info['SYSTEM'] == 'PBC_CRYSTAL':
         radius=info['RCUT']
     )
     print "First molecules of the chain: ", coord_first
-    coord_charge = [int(x) for x in (numpy.array(coord_first) \
-                                     + (numpy.ceil(info['NUMBER_MOL_ACTIVE'] / 2)) * numpy.array(info['DIRECTION']))]
+    if info['COORD_CHARGE'] == 'MIDDLE':
+        coord_charge = [int(x) for x in (numpy.array(coord_first) \
+                                         + (numpy.ceil(info['NUMBER_MOL_ACTIVE'] / 2)) * numpy.array(info['DIRECTION']))]
+    elif info['COORD_CHARGE'] == 'FIRST':
+        coord_charge = coord_first
+    else:
+        print "'COORD_CHARGE' in info should be 'MIDDLE or 'FIRST"
+        raise SystemExit
+
     print "Coord charge: ", coord_charge
     info.update({
         'SIZE_CRYSTAL': size_crystal,
