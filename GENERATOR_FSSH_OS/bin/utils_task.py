@@ -91,8 +91,17 @@ def add_list_activated(system_info, init):
                 nmol_unit=system_info['NMOL_UNIT']
 
             ),
-            'FIRST_DIABAT': int(numpy.ceil(system_info['NUMBER_MOL_ACTIVE'] / 2)) + 1
         })
+        if system_info['POS_CHARGE'] == 'MIDDLE':
+            system_info.update({
+                'FIRST_DIABAT': int(numpy.ceil(system_info['NUMBER_MOL_ACTIVE'] / 2)) + 1 })
+        elif system_info['POS_CHARGE'] == 'FIRST':
+            system_info.update({
+                'FIRST_DIABAT': 1 })
+        else:
+            print "'POS_CHARGE' in info should be 'MIDDLE or 'FIRST"
+            raise SystemExit
+
     elif system_info['SYSTEM'] == 'OS_SOLVENT':
         nmol = prod(system_info.get('SIZE_CRYSTAL'))*system_info['NMOL_UNIT']
         system_info['LIST_ACTIVATED'] = range(1, nmol+1)
