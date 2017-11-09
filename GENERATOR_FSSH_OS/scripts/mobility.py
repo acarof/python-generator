@@ -1,7 +1,6 @@
 # standard modules
-import sys, os, time
+import sys,os, time
 from multiprocessing import Pool, cpu_count
-
 
 # custom modudules
 from utils_analyse import *
@@ -11,7 +10,7 @@ keywords = ['TEMPERATURE']
 dict_properties = {
     'Block-runs-average' : ['MSD']
 }
-number_blocks = 1
+number_blocks = 5
 # FOR HISTO
 nbin=100
 max_ = 0.004
