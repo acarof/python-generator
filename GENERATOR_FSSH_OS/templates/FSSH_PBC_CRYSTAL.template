@@ -93,6 +93,12 @@
                              @INCLUDE AOM_COEFF.include
                         &END AOM
                         &PRINT
+                            #&PVECS LOW
+                            #   &EACH
+                            #       MD          2
+                            #   &END EACH
+                            #&END PVECS
+
                             &COEFFICIENTS  LOW
                                &EACH
                                    MD          sedPRINT_FSSH

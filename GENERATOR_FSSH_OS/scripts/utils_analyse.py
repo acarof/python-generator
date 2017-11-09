@@ -83,7 +83,7 @@ def initialize_properties_dict(properties_dict, dict_properties, number_blocks, 
                 dict_[property] = [{}] * number_blocks
             elif method == 'Runs-average':
                 dict_[property] = {}
-            elif method in ['Mean', 'Specific', 'Initial']:
+            elif method in ['Mean', 'Specific', 'Initial', 'Last']:
                 dict_[property] = []
                 dict_[property + 'info'] = ''
             elif method == 'Histogram':
@@ -119,7 +119,7 @@ def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, hist
                 prop = dir.extract(property)
                 if method == 'Block-runs-average':
                     block = int(index / length_block)
-                    print block
+                    #print block
                     dict_[property][block] = sum_two_dict(dict_.get(property)[block], prop)
                 elif method == 'Runs-average':
                     dict_[property] = sum_two_dict(dict_.get(property), prop)
@@ -134,7 +134,13 @@ def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, hist
                     dict_[property + 'info'] += line
                 elif method == 'Initial':
                     #prop = dir.extract(property, init = True)
-                    line = '%s      %s\n' % (directory, '    '.join(map(str, prop.values()[0])))
+                    line = '%s      %s\n' % (directory, '    '.join(map(str, prop[min(prop.keys())])))
+                    dict_[property + 'info'] += line
+                elif method == 'Last':
+                    try:
+                        line = '%s      %s\n' % (directory, '    '.join(map(str, prop[max(prop.keys())])))
+                    except:
+                        line = '%s      %s\n' % (directory, str(prop[max(prop.keys())]))
                     dict_[property + 'info'] += line
                 elif method == 'Histogram':
                     nbin = histo_info[property]['nbin']
