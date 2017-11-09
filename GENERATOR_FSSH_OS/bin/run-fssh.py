@@ -16,7 +16,7 @@ info = {
     #################### CAN BE CHANGED ###############################################
     #'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
     'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
-    'NUMBER_CONFIG': 5,
+    'NUMBER_CONFIG': 1,
     'NUMBER_REPEAT': 1,
     'LENGTH_FS':   20,  # LENGTH IN FS
     'AOM_RADIUS' : 3.0,

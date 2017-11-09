@@ -66,9 +66,22 @@ class FSSHRun(object):
             return self._extract_adiabatic_energies()
         elif property == 'MSD':
             return self._extract_msd()
+        elif property == 'IPR':
+            return self._extract_ipr()
         else:
             print "Extraction of %s not implemented" % property
             raise SystemExit
+
+    def _extract_ipr(self):
+        populations = self._extract_population()
+        result = {}
+        for time, pop in populations.items():
+            ipr = 0
+            for popi in pop:
+                ipr += popi**2
+            ipr = 1.0/ipr
+            result[time] = ipr
+        return result
 
     def _extract_msd(self):
         populations = self._extract_population()
@@ -77,7 +90,7 @@ class FSSHRun(object):
         pos0 = 0.0
         for (x,y) in zip(populations[0.0], com[0.0]):
             pos0 +=  x *y
-        print pos0
+        print "pos0", pos0
         for time, pop in populations.items():
             if com.get(time):
                 msd = 0.0

@@ -10,12 +10,13 @@ from utils_analyse import *
 scripts = 'general'
 keywords = ['TEMPERATURE']
 dict_properties = {
-    'Runs-average' :  ['Adiabatic-populations', 'Surface-populations', 'Delta_E', 'Populations', 'MSD'],
+    'Runs-average' :  ['Adiabatic-populations', 'Surface-populations', 'Delta_E', 'Populations', 'MSD', 'IPR'],
     'Block-runs-average' : [ 'MSD'],
     'Specific' : ['FSSH', 'Detailed-FSSH'],
     'Mean' : ['Total-energy', 'Temperature'],
     'Histogram' : ['Off-diagonals', 'Delta_E'],
-    'Initial'   : ['Delta_E']
+    'Initial'   : ['Delta_E'],
+    'Last' : ['IPR']
 }
 number_blocks = 5
 # FOR HISTO
@@ -87,7 +88,7 @@ with open('%s/List-tuple.dat' % dataname, 'w') as filetuple:
         for method in dict_properties:
             dict_ = properties[method]
             for property in dict_properties[method]:
-                if method in ['Mean', 'Specific', 'Initial']:
+                if method in ['Mean', 'Specific', 'Initial', 'Last']:
                     create_file(property, title, dict_[property + 'info'], method, dataname, tuple=tuple)
                 elif method == 'Runs-average':
                     dict_[property] = average_dict(dict_[property], properties['Number runs'])
