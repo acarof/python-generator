@@ -100,7 +100,10 @@ class FSSHRun(object):
 
                 state = states[time][0] - 1 # warning
                 #print state
-                coeff = eigenvectors[state]
+                #print eigenvalues
+                coeff = eigenvectors[:, state]
+                #print coeff
+                #print np.dot(hamilt, coeff)
                 #print coeff
                 populations =  [ np.absolute(x)**2 for x in coeff]
                 #print populations
