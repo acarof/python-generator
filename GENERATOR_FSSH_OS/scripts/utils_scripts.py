@@ -65,15 +65,51 @@ class FSSHRun(object):
         elif property == 'Adiabatic-energies':
             return self._extract_adiabatic_energies()
         elif property == 'MSD':
-            return self._extract_msd()
+            populations = self._extract_population()
+            return self._extract_msd(populations)
         elif property == 'IPR':
-            return self._extract_ipr()
+            populations = self._extract_population()
+            return self._extract_ipr(populations)
+        elif property == 'Projected-populations':
+            return self._extract_projected_populations()
+        elif property == 'Projected-MSD':
+            populations = self._extract_projected_populations()
+            return self._extract_msd(populations)
+        elif property == 'Projected-IPR':
+            populations = self._extract_projected_populations()
+            return self._extract_ipr(populations)
         else:
             print "Extraction of %s not implemented" % property
             raise SystemExit
 
-    def _extract_ipr(self):
-        populations = self._extract_population()
+    def _extract_projected_populations(self):
+        result = {}
+        states = self._extract_state()
+        for time in self.hamiltonians:
+            if states.get(time) is not None:
+                hamilt = np.transpose( self.hamiltonians[time])[2:]
+                #print hamilt
+                eigenvalues, eigenvectors = np.linalg.eig( hamilt )
+                #print eigenvalues
+                #print eigenvectors
+                idx = eigenvalues.argsort()
+                eigenvalues = eigenvalues[idx]
+                #print eigenvalues
+                eigenvectors = eigenvectors[:, idx]
+                #print eigenvectors
+
+                state = states[time][0] - 1 # warning
+                #print state
+                coeff = eigenvectors[state]
+                #print coeff
+                populations =  [ np.absolute(x)**2 for x in coeff]
+                #print populations
+                result[time] = populations
+        return result
+
+
+    def _extract_ipr(self, populations):
+        #populations = self._extract_population()
         result = {}
         for time, pop in populations.items():
             ipr = 0
@@ -83,8 +119,8 @@ class FSSHRun(object):
             result[time] = ipr
         return result
 
-    def _extract_msd(self):
-        populations = self._extract_population()
+    def _extract_msd(self, populations):
+        #populations = self._extract_population()
         com = self._extract_com()
         result = {}
         pos0 = 0.0
