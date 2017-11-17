@@ -78,9 +78,48 @@ class FSSHRun(object):
         elif property == 'Projected-IPR':
             populations = self._extract_projected_populations()
             return self._extract_ipr(populations)
+        elif property == 'MQC-populations':
+            return self._extract_mqc_populations()
+        elif property == 'MQC-MSD':
+            populations = self._extract_mqc_populations()
+            return self._extract_msd(populations)
+        elif property == 'MQC-IPR':
+            populations = self._extract_mqc_populations()
+            return self._extract_ipr(populations)
         else:
             print "Extraction of %s not implemented" % property
             raise SystemExit
+
+    def _extract_mqc_populations(self):
+        result = {}
+        states = self._extract_state()
+        for time in self.hamiltonians:
+            if (self.coefficients.get(time) is not None) and (states.get(time) is not None):
+                diabat = [np.complex(coeff[2], coeff[3]) for coeff in self.coefficients[time]]
+                pop = np.array([np.absolute(x) ** 2 for x in diabat])
+                #print "populations", pop
+
+                hamilt = np.transpose( self.hamiltonians[time])[2:]
+                eigenvalues, eigenvectors = np.linalg.eig( hamilt )
+                idx = eigenvalues.argsort()
+                eigenvectors = eigenvectors[:, idx]
+
+                state = states[time][0] - 1
+                pop += np.array([ np.absolute(x)**2 for x in eigenvectors[:, state]])
+                #print "projected", np.array([ np.absolute(x)**2 for x in eigenvectors[:, state]])
+                #print "pop", pop
+
+                adiabat = np.dot( eigenvectors.transpose(), diabat)
+                pop_adiab = [np.absolute(x) ** 2 for x in adiabat]
+                #print "pop_adiab", pop_adiab
+                for state in range(len(pop_adiab)):
+                    pop += - pop_adiab[state]*np.array([ np.absolute(x)**2 for x in eigenvectors[:, state]])
+                    #print "adiab_pop",  pop_adiab[state]
+                    #print "eigen", np.array([ np.absolute(x)**2 for x in eigenvectors[:, state]])
+                    #print "correction", pop
+
+                result[time] = pop
+        return result
 
     def _extract_projected_populations(self):
         result = {}
