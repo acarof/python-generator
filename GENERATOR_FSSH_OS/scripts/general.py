@@ -6,17 +6,19 @@ from multiprocessing import Pool, cpu_count
 # custom modudules
 from utils_analyse import *
 
-
 scripts = 'general'
 keywords = ['TEMPERATURE']
 dict_properties = {
-    'Runs-average' :  ['Adiabatic-populations', 'Surface-populations', 'Delta_E', 'Populations', 'MSD', 'IPR'],
-    'Block-runs-average' : [ 'MSD'],
+    'Runs-average' :  ['Adiabatic-populations', 'Surface-populations', 'Delta_E',
+                       'Populations', 'MSD', 'IPR',
+                       'Projected-populations', 'Projected-MSD', 'Projected-IPR',
+                       'MQC-populations', 'MQC-MSD', 'MQC-IPR'],
+    'Block-runs-average' : [ 'MSD', 'Projected-MSD', 'MQC-MSD'],
     'Specific' : ['FSSH', 'Detailed-FSSH'],
     'Mean' : ['Total-energy', 'Temperature'],
     'Histogram' : ['Off-diagonals', 'Delta_E'],
     'Initial'   : ['Delta_E'],
-    'Last' : ['IPR']
+    'Last' : ['IPR', 'Projected-IPR', 'MQC-IPR']
 }
 number_blocks = 5
 # FOR HISTO
