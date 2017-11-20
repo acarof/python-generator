@@ -4,30 +4,30 @@ PSF
  REMARKS VMD-generated NAMD/X-Plor PSF structure file
 
       24 !NATOM
-         1 ANTC     1        RES1     CC      CC      -0.06127        12.0110          0
-         2 ANTC     1        RES1     CB      CB      -0.03965        12.0110          0
-         3 ANTC     1        RES1     CP      CP      -0.04947        12.0110          0
-         4 ANTC     1        RES1     CA      CA      0.040699        12.0110          0
-         5 ANTC     1        RES1     CP      CP      -0.08032        12.0110          0
-         6 ANTC     1        RES1     CB      CB      -0.03165        12.0110          0
-         7 ANTC     1        RES1     CC      CC      -0.06968        12.0110          0
-         8 ANTC     1        RES1     H       H       0.160854        1.0080           0
-         9 ANTC     1        RES1     H       H       0.15833         1.0080           0
-        10 ANTC     1        RES1     H       H       0.146939        1.0080           0
-        11 ANTC     1        RES1     H       H       0.158986        1.0080           0
-        12 ANTC     1        RES1     H       H       0.162269        1.0080           0
-        13 ANTC     1        RES1     CP      CP      -0.06857        12.0110          0
-        14 ANTC     1        RES1     CA      CA      0.062585        12.0110          0
-        15 ANTC     1        RES1     CP      CP      -0.08450        12.0110          0
-        16 ANTC     1        RES1     CB      CB      -0.02916        12.0110          0
-        17 ANTC     1        RES1     H       H       0.143577        1.0080           0
-        18 ANTC     1        RES1     CB      CB      -0.02165        12.0110          0
-        19 ANTC     1        RES1     CC      CC      -0.06719        12.0110          0
-        20 ANTC     1        RES1     H       H       0.158456        1.0080           0
-        21 ANTC     1        RES1     CC      CC      -0.07237        12.0110          0
-        22 ANTC     1        RES1     H       H       0.156642        1.0080           0
-        23 ANTC     1        RES1     H       H       0.162619        1.0080           0
-        24 ANTC     1        RES1     H       H       0.16358         1.0080           0
+         1 ANTC     1        RES1     CC      CC      0.0             12.0110          0
+         2 ANTC     1        RES1     CB      CB      0.0             12.0110          0
+         3 ANTC     1        RES1     CP      CP      0.0             12.0110          0
+         4 ANTC     1        RES1     CA      CA      0.0             12.0110          0
+         5 ANTC     1        RES1     CP      CP      0.0             12.0110          0
+         6 ANTC     1        RES1     CB      CB      0.0             12.0110          0
+         7 ANTC     1        RES1     CC      CC      0.0             12.0110          0
+         8 ANTC     1        RES1     H       H       0.0             1.0080           0
+         9 ANTC     1        RES1     H       H       0.0             1.0080           0
+        10 ANTC     1        RES1     H       H       0.0             1.0080           0
+        11 ANTC     1        RES1     H       H       0.0             1.0080           0
+        12 ANTC     1        RES1     H       H       0.0             1.0080           0
+        13 ANTC     1        RES1     CP      CP      0.0             12.0110          0
+        14 ANTC     1        RES1     CA      CA      0.0             12.0110          0
+        15 ANTC     1        RES1     CP      CP      0.0             12.0110          0
+        16 ANTC     1        RES1     CB      CB      0.0             12.0110          0
+        17 ANTC     1        RES1     H       H       0.0             1.0080           0
+        18 ANTC     1        RES1     CB      CB      0.0             12.0110          0
+        19 ANTC     1        RES1     CC      CC      0.0             12.0110          0
+        20 ANTC     1        RES1     H       H       0.0             1.0080           0
+        21 ANTC     1        RES1     CC      CC      0.0             12.0110          0
+        22 ANTC     1        RES1     H       H       0.0             1.0080           0
+        23 ANTC     1        RES1     H       H       0.0             1.0080           0
+        24 ANTC     1        RES1     H       H       0.0             1.0080           0
 
       26 !NBOND: bonds
        1       2       1       7       1       8       2       3

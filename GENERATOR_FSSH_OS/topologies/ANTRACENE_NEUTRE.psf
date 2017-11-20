@@ -4,30 +4,30 @@ PSF
  REMARKS VMD-generated NAMD/X-Plor PSF structure file
 
       24 !NATOM
-         1 ANTN     1       ANTN      CA      CA      -0.1267         12.0110          0
-         2 ANTN     1       ANTN      CA      CA      -0.1177         12.0110          0
-         3 ANTN     1       ANTN      CP      CP      -0.0337         12.0110          0
-         4 ANTN     1       ANTN      CA      CA      -0.1068         12.0110          0
-         5 ANTN     1       ANTN      CP      CP      -0.0337         12.0110          0
-         6 ANTN     1       ANTN      CA      CA      -0.1177         12.0110          0
-         7 ANTN     1       ANTN      CA      CA      -0.1267         12.0110          0
-         8 ANTN     1       ANTN      H       H       0.1322          1.0080           0
-         9 ANTN     1       ANTN      H       H       0.1322          1.0080           0
-        10 ANTN     1       ANTN      H       H       0.1342          1.0080           0
-        11 ANTN     1       ANTN      H       H       0.1322          1.0080           0
-        12 ANTN     1       ANTN      H       H       0.1322          1.0080           0
-        13 ANTN     1       ANTN      CP      CP      -0.0337         12.0110          0
-        14 ANTN     1       ANTN      CA      CA      -0.1068         12.0110          0
-        15 ANTN     1       ANTN      CP      CP      -0.0337         12.0110          0
-        16 ANTN     1       ANTN      CA      CA      -0.1177         12.0110          0
-        17 ANTN     1       ANTN      H       H       0.1342          1.0080           0
-        18 ANTN     1       ANTN      CA      CA      -0.1177         12.0110          0
-        19 ANTN     1       ANTN      CA      CA      -0.1267         12.0110          0
-        20 ANTN     1       ANTN      H       H       0.1322          1.0080           0
-        21 ANTN     1       ANTN      CA      CA      -0.1267         12.0110          0
-        22 ANTN     1       ANTN      H       H       0.1322          1.0080           0
-        23 ANTN     1       ANTN      H       H       0.1322          1.0080           0
-        24 ANTN     1       ANTN      H       H       0.1322          1.0080           0
+         1 RES3     1       ANTN      CA      CA      0.0000         12.0110          0
+         2 RES3     1       ANTN      CA      CA      0.0000         12.0110          0
+         3 RES3     1       ANTN      CP      CP      0.0000         12.0110          0
+         4 RES3     1       ANTN      CA      CA      0.0000         12.0110          0
+         5 RES3     1       ANTN      CP      CP      0.0000         12.0110          0
+         6 RES3     1       ANTN      CA      CA      0.0000         12.0110          0
+         7 RES3     1       ANTN      CA      CA      0.0000         12.0110          0
+         8 RES3     1       ANTN      H       H       0.0000         1.0080           0
+         9 RES3     1       ANTN      H       H       0.0000         1.0080           0
+        10 RES3     1       ANTN      H       H       0.0000         1.0080           0
+        11 RES3     1       ANTN      H       H       0.0000         1.0080           0
+        12 RES3     1       ANTN      H       H       0.0000         1.0080           0
+        13 RES3     1       ANTN      CP      CP      0.0000         12.0110          0
+        14 RES3     1       ANTN      CA      CA      0.0000         12.0110          0
+        15 RES3     1       ANTN      CP      CP      0.0000         12.0110          0
+        16 RES3     1       ANTN      CA      CA      0.0000         12.0110          0
+        17 RES3     1       ANTN      H       H       0.0000         1.0080           0
+        18 RES3     1       ANTN      CA      CA      0.0000         12.0110          0
+        19 RES3     1       ANTN      CA      CA      0.0000         12.0110          0
+        20 RES3     1       ANTN      H       H       0.0000         1.0080           0
+        21 RES3     1       ANTN      CA      CA      0.0000         12.0110          0
+        22 RES3     1       ANTN      H       H       0.0000         1.0080           0
+        23 RES3     1       ANTN      H       H       0.0000         1.0080           0
+        24 RES3     1       ANTN      H       H       0.0000         1.0080           0
 
       26 !NBOND: bonds
        1       2       1       7       1       8       2       3
