@@ -73,80 +73,53 @@ class FSSHRun(object):
         elif property == 'Projected-populations':
             return self._extract_projected_populations()
         elif property == 'Projected-MSD':
-            populations = self._extract_projected_populations()
-            return self._extract_msd(populations)
+            return self._extract_msd(self._extract_projected_populations())
         elif property == 'Projected-IPR':
-            populations = self._extract_projected_populations()
-            return self._extract_ipr(populations)
+            return self._extract_ipr(self._extract_projected_populations())
         elif property == 'MQC-populations':
             return self._extract_mqc_populations()
         elif property == 'MQC-MSD':
-            populations = self._extract_mqc_populations()
-            return self._extract_msd(populations)
+            return self._extract_msd(self._extract_mqc_populations())
         elif property == 'MQC-IPR':
-            populations = self._extract_mqc_populations()
-            return self._extract_ipr(populations)
+            return self._extract_ipr( self._extract_mqc_populations()  )
         else:
             print "Extraction of %s not implemented" % property
             raise SystemExit
 
     def _extract_mqc_populations(self):
-        result = {}
-        states = self._extract_state()
-        for time in self.hamiltonians:
-            if (self.coefficients.get(time) is not None) and (states.get(time) is not None):
-                diabat = [np.complex(coeff[2], coeff[3]) for coeff in self.coefficients[time]]
-                pop = np.array([np.absolute(x) ** 2 for x in diabat])
-                #print "populations", pop
+        try:
+            result = self._mqc_populations
+        except:
+            result = {}
+            for time, eigenvectors in self._extract_eigenvectors().iteritems():
+                if (self.coefficients.get(time) is not None) and (self._extract_state().get(time) is not None):
+                    diabat = [np.complex(coeff[2], coeff[3]) for coeff in self.coefficients[time]]
+                    pop = np.array([np.absolute(x) ** 2 for x in diabat])
 
-                hamilt = np.transpose( self.hamiltonians[time])[2:]
-                eigenvalues, eigenvectors = np.linalg.eig( hamilt )
-                idx = eigenvalues.argsort()
-                eigenvectors = eigenvectors[:, idx]
+                    state = self._states[time][0] - 1
+                    pop += np.array([ np.absolute(x)**2 for x in eigenvectors[:, state]])
 
-                state = states[time][0] - 1
-                pop += np.array([ np.absolute(x)**2 for x in eigenvectors[:, state]])
-                #print "projected", np.array([ np.absolute(x)**2 for x in eigenvectors[:, state]])
-                #print "pop", pop
+                    adiabat = np.dot( eigenvectors.transpose(), diabat)
+                    pop_adiab = [np.absolute(x) ** 2 for x in adiabat]
+                    for state in range(len(pop_adiab)):
+                        pop += - pop_adiab[state]*np.array([ np.absolute(x)**2 for x in eigenvectors[:, state]])
 
-                adiabat = np.dot( eigenvectors.transpose(), diabat)
-                pop_adiab = [np.absolute(x) ** 2 for x in adiabat]
-                #print "pop_adiab", pop_adiab
-                for state in range(len(pop_adiab)):
-                    pop += - pop_adiab[state]*np.array([ np.absolute(x)**2 for x in eigenvectors[:, state]])
-                    #print "adiab_pop",  pop_adiab[state]
-                    #print "eigen", np.array([ np.absolute(x)**2 for x in eigenvectors[:, state]])
-                    #print "correction", pop
-
-                result[time] = pop
+                    result[time] = pop
+            self._mqc_populations = result
         return result
 
     def _extract_projected_populations(self):
-        result = {}
-        states = self._extract_state()
-        for time in self.hamiltonians:
-            if states.get(time) is not None:
-                hamilt = np.transpose( self.hamiltonians[time])[2:]
-                #print hamilt
-                eigenvalues, eigenvectors = np.linalg.eig( hamilt )
-                #print eigenvalues
-                #print eigenvectors
-                idx = eigenvalues.argsort()
-                eigenvalues = eigenvalues[idx]
-                #print eigenvalues
-                eigenvectors = eigenvectors[:, idx]
-                #print eigenvectors
-
-                state = states[time][0] - 1 # warning
-                #print state
-                #print eigenvalues
-                coeff = eigenvectors[:, state]
-                #print coeff
-                #print np.dot(hamilt, coeff)
-                #print coeff
-                populations =  [ np.absolute(x)**2 for x in coeff]
-                #print populations
-                result[time] = populations
+        try:
+            result = self._projected_populations
+        except:
+            result = {}
+            for time, eigenvectors in self._extract_eigenvectors().iteritems():
+                if self._extract_state().get(time) is not None:
+                    state = self._states[time][0] - 1 # warning
+                    coeff = eigenvectors[:, state]
+                    populations =  [ np.absolute(x)**2 for x in coeff]
+                    result[time] = populations
+            self._projected_populations = result
         return result
 
 
@@ -184,7 +157,6 @@ class FSSHRun(object):
         for time, pop in populations.items():
             results[time] = [ x*6.038 for x in range(len(pop))]
         return results
-
 
     def _extract_state(self, filename='run-sh-1.log'):
         try:
@@ -346,32 +318,36 @@ class FSSHRun(object):
         file.close()
         return results
 
-    def _extract_adiabatic_population(self):
-        result = {}
-        for time in self.hamiltonians:
-            if self.coefficients.get(time) is not None:
-                hamilt = np.transpose( self.hamiltonians[time])[2:]
-                eigenvalues, eigenvectors = np.linalg.eig( hamilt )
+    def _extract_eigenvectors(self):
+        try:
+            results = self._eigenvectors
+        except:
+            results = {}; results2 = {}
+            for time in self.hamiltonians:
+                hamilt = np.transpose(self.hamiltonians[time])[2:]
+                eigenvalues, eigenvectors = np.linalg.eig(hamilt)
                 idx = eigenvalues.argsort()
                 eigenvalues = eigenvalues[idx]
                 eigenvectors = eigenvectors[:, idx]
+                results[time] = eigenvectors
+                results2[time] = eigenvalues
+            self._eigenvectors = results
+            self._eigenenergies = results2
+        return results
+
+    def _extract_adiabatic_population(self):
+        result = {}
+        for time, eigenvectors in self._extract_eigenvectors().iteritems():
+            if self.coefficients.get(time) is not None:
                 diabat = [ np.complex(coeff[2], coeff[3]) for coeff in self.coefficients[time] ]
                 adiabat = np.dot( eigenvectors.transpose(), diabat)
-                #adiabat = eigenvectors.transpose().dot(diabat)
-                #print "Test", adiabat - adiabat1
                 populations = [ np.absolute(x)**2 for x in adiabat]
                 result[time] = populations
         return result
 
     def _extract_adiabatic_energies(self):
-        result = {}
-        for time in self.hamiltonians:
-            hamilt = np.transpose( self.hamiltonians[time])[2:]
-            eigenvalues, eigenvectors = np.linalg.eig( hamilt )
-            idx = eigenvalues.argsort()
-            eigenvalues = eigenvalues[idx]
-            result[time] = eigenvalues
-        return result
+        self._extract_eigenvectors()
+        return self._eigenenergies
 
     def _extract_energies(self, property):
         def _read_ener_file():
@@ -445,13 +421,17 @@ class FSSHRun(object):
 
 
     def _extract_population(self, filename='run-coeff-1.xyz'):
-        populations = {}
-        for time in self.coefficients:
-            list = self.coefficients.get(time)
-            pop = []
-            for i, coeff in enumerate(list):
-                pop.append(np.square(np.absolute(np.complex(coeff[2], coeff[3]))))
-            populations.update({time: pop})
+        try:
+            populations = self._populations
+        except:
+            populations = {}
+            for time in self.coefficients:
+                list = self.coefficients.get(time)
+                pop = []
+                for i, coeff in enumerate(list):
+                    pop.append(np.square(np.absolute(np.complex(coeff[2], coeff[3]))))
+                populations.update({time: pop})
+            self._populations = populations
         return populations
 
 
