@@ -187,20 +187,24 @@ class FSSHRun(object):
 
 
     def _extract_state(self, filename='run-sh-1.log'):
-        file = open('%s/%s' % (self.name, filename), 'r')
-        results = {}
-        for line in file.readlines():
-            if ', time' in line:
-                time = float(line.split()[5])
-                if self.init:
-                    if time > self.timestep:
-                        file.close()
-                        return results
-                results.update({time: []})
-            elif 'Final' in line:
-                state = int(line.split()[3])
-                results.get(time).append(state)
-        file.close()
+        try:
+            results = self._states
+        except:
+            file = open('%s/%s' % (self.name, filename), 'r')
+            results = {}
+            for line in file.readlines():
+                if ', time' in line:
+                    time = float(line.split()[5])
+                    if self.init:
+                        if time > self.timestep:
+                            file.close()
+                            return results
+                    results.update({time: []})
+                elif 'Final' in line:
+                    state = int(line.split()[3])
+                    results.get(time).append(state)
+            file.close()
+            self._states = results
         return results
 
     def _extract_surface_population(self, surface = None):
