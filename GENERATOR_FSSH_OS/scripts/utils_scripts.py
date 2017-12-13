@@ -47,6 +47,8 @@ class FSSHRun(object):
             return self._extract_detailed_fssh()
         elif (property == 'Delta_E'):
             return self._extract_delta_e()
+        elif (property == 'Site-energies'):
+            return self._extract_site_energies()
         elif (property == 'State'):
             return self._extract_state()
         elif (property == 'Forces'):
@@ -401,6 +403,16 @@ class FSSHRun(object):
             for i in range(1, len(self.hamiltonians.get(time))):
                 delta_e[time].append(
                     self.hamiltonians.get(time)[i][i + 2] - self.hamiltonians.get(time)[i - 1][i - 1 + 2]
+                )
+        return delta_e
+
+    def _extract_site_energies(self, filename='run-hamilt-1.xyz'):
+        delta_e = {}
+        for time in self.hamiltonians:
+            delta_e[time] = []
+            for i in range(len(self.hamiltonians.get(time))):
+                delta_e[time].append(
+                     self.hamiltonians.get(time)[i][i + 2]
                 )
         return delta_e
 
