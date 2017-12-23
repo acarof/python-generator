@@ -19,8 +19,7 @@ dict_properties = {
                        'Populations', 'MSD', 'IPR',
                        'Projected-populations', 'Projected-MSD', 'Projected-IPR',
                        'MQC-populations', 'MQC-MSD', 'MQC-IPR', 'Total-energy',
-                       'Temperature','Off-diagonals', 'Adiabatic-energies', 'Site-energies'],
-
+                       'Temperature','Off-diagonals', 'Site-energies'],
 }
 number_blocks = 1
 # FOR HISTO

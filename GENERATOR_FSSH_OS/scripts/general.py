@@ -50,7 +50,7 @@ if not os.path.isdir(dataname):
 run_dict = {}
 os.system('cd ..')
 for i, directory in enumerate(dirlist):
-    if 'run-fssh' in directory and 'per' not in directory:
+    if 'run-fssh' in directory and 'data' not in directory:
         keys = tuple(keywords)
         if run_dict.get(keys ) is None:
             run_dict[keys] = []
