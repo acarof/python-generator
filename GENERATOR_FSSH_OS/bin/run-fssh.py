@@ -17,13 +17,15 @@ info = {
     #'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
     'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
     'NUMBER_CONFIG': 1,
-    'NUMBER_REPEAT': 24,
-    'LENGTH_FS':   1000,  # LENGTH IN FS
+    'NUMBER_REPEAT': 5,
+    'LENGTH_FS':   10,  # LENGTH IN FS
+    'PRINTING_FREQUENCY_FAST' : 1, # Print every N fs
     'AOM_RADIUS' : 3.0,
     ###################################################################################
     'INITIALIZATION': 'DIABATIC',
     'LIGHT': False,
 }
+info['PRINTING_FREQUENCY_SLOW'] = info['LENGTH_FS']
 cp2k_param = [
     #################### CAN BE CHANGED ###############################################
     ['PROPAGATION', 'FSSH'],  # METHOD OF PROPAGATION: FSSH OR BORN_OPPENEHIMER
@@ -33,6 +35,8 @@ cp2k_param = [
     #['FILE_INIT'] + info['FILE_INIT'],
     ###################################################################################
     ['DECOHERENCE_CORRECTIONS', 'DAMPING'],
+    ['SPURIOUS_TRANSFER_CORR','T'],   
+    ['REORDERING_STATES_USING_OVERLAP', 'T'], 
     ['DECO_TIME', 'FORCES_BASED'],
     ['THRESHOLD_TAU_FORCES',  1E-20],
     ['TEMPERATURE_FG_WIDTH',  298],

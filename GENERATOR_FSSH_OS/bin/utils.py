@@ -45,7 +45,9 @@ sed_dict = {'ENSEMBLE': 'NVE',
             'K_CC_CHARGED'      : 0.263099,
 	        'SEED'              : 2000,
             'REPRESENTATION'    : 'DIABATIC_BASIS',
-            'RK_PROPAGATION'    : 'DIABATIC_RK'
+            'RK_PROPAGATION'    : 'DIABATIC_RK',
+            'REORDERING_STATES_USING_OVERLAP' : 'T',
+            'SPURIOUS_TRANSFER_CORR' : 'T',
             }
 
 

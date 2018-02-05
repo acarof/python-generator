@@ -202,9 +202,9 @@ def shorten_log_file(ndir):
 
 
 def run_fssh_from_diabat(cp2k_info, task_info, paths):
-    cp2k_info.update({'STEPS' : int(task_info['LENGTH_FS'] / cp2k_info['TIMESTEP'] ) } )
-    cp2k_info.update({'PRINT':  int(task_info['LENGTH_FS'] / cp2k_info['TIMESTEP']) } )
-    cp2k_info.update({'PRINT_FSSH': int( 1 / cp2k_info['TIMESTEP']) })
+    cp2k_info.update({'STEPS' : int(task_info['PRINTING_FREQUENCY_SLOW'] / cp2k_info['TIMESTEP'] ) } )
+    cp2k_info.update({'PRINT':  int(task_info['PRINTING_FREQUENCY_SLOW'] / cp2k_info['TIMESTEP']) } )
+    cp2k_info.update({'PRINT_FSSH': int( task_info['PRINTING_FREQUENCY_FAST'] / cp2k_info['TIMESTEP']) })
 
     restart_info = {
         'RESTART_DIR' : cp2k_info['FILE_INIT'],
