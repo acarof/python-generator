@@ -179,6 +179,11 @@ class FSSHRun(object):
                 elif 'Final' in line:
                     state = int(line.split()[3])
                     results.get(time).append(state)
+                elif 'First Adiabatic State =' in line:
+                    time = 0.0
+                    state = int(line.split()[-1])
+                    results.update({time:[]})
+                    results[time].append(state)
             file.close()
             self._states = results
         return results
