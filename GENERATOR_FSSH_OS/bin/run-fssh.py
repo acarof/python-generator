@@ -19,11 +19,13 @@ info = {
     'NUMBER_CONFIG': 1,
     'NUMBER_REPEAT': 5,
     'LENGTH_FS':   10,  # LENGTH IN FS
+    'PRINTING_FREQUENCY_FAST' : 1, # Print every N fs
     'AOM_RADIUS' : 3.0,
     ###################################################################################
     'INITIALIZATION': 'DIABATIC',
     'LIGHT': False,
 }
+info['PRINTING_FREQUENCY_SLOW'] = info['LENGTH_FS']
 cp2k_param = [
     #################### CAN BE CHANGED ###############################################
     ['PROPAGATION', 'FSSH'],  # METHOD OF PROPAGATION: FSSH OR BORN_OPPENEHIMER

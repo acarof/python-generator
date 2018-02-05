@@ -23,12 +23,13 @@ class FSSHRun(object):
         self.coefficients = self._read_xyz_file("run-coeff-1.xyz")
 
 
-    def extract(self, property, init=False, **kwargs):
+    def extract(self, property, init=False, msd_info = 0.0):
         if init:
             self.init = True
             self.timestep  = float(self.get_input_key(['\TIMESTEP'])[0])
         else:
             self.init = False
+        self.msd_info = msd_info
         if (property == 'Atoms Number'):
             return self._get_atoms_number()
         elif (property == 'Off-diagonals'):
@@ -52,7 +53,7 @@ class FSSHRun(object):
         elif (property == 'State'):
             return self._extract_state()
         elif (property == 'Forces'):
-            return self._extract_forces(**kwargs)
+            return self._extract_forces()
         elif (property == 'NACE'):
             return self._extract_coupling(filename='run-nace-1.xyz')
         elif (property == 'NACV'):
@@ -159,7 +160,7 @@ class FSSHRun(object):
         populations = self._extract_population()
         results = {}
         for time, pop in populations.items():
-            results[time] = [ x*6.038 for x in range(len(pop))]
+            results[time] = [ x*self.msd_info for x in range(len(pop))]
         return results
 
     def _extract_state(self, filename='run-sh-1.log'):

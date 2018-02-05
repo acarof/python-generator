@@ -22,6 +22,7 @@ dict_properties = {
     'Last' : ['IPR', 'Projected-IPR', 'MQC-IPR']
 }
 number_blocks = 5
+msd_length = 6.038
 # FOR HISTO
 histo_info = {
     'Off-diagonals' : {
@@ -63,7 +64,7 @@ for i, directory in enumerate(dirlist):
 
 # PARALLEL OR SERIAL CALCULATION
 def super_analyse(tuple):
-    return analyse_properties(tuple, run_dict, dict_properties, number_blocks=number_blocks, histo_info=histo_info)
+    return analyse_properties(tuple, run_dict, dict_properties, number_blocks=number_blocks, histo_info=histo_info, msd_info = msd_length)
 try:
     nworker = int( sys.argv[1] )
 except:
