@@ -6,22 +6,22 @@ from multiprocessing import Pool, cpu_count
 # custom modudules
 from utils_analyse import *
 
-scripts = 'general'
+try:
+     name = sys.argv[1]
+except:
+     print "No directory"
+     raise SystemExit
+
+scripts = name.replace("/","")
 keywords = ['TEMPERATURE']
 dict_properties = {
     'Runs-average' :  ['Adiabatic-populations', 'Surface-populations', 'Delta_E',
-                       'Adiabatic-energies', 'Adiabatic-IPR',
                        'Populations', 'MSD', 'IPR',
                        'Projected-populations', 'Projected-MSD', 'Projected-IPR',
-                       'MQC-populations', 'MQC-MSD', 'MQC-IPR'],
-    'Block-runs-average' : [ 'MSD', 'Projected-MSD', 'MQC-MSD'],
-    'Specific' : ['FSSH', 'Detailed-FSSH'],
-    'Mean' : ['Total-energy', 'Temperature'],
-    'Histogram' : ['Off-diagonals', 'Delta_E'],
-    'Initial'   : ['Delta_E'],
-    'Last' : ['IPR', 'Projected-IPR', 'MQC-IPR']
+                       'MQC-populations', 'MQC-MSD', 'MQC-IPR', 'Total-energy',
+                       'Temperature','Delta_E','Off-diagonals', 'Site-energies'],
 }
-number_blocks = 5
+number_blocks = 1
 # FOR HISTO
 histo_info = {
     'Off-diagonals' : {
@@ -50,13 +50,14 @@ if not os.path.isdir(dataname):
 # CREATE LIST OF RUNS
 run_dict = {}
 os.system('cd ..')
-for i, directory in enumerate(dirlist):
-    if 'run-fssh' in directory and 'data' not in directory:
-        keys = tuple(keywords)
-        if run_dict.get(keys ) is None:
-            run_dict[keys] = []
-        run_dict[keys].append(directory)
-
+#for i, directory in enumerate(dirlist):
+#    if 'run-fssh' in directory and 'per' not in directory:
+#        keys = tuple(keywords)
+#        if run_dict.get(keys ) is None:
+#            run_dict[keys] = []
+#        run_dict[keys].append(directory)
+keys = tuple(keywords)
+run_dict[keys] = [ name ]
 
 
 

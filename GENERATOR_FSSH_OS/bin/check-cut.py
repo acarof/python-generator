@@ -5,17 +5,23 @@ import os
 #rm input-1.psf
 
 os.mkdir('fail')
+os.system('rm core')
+os.system('rm run.log')
 for dir in os.listdir('.'):
     if 'run-fssh' in dir:
         os.system('rm %s/*restart*' % dir)
         os.system('rm %s/input-1.psf' % dir)
         os.system('rm %s/run-mix-1.ener' % dir)
         os.system('rm %s/run-r-1.out' % dir)
+        os.system('rm %s/core' % dir)
         failed = True
-        with open('%s/run.log' % dir) as logfile:
-            for line in logfile.readlines():
-                if 'PROGRAM ENDED AT' in line:
-                    failed = False
+	try:
+	        with open('%s/run.log' % dir) as logfile:
+        	    for line in logfile.readlines():
+                	if 'PROGRAM ENDED AT' in line:
+                    		failed = False
+	except:
+		pass
         if failed:
             os.system('mv %s fail/%s' % (dir, dir))
 
