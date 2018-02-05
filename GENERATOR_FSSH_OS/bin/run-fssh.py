@@ -33,6 +33,8 @@ cp2k_param = [
     #['FILE_INIT'] + info['FILE_INIT'],
     ###################################################################################
     ['DECOHERENCE_CORRECTIONS', 'DAMPING'],
+    ['SPURIOUS_TRANSFER_CORR','T'],   
+    ['REORDERING_STATES_USING_OVERLAP', 'T'], 
     ['DECO_TIME', 'FORCES_BASED'],
     ['THRESHOLD_TAU_FORCES',  1E-20],
     ['TEMPERATURE_FG_WIDTH',  298],

@@ -66,6 +66,8 @@
                         TEMPERATURE_FG_WIDTH                  sedTEMPERATURE
                         EDC_C                                 sedEDC_C
                         EDC_E0                                sedEDC_E0
+                        SPURIOUS_TRANSFER_CORR                sedSPURIOUS_TRANSFER_CORR
+                        REORDERING_STATES_USING_OVERLAP       sedREORDERING_STATES_USING_OVERLAP
                         INITIALIZATION                        sedINITIALIZATION
                         FIRST_DIABAT                          sedFIRST_DIABAT
                         FIRST_ADIABAT                         sedFIRST_ADIABAT
