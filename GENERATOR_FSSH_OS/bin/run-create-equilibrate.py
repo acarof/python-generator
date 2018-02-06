@@ -25,7 +25,7 @@ anthracene = {
 
     ###################################################################################
     'SYSTEM': 'PBC_CRYSTAL',  # (do not change)
-    'MOL_NAME': 'ANTRACENE',  # NAME OF THE MOLECULE
+   # 'MOL_NAME': 'ANTRACENE',  # NAME OF THE MOLECULE
     'FILE_UNIT': 'ant_unitcell.xyz',  # NAME OF THE .xyz FILE WITH THE UNITCELL
     'FILE_CRYSTAL': 'crystal.xyz',  # NAME OF THE .xyz FILE TO PRINT THE CRYSTAL
     'ABC': [8.562, 6.038, 11.184],  # ABC OF THE UNITCELL
@@ -34,6 +34,8 @@ anthracene = {
     'NATOM_MOL': 24,  # NUMBER OF ATOMS PER MOLECULES
     'NMOL_UNIT': 2,  # NUMBER OF MOLECULES PER UNIT_CELL
     'FORCEFIELD_FILE': 'ANTRACENE_FF.prm',  # FORCEFIELD
+    'PSF_CHARGE_MOL': 'ANTRACENE_CHARGE.psf',
+    'PSF_NEUTRAL_MOL': 'ANTRACENE_NEUTRE.psf',
     ##################################################################################
     'TEMPLATE_FILE' : 'FIST_PBC_CRYSTAL.template',         # (do not change)
 }
@@ -138,7 +140,7 @@ anthracene = {
 
     ###################################################################################
     'SYSTEM': 'PBC_CRYSTAL',  # (do not change)
-    'MOL_NAME': 'ANTRACENE',  # NAME OF THE MOLECULE
+   # 'MOL_NAME': 'ANTRACENE',  # NAME OF THE MOLECULE
     'FILE_UNIT': 'ant_unitcell.xyz',  # NAME OF THE .xyz FILE WITH THE UNITCELL
     'FILE_CRYSTAL': 'crystal.xyz',  # NAME OF THE .xyz FILE TO PRINT THE CRYSTAL
     'ABC': [8.562, 6.038, 11.184],  # ABC OF THE UNITCELL
@@ -147,6 +149,8 @@ anthracene = {
     'NATOM_MOL': 24,  # NUMBER OF ATOMS PER MOLECULES
     'NMOL_UNIT': 2,  # NUMBER OF MOLECULES PER UNIT_CELL
     'FORCEFIELD_FILE': 'ANTRACENE_FF.prm',  # FORCEFIELD
+    'PSF_CHARGE_MOL' : 'ANTRACENE_CHARGE.psf',
+    'PSF_NEUTRAL_MOL' : 'ANTRACENE_NEUTRE.psf',
     ##################################################################################
     'TEMPLATE_FILE' : 'FIST_PBC_CRYSTAL.template',         # (do not change)
 }

@@ -49,6 +49,7 @@ cp2k_param = [
     ['ELECTRONIC_STEPS', 5],
     ['TEMPLATE_FILE', 'FSSH_PBC_CRYSTAL.template'],
     ['FORCEFIELD_FILE', 'ANTRACENE_FF.prm'],
+    ['AOM_COEFF', 'ANTRACENE_AOM.inc'],
     ['INITIALIZATION', 'DIABATIC'],
 ]
 
