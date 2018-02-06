@@ -19,7 +19,7 @@ dict_properties = {
                        'Populations', 'MSD', 'IPR',
                        'Projected-populations', 'Projected-MSD', 'Projected-IPR',
                        'MQC-populations', 'MQC-MSD', 'MQC-IPR', 'Total-energy',
-                       'Temperature','Delta_E','Off-diagonals', 'Site-energies'],
+                       'Temperature','Off-diagonals', 'Site-energies'],
 }
 number_blocks = 1
 # FOR HISTO
@@ -66,7 +66,7 @@ run_dict[keys] = [ name ]
 def super_analyse(tuple):
     return analyse_properties(tuple, run_dict, dict_properties, number_blocks=number_blocks, histo_info=histo_info)
 try:
-    nworker = int( sys.argv[1] )
+    nworker = int( sys.argv[2] )
 except:
     nworker = -1
 if nworker == -1:

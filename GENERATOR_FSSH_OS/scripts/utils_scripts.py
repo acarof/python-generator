@@ -11,7 +11,8 @@ units = {
 
 headers = {
     'FSSH': '# Attempts  Kin-passed Successful Decoherence\n ',
-    'Detailed-FSSH' : '# Attempts  Kin-passed Successful Decoherence Ups Downs\n'
+    'Detailed-FSSH' : '# Attempts  Kin-passed Successful Decoherence Ups Downs\n',
+    'Detailed-CASES' : '# CASE1  CASE2 CASE3 CASE4 CASE5 CASE6\n'
 }
 
 
@@ -46,6 +47,8 @@ class FSSHRun(object):
             return self._extract_fssh()
         elif property == 'Detailed-FSSH':
             return self._extract_detailed_fssh()
+        elif property == 'Detailed-CASES':
+            return self._extract_CASES()
         elif (property == 'Delta_E'):
             return self._extract_delta_e()
         elif (property == 'Site-energies'):
@@ -209,6 +212,15 @@ class FSSHRun(object):
     def _extract_fssh(self, filename='run-sh-1.log'):
         results = []
         for property in ['ATTEMPT', 'PASSED', 'SUCCESS', 'DECOHERENCE!']:
+            with open('%s/%s' % (self.name, filename)) as f:
+                contents = f.read()
+                count = contents.count(property)
+            results.append(count)
+        return results
+
+    def _extract_CASES(self, filename='run.log'):
+        results = []
+        for property in ['CASE1:', 'CASE2:', 'CASE3:', 'CASE4:', 'CASE5:', 'CASE6:']:
             with open('%s/%s' % (self.name, filename)) as f:
                 contents = f.read()
                 count = contents.count(property)
