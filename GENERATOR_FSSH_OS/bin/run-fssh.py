@@ -48,8 +48,8 @@ cp2k_param = [
     ['EDC_E0', 0.1],
     ['ELECTRONIC_STEPS', 5],
     ['TEMPLATE_FILE', 'FSSH_PBC_CRYSTAL.template'],
-    ['FORCEFIELD_FILE', 'ANTRACENE_FF.prm'],
-    ['AOM_COEFF', 'ANTRACENE_AOM.inc'],
+    ['FORCEFIELD_FILE', 'ANTHRACENE_HOLE_FF.prm'],
+    ['AOM_COEFF', 'ANTHRACENE_HOLE_AOM.inc'],
     ['INITIALIZATION', 'DIABATIC'],
 ]
 
