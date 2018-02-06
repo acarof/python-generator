@@ -214,7 +214,14 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     print "restart_info"
     print restart_info
     seed()
-    cp2k_info['SEED'] = randint(1, 1E9)
+    if task_info.get('SEED') is None:
+        cp2k_info['SEED'] = randint(1, 1E9)
+    else:
+        cp2k_info['SEED'] = task_info['SEED']
+    if task_info.get('NAME') is None:
+        name = 'run-fssh'
+    else:
+        name = task_info['NAME']
 
     system = cp2k_info['SYSTEM']
     if system in ['PBC_CRYSTAL', 'NEUTRAL_CRYSTAL', 'OS_SOLVENT']:
@@ -224,7 +231,7 @@ def run_fssh_from_diabat(cp2k_info, task_info, paths):
     else:
         sys.exit()
 
-    config = Config(cp2k_info, paths, RESTART=restart_info, name = 'fssh')
+    config = Config(cp2k_info, paths, RESTART=restart_info, name = name)
     print "GO FOR RUN %d" % cp2k_info['NDIR']
     config.run(cp2k_info['NDIR'])
     if task_info.get('LIGHT', False) and not cp2k_info.get('ARCHER', True):

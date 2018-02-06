@@ -49,7 +49,7 @@ def do_run(dict_):
                                   paths = dict_['PATHS'], steps=info['NPROD'],
                                   ndir=dict_['NDIR'],restart_info=dict_['RESTART_INFO'], velocities=True, ensemble='NVE',
                                   TEMPERATURE=system_info['TEMPERATURE'], nconfig=info['NCONFIG'],
-                                  archer=dict_['ARCHER'], name = 'sample')
+                                  archer=dict_['ARCHER'], name = 'run-sample')
     os.system('cp %s/crystal.xyz %s' % (dict_['FILE_INIT'], previous_dir))
     system_info.update({'NPROD_INIT' : info['NPROD']})
     system_info.update({'NCONFIG_INIT' : info['NCONFIG']})

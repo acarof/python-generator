@@ -351,7 +351,7 @@ class CP2KRun(object):
     def run(self, ndir):
         self.ndir = ndir
         if self._my_sed_dict.get('name'):
-            dir = Dir('run-%s-%d' % (self._my_sed_dict['name'], ndir))
+            dir = Dir('%s-%d' % (self._my_sed_dict['name'], ndir))
         else:
             dir = Dir('run-%d' % ndir)
         self._dir = dir

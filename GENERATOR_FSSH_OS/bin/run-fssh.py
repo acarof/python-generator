@@ -21,6 +21,8 @@ info = {
     'LENGTH_FS':   10,  # LENGTH IN FS
     'PRINTING_FREQUENCY_FAST' : 1, # Print every N fs
     'AOM_RADIUS' : 3.0,
+  #  'NAME': 'anthracene-fssh',
+  #  'SEED': 717063212,
     ###################################################################################
     'INITIALIZATION': 'DIABATIC',
     'LIGHT': False,

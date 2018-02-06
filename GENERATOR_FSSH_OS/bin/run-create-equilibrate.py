@@ -104,7 +104,7 @@ def do_run(dict_):
     previous_dir = run_fist(dict_['INFO'], dict_['PATHS'], steps=info['NEQ'],
                                   ndir=dict_['NDIR'], restart_info=None, velocities=False, ensemble='NVT',
                                   TEMPERATURE=dict_['TEMPERATURE'], nconfig=info['NCONFIG'],
-                                  archer=dict_['ARCHER'], name = 'eq')
+                                  archer=dict_['ARCHER'], name = 'run-eq')
     os.system('cp %s/%s %s' % ( paths['crystal'], info['FILE_CRYSTAL'], previous_dir  ))
     info.update({'TEMPERATURE': dict_['TEMPERATURE']})
     info.update({'NEQ' : info['NEQ']})
