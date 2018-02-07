@@ -1,0 +1,18 @@
+#!/bin/bash --login
+
+#PBS -N pbs-py-mult
+#PBS -l select=1
+#PBS -l walltime=00:20:00
+#PBS -A e05-softm-blu
+
+module load anaconda-compute
+#source activate forgenerator-compute
+#conda list
+
+# Make sure any symbolic links are resolved to absolute path
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+
+# Change to the directory that the job was submitted from
+cd $PBS_O_WORKDIR
+
+aprun -d 24 python bin/run-multiple-fssh.py ARCHER 24
