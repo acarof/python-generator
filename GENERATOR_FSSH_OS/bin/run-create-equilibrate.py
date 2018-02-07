@@ -18,14 +18,14 @@ anthracene = {
     'TIMESTEP': 0.5,            # TIMESTEP IN FS
 
     #################### CAN BE CHANGED ###############################################
-    'NUMBER_MOL_ACTIVE': 4,  # NUMBER OF ACTIVE MOLECULES
+    'NUMBER_MOL_ACTIVE': 12,  # NUMBER OF ACTIVE MOLECULES
     'DIRECTION': [0, 1, 0],  # DIRECTION TO PROPAGATE THE CHARGE
     'RCUT': 8,  # VDW RCUT
     'POS_CHARGE' : 'FIRST',
 
     ###################################################################################
     'SYSTEM': 'PBC_CRYSTAL',  # (do not change)
-    'MOL_NAME': 'ANTRACENE',  # NAME OF THE MOLECULE
+   # 'MOL_NAME': 'ANTRACENE',  # NAME OF THE MOLECULE
     'FILE_UNIT': 'ant_unitcell.xyz',  # NAME OF THE .xyz FILE WITH THE UNITCELL
     'FILE_CRYSTAL': 'crystal.xyz',  # NAME OF THE .xyz FILE TO PRINT THE CRYSTAL
     'ABC': [8.562, 6.038, 11.184],  # ABC OF THE UNITCELL
@@ -33,7 +33,9 @@ anthracene = {
     'STARTING_POINT': [0.0, 0.0, 0.0],  # (do not change)
     'NATOM_MOL': 24,  # NUMBER OF ATOMS PER MOLECULES
     'NMOL_UNIT': 2,  # NUMBER OF MOLECULES PER UNIT_CELL
-    'FORCEFIELD_FILE': 'ANTRACENE_FF.prm',  # FORCEFIELD
+    'FORCEFIELD_FILE': 'ANTHRACENE_HOLE_FF.prm',  # FORCEFIELD
+    'PSF_CHARGE_MOL': 'ANTHRACENE_POSITIVE_NO_CHARGE.psf',
+    'PSF_NEUTRAL_MOL': 'ANTHRACENE_NEUTRAL_NO_CHARGE.psf',
     ##################################################################################
     'TEMPLATE_FILE' : 'FIST_PBC_CRYSTAL.template',         # (do not change)
 }
@@ -104,7 +106,7 @@ def do_run(dict_):
     previous_dir = run_fist(dict_['INFO'], dict_['PATHS'], steps=info['NEQ'],
                                   ndir=dict_['NDIR'], restart_info=None, velocities=False, ensemble='NVT',
                                   TEMPERATURE=dict_['TEMPERATURE'], nconfig=info['NCONFIG'],
-                                  archer=dict_['ARCHER'], name = 'eq')
+                                  archer=dict_['ARCHER'], name = 'run-eq')
     os.system('cp %s/%s %s' % ( paths['crystal'], info['FILE_CRYSTAL'], previous_dir  ))
     info.update({'TEMPERATURE': dict_['TEMPERATURE']})
     info.update({'NEQ' : info['NEQ']})
@@ -138,7 +140,7 @@ anthracene = {
 
     ###################################################################################
     'SYSTEM': 'PBC_CRYSTAL',  # (do not change)
-    'MOL_NAME': 'ANTRACENE',  # NAME OF THE MOLECULE
+   # 'MOL_NAME': 'ANTRACENE',  # NAME OF THE MOLECULE
     'FILE_UNIT': 'ant_unitcell.xyz',  # NAME OF THE .xyz FILE WITH THE UNITCELL
     'FILE_CRYSTAL': 'crystal.xyz',  # NAME OF THE .xyz FILE TO PRINT THE CRYSTAL
     'ABC': [8.562, 6.038, 11.184],  # ABC OF THE UNITCELL
@@ -147,6 +149,8 @@ anthracene = {
     'NATOM_MOL': 24,  # NUMBER OF ATOMS PER MOLECULES
     'NMOL_UNIT': 2,  # NUMBER OF MOLECULES PER UNIT_CELL
     'FORCEFIELD_FILE': 'ANTRACENE_FF.prm',  # FORCEFIELD
+    'PSF_CHARGE_MOL' : 'ANTRACENE_CHARGE.psf',
+    'PSF_NEUTRAL_MOL' : 'ANTRACENE_NEUTRE.psf',
     ##################################################################################
     'TEMPLATE_FILE' : 'FIST_PBC_CRYSTAL.template',         # (do not change)
 }

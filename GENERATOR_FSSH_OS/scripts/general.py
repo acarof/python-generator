@@ -15,7 +15,7 @@ dict_properties = {
                        'Projected-populations', 'Projected-MSD', 'Projected-IPR',
                        'MQC-populations', 'MQC-MSD', 'MQC-IPR'],
     'Block-runs-average' : [ 'MSD', 'Projected-MSD', 'MQC-MSD'],
-    'Specific' : ['FSSH', 'Detailed-FSSH'],
+    'Specific' : ['FSSH', 'Detailed-FSSH', 'Detailed-CASES'],
     'Mean' : ['Total-energy', 'Temperature'],
     'Histogram' : ['Off-diagonals', 'Delta_E'],
     'Initial'   : ['Delta_E'],

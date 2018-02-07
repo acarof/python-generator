@@ -16,11 +16,13 @@ info = {
     #################### CAN BE CHANGED ###############################################
     #'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
     'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
-    'NUMBER_CONFIG': 1,
+    'NUMBER_CONFIG': 2,
     'NUMBER_REPEAT': 5,
     'LENGTH_FS':   10,  # LENGTH IN FS
     'PRINTING_FREQUENCY_FAST' : 1, # Print every N fs
     'AOM_RADIUS' : 3.0,
+  #  'NAME': 'anthracene-fssh',
+  #  'SEED': 717063212,
     ###################################################################################
     'INITIALIZATION': 'DIABATIC',
     'LIGHT': False,
@@ -46,7 +48,8 @@ cp2k_param = [
     ['EDC_E0', 0.1],
     ['ELECTRONIC_STEPS', 5],
     ['TEMPLATE_FILE', 'FSSH_PBC_CRYSTAL.template'],
-    ['FORCEFIELD_FILE', 'ANTRACENE_FF.prm'],
+    ['FORCEFIELD_FILE', 'ANTHRACENE_HOLE_FF.prm'],
+    ['AOM_COEFF', 'ANTHRACENE_HOLE_AOM.inc'],
     ['INITIALIZATION', 'DIABATIC'],
 ]
 

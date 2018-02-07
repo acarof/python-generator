@@ -66,7 +66,7 @@ run_dict[keys] = [ name ]
 def super_analyse(tuple):
     return analyse_properties(tuple, run_dict, dict_properties, number_blocks=number_blocks, histo_info=histo_info)
 try:
-    nworker = int( sys.argv[1] )
+    nworker = int( sys.argv[2] )
 except:
     nworker = -1
 if nworker == -1:

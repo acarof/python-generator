@@ -351,7 +351,7 @@ class CP2KRun(object):
     def run(self, ndir):
         self.ndir = ndir
         if self._my_sed_dict.get('name'):
-            dir = Dir('run-%s-%d' % (self._my_sed_dict['name'], ndir))
+            dir = Dir('%s-%d' % (self._my_sed_dict['name'], ndir))
         else:
             dir = Dir('run-%d' % ndir)
         self._dir = dir
@@ -476,9 +476,9 @@ class FSSHOSCrystal(CP2KRun):
         self._sizecrystal = self._my_sed_dict.get('SIZE_CRYSTAL')
         self._coordcharge = self._my_sed_dict.get('COORD_CHARGE')
         self._built_list_activated()
-        self._mol_name = self._my_sed_dict.get('MOL_NAME')
+        #self._mol_name = self._my_sed_dict.get('MOL_NAME')
         self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
-        self._forcefield_file = '%s_FF.inc'  % (self._mol_name)
+        #self._forcefield_file = '%s_FF.inc'  % (self._mol_name)
         self._forcefield_format = '.inc'
         if self._my_sed_dict.get('FORCEFIELD_FILE'):
             self._forcefield_file = self._my_sed_dict.get('FORCEFIELD_FILE')
@@ -627,7 +627,8 @@ class FSSHOSCrystal(CP2KRun):
                                 CONN_FILE_FORMAT  UPSF
                            &END MOLECULE
                    """ % \
-                      ( molecule - index - 1, self._mol_name + "_NEUTRE.psf")
+                    (molecule - index - 1, self._my_sed_dict['PSF_NEUTRAL_MOL'])
+                # ( molecule - index - 1, self._mol_name + "_NEUTRE.psf")
             result += """
                            @IF ${ACTIVE_MOL} == %s
                                 &MOLECULE
@@ -644,8 +645,10 @@ class FSSHOSCrystal(CP2KRun):
                                &END MOLECULE
                             @ENDIF
                    """ % \
-                      ( molecule, self._mol_name + "_CHARGE.psf",
-                        molecule, self._mol_name + "_NEUTRE.psf")
+                    ( molecule, self._my_sed_dict['PSF_CHARGE_MOL'],
+                      molecule, self._my_sed_dict['PSF_NEUTRAL_MOL'])
+            # ( molecule, self._mol_name + "_CHARGE.psf",
+            #   molecule, self._mol_name + "_NEUTRE.psf")
             index = molecule
         if (index != self._nmol):
             result += """
@@ -655,7 +658,8 @@ class FSSHOSCrystal(CP2KRun):
                                 CONN_FILE_FORMAT  UPSF
                             &END MOLECULE
                     """ % \
-                      ( self._nmol - index, self._mol_name + "_NEUTRE.psf")
+                    (self._nmol - index, self._my_sed_dict['PSF_NEUTRAL_MOL'])
+            #   ( self._nmol - index, self._mol_name + "_NEUTRE.psf")
         if self._my_sed_dict['SYSTEM'] == 'OS_SOLVENT':
             result += """
                             &MOLECULE
@@ -754,7 +758,7 @@ class FSSHOSCrystal(CP2KRun):
     def _aom(self):
         for mol in range(1, 1 +self._nmol):
             if mol in self._list_activated:
-                os.system('cat %s/%s_AOM.inc >> %s/AOM_COEFF.include' % (self.paths.get('topologies'), self._mol_name, self._dir.path))
+                os.system('cat %s/%s >> %s/AOM_COEFF.include' % (self.paths.get('topologies'), self._my_sed_dict['AOM_COEFF'], self._dir.path))
             else:
                 with open('%s/AOM_COEFF.include' % (self._dir.path), 'ab+') as file_:
                     for atom in range(self._natom_mol):
