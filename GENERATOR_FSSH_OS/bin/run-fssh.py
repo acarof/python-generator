@@ -16,7 +16,7 @@ info = {
     #################### CAN BE CHANGED ###############################################
     #'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
     'FILE_INIT': ['run-sample-%s' % x for x in range(1)],  # NAME OF THE RUN OF INITIALIZATION
-    'NUMBER_CONFIG': 1,
+    'NUMBER_CONFIG': 2,
     'NUMBER_REPEAT': 5,
     'LENGTH_FS':   10,  # LENGTH IN FS
     'PRINTING_FREQUENCY_FAST' : 1, # Print every N fs
