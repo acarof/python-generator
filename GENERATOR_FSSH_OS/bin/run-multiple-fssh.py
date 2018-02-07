@@ -136,10 +136,15 @@ elif nworker > 1:
     pool.map(run_fssh, mega_list)
 
 
+target_ndir = 0
 for ndir in range(len(mega_list)):
     target = move_list[ndir]
+
     if target != '.':
         if not (os.path.isdir(target)):
             os.mkdir(target)
         # WARNING: we assume name is run-fssh-
-        os.system( 'mv run-fssh-%s %s/' % (ndir, target))
+        os.system( 'mv run-fssh-%s %s/run-fssh-%s' % (ndir, target, target_ndir))
+    target_ndir += 1
+    if target_ndir >= move_list.count(target):
+        target_ndir = 0
