@@ -1,8 +1,8 @@
 #!/bin/bash --login
 
 #PBS -N pbs-farm-fssh
-#PBS -l select=32
-#PBS -l walltime=00:30:00
+#PBS -l select=1
+#PBS -l walltime=00:20:00
 #PBS -A e05-softm-blu
 
 # Don't change
@@ -10,7 +10,7 @@ export PMI_NO_FORK=1
 export CORES_PER_EXE=1
 export CORES_PER_NODE=24
 #export CORES_PER_JOB=`qstat -f $PBS_JOBID | awk '/Resource_List.ncpus/ {print $3}'`
-NUMBER_RUNS=768
+NUMBER_RUNS=20
 export CORES_PER_JOB=$NUMBER_RUNS
 export LOGFILE=$PBS_JOBNAME.log${PBS_JOBID}
 

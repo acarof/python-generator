@@ -18,12 +18,10 @@ multiple_info = [{}]  # Default dictionnary
 
 multiple_info = [
     {'FILE_INIT' : 'run-sample-0',
-     'TIMESTEP'  : 0.1,
-     'NEW_DIR'   : 'NEW_TEST'
+     'NEW_DIR'   : 'RUNS-TEMP-100'
      },
-    {'FILE_INIT': 'run-sample-0',
-     'TIMESTEP': 0.5,
-    'NEW_DIR': 'NEW_TEST2'
+    {'FILE_INIT': 'run-sample-1',
+    'NEW_DIR': 'RUNS-TEMP-200'
 },
     #{'FILE_INIT': 'run-sample-0',
     # 'SCALING': 0.11111},
@@ -33,9 +31,9 @@ info = {
     ###################################################################################
     #### TRAJECTORIES INFORMATION ####
     # 'FILE_INIT' : 'run-sample-0',                    # path to the run where initial config can be found
-    #'TIMESTEP': 0.5,                                   # Timestep (fs)
-    'NUMBER_CONFIG': 2,                                # number of initial config
-    'NUMBER_REPEAT': 5,                                # number of repetition for each config
+    'TIMESTEP': 0.5,                                   # Timestep (fs)
+    'NUMBER_CONFIG': 1,                                # number of initial config
+    'NUMBER_REPEAT': 20,                                # number of repetition for each config
     'LENGTH_FS': 10,  # LENGTH IN FS                   # length of the run
     'PRINTING_FREQUENCY_FAST': 1,                      # Print every N fs for FSSH properties (coefficient, hamitlonian)
 

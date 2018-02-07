@@ -1,7 +1,7 @@
 #!/bin/bash --login
 
 #PBS -N pbs-cp-sampl
-#PBS -l select=1
+#PBS -l select=2
 #PBS -l walltime=0:05:00
 #PBS -A e05-softm-blu
 
@@ -17,7 +17,7 @@ basedir=$PBS_O_WORKDIR
 
 CP2K_PATH=/work/e05/e05/acarofmc/src/CP2K/nonadiabatic-cp2k/cp2k/exe/ARCHER/cp2k.popt
 START_RUN=0
-LAST_RUN=0
+LAST_RUN=1
 KIND=sample
 
 
