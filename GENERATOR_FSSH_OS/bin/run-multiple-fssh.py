@@ -18,7 +18,13 @@ multiple_info = [{}]  # Default dictionnary
 
 multiple_info = [
     {'FILE_INIT' : 'run-sample-0',
+     'TIMESTEP'  : 0.1,
+     'NEW_DIR'   : 'NEW_TEST'
      },
+    {'FILE_INIT': 'run-sample-0',
+     'TIMESTEP': 0.5,
+    'NEW_DIR': 'NEW_TEST2'
+},
     #{'FILE_INIT': 'run-sample-0',
     # 'SCALING': 0.11111},
 ]
@@ -27,7 +33,7 @@ info = {
     ###################################################################################
     #### TRAJECTORIES INFORMATION ####
     # 'FILE_INIT' : 'run-sample-0',                    # path to the run where initial config can be found
-    'TIMESTEP': 0.5,                                   # Timestep (fs)
+    #'TIMESTEP': 0.5,                                   # Timestep (fs)
     'NUMBER_CONFIG': 2,                                # number of initial config
     'NUMBER_REPEAT': 5,                                # number of repetition for each config
     'LENGTH_FS': 10,  # LENGTH IN FS                   # length of the run
@@ -111,12 +117,13 @@ for key_old in multiple_info:
             mega_list.append(new_key)
 
 
-
+move_list = []
 for ndir in range(len(mega_list)):
     mega_list[ndir].update({'NDIR': ndir,
                             'PATHS_DICT': paths,
                             'INPUTS_DICT': info
                             })
+    move_list.append( mega_list[ndir].get('NEW_DIR', '.' ))
 
 
 # RUN THE CALCULATIONS, SERIE OR PARALLEL ACCORDING TO THE NWORKER VARIABLE
@@ -129,3 +136,10 @@ elif nworker > 1:
     pool.map(run_fssh, mega_list)
 
 
+for ndir in range(len(mega_list)):
+    target = move_list[ndir]
+    if target != '.':
+        if not (os.path.isdir(target)):
+            os.mkdir(target)
+        # WARNING: we assume name is run-fssh-
+        os.system( 'mv run-fssh-%s %s/' % (ndir, target))
