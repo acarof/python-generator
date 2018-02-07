@@ -6,7 +6,7 @@ from itertools import product as iterprod
 
 # custom modules
 from utils_task import *
-
+import stat
 
 # SET-UP THE SYSTEM
 paths, nworker, archer = set_up(sys.argv)
@@ -137,9 +137,11 @@ elif nworker > 1:
 
 
 target_ndir = 0
+target_list = []
 for ndir in range(len(mega_list)):
     target = move_list[ndir]
-
+    if target not in target_list:
+        target_list.append(target)
     if target != '.':
         if not (os.path.isdir(target)):
             os.mkdir(target)
@@ -148,3 +150,50 @@ for ndir in range(len(mega_list)):
     target_ndir += 1
     if target_ndir >= move_list.count(target):
         target_ndir = 0
+
+
+def create_x(results, name):
+    with open(name, 'w') as file_:
+        file_.write(results)
+    st = os.stat(name)
+    os.chmod(name, st.st_mode | stat.S_IEXEC)
+
+
+results = """
+#!/bin/bash
+
+list_run=(%s)
+
+for dir in "${list_run[@]}";
+do
+    cp job_cp2k_taskfarm_fssh.pbs ${dir}/
+    cp cpuid.x ${dir}/
+    cp task-for-fssh-taskfarm.sh ${dir}/
+    cp -r topologies ${dir}/
+    cd ${dir}
+    pwd
+    qsub job_cp2k_taskfarm_fssh.pbs &
+    cd ..
+done
+""" % "  ".join(["\"%s\"" % target for target in target_list])
+create_x(results, name="do_multiple_fssh.sh")
+
+
+
+results = """
+#!/bin/bash
+
+
+list_run=(%s)
+
+for dir in "${list_run[@]}";
+do
+    cp job_analyse_general.pbs ${dir}/
+    cp -r scripts/ ${dir}/
+    cd ${dir}
+    pwd
+    qsub job_analyse_general.pbs &
+    cd ..
+done
+""" % "  ".join(["\"%s\"" % target for target in target_list])
+create_x(results, name="do_multiple_analysis.sh")
