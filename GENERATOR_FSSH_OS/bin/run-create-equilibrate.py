@@ -18,7 +18,7 @@ anthracene = {
     'TIMESTEP': 0.5,            # TIMESTEP IN FS
 
     #################### CAN BE CHANGED ###############################################
-    'NUMBER_MOL_ACTIVE': 12,  # NUMBER OF ACTIVE MOLECULES
+    'NUMBER_MOL_ACTIVE': 48,  # NUMBER OF ACTIVE MOLECULES
     'DIRECTION': [0, 1, 0],  # DIRECTION TO PROPAGATE THE CHARGE
     'RCUT': 8,  # VDW RCUT
     'POS_CHARGE' : 'FIRST',
@@ -36,6 +36,7 @@ anthracene = {
     'FORCEFIELD_FILE': 'ANTHRACENE_HOLE_FF.prm',  # FORCEFIELD
     'PSF_CHARGE_MOL': 'ANTHRACENE_POSITIVE_NO_CHARGE.psf',
     'PSF_NEUTRAL_MOL': 'ANTHRACENE_NEUTRAL_NO_CHARGE.psf',
+    'ELECTROSTATICS' : 'TRUE',
     ##################################################################################
     'TEMPLATE_FILE' : 'FIST_PBC_CRYSTAL.template',         # (do not change)
 }

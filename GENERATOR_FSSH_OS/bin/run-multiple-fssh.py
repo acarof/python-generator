@@ -19,12 +19,12 @@ multiple_info = [{}]  # Default dictionnary
 multiple_info = [
     {'FILE_INIT' : 'run-sample-0',
      'TIMESTEP'  : 0.1,
-     'NEW_DIR'   : 'NEW_TEST'
+     'NEW_DIR'   : 'CHEDDAR_MAN'
      },
-    {'FILE_INIT': 'run-sample-0',
-     'TIMESTEP': 0.5,
-    'NEW_DIR': 'NEW_TEST2'
-},
+#    {'FILE_INIT': 'run-sample-0',
+#     'TIMESTEP': 0.5,
+#    'NEW_DIR': 'NEW_TEST2'
+#},
     #{'FILE_INIT': 'run-sample-0',
     # 'SCALING': 0.11111},
 ]
