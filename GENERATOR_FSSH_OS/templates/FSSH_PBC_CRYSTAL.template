@@ -21,12 +21,16 @@
                  MTS         2
             &END NOSE
         &END THERMOSTAT
+        &PRINT
+            &PROGRAM_RUN_INFO sedRUNLOG 
+            &END PROGRAM_RUN_INFO  
+        &END PRINT
    	&END MD
   	&PRINT
 	 &TRAJECTORY  LOW
             FORMAT  XYZ
             &EACH
-                MD          sedSTEPS
+                MD          sedPRINT
             &END EACH
         &END TRAJECTORY
         #&VELOCITIES  LOW
@@ -45,6 +49,8 @@
         &END RESTART_HISTORY
         &RESTART OFF
         &END RESTART
+        &MIXED_ENERGIES OFF
+        &END MIXED_ENERGIES
    	&END PRINT
    	@INCLUDE CONSTRAINT.include
 &END MOTION
@@ -74,6 +80,7 @@
                         SEED                                  sedSEED
                         REPRESENTATION                        sedREPRESENTATION
                         RK_PROPAGATION                        sedRK_PROPAGATION
+                        PRINT_MORE                            sedPRINT_MORE
                         &AOM
                              PSIGMA_FILE_NAME                 ../topologies/S_psigma.txt
                              PPI_FILE_NAME                    ../topologies/S_ppi.txt
@@ -142,9 +149,9 @@
                         &END PRINT
                 &END ADIABATIC
                 &PRINT
-                        &PROGRAM_RUN_INFO LOW
+                        &PROGRAM_RUN_INFO OFF
                                         &EACH
-                                                MD 1
+                                                MD sedPRINT
                                         &END EACH
                         &END PROGRAM_RUN_INFO
                 &END PRINT

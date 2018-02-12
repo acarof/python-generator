@@ -2,7 +2,7 @@
 
 #PBS -N pbs-cp-fssh
 #PBS -l select=1
-#PBS -l walltime=02:00:00
+#PBS -l walltime=00:05:00
 #PBS -A e05-softm-blu
 
 module load cp2k
@@ -15,7 +15,7 @@ cd $PBS_O_WORKDIR
 # All simulations are in subdirectories of this directory.
 basedir=$PBS_O_WORKDIR
 
-CP2K_PATH=/work/e05/e05/acarofmc/bin/cp2k.sopt
+CP2K_PATH=/work/e05/e05/acarofmc/src/CP2K/nonadiabatic-cp2k/cp2k/exe/ARCHER/cp2k.sopt
 START_RUN=0
 LAST_RUN=0
 KIND=fssh
@@ -30,14 +30,14 @@ done
 # Wait for all simulations to complete
 wait
 
-for (( i=$START_RUN; i<=$LAST_RUN; i++ ))
-do
-  cd $basedir/run-${KIND}-$i/
-  rm *restart*
-  rm run-r-1.out
-  rm run-mix-1.ener
-  rm input-1.psf
-done
+#for (( i=$START_RUN; i<=$LAST_RUN; i++ ))
+#do
+#  cd $basedir/run-${KIND}-$i/
+#  rm *restart*
+#  rm run-r-1.out
+#  rm run-mix-1.ener
+#  rm input-1.psf
+#done
 
 
 

@@ -846,6 +846,11 @@ class FSSHOSCrystal(CP2KRun):
         %s
         @INCLUDE TOPOLOGY.include
     &END SUBSYS
+    &PRINT
+            &PROGRAM_RUN_INFO OFF
+            &END PROGRAM_RUN_INFO
+    &END PRINT
+
 &END FORCE_EVAL
             """ % (self._get_force_field(),
                    self._get_electrostatics(),

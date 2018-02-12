@@ -51,6 +51,8 @@ cp2k_param = [
     ['FORCEFIELD_FILE', 'ANTHRACENE_HOLE_FF.prm'],
     ['AOM_COEFF', 'ANTHRACENE_HOLE_AOM.inc'],
     ['INITIALIZATION', 'DIABATIC'],
+    ['PRINT_MORE', 'F'],
+    ['RUNLOG', 'OFF']
 ]
 
 # BUILD THE MEGA_LISTS

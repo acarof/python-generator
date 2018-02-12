@@ -50,6 +50,8 @@ info = {
     #  'NAME': 'anthracene-fssh',                      # Name of the runs
     #  'SEED': 717063212,                              # Seed of the runs, if not present, a random value is chosen
     'LIGHT': False,                                    # Remove some files for production run
+    'PRINT_MORE' : 'T',                                # Level of printing for FSSH information ( T or F)
+    'RUNLOG'     : 'LOW',                              # Level of printing for MD information (OFF or LOW)
 
     ###################################################################################
     #### SURFACE HOPPING INFORMATION ####
@@ -195,3 +197,42 @@ do
 done
 """ % "  ".join(["\"%s\"" % target for target in target_list])
 create_x(results, name="do_multiple_analysis.sh")
+
+
+results = """
+#!/bin/bash
+
+
+list_run=(%s)
+
+for dir in "${list_run[@]}";
+do
+    cp job_archive_bash.pbs ${dir}/
+    cp -r scripts/ ${dir}/
+    cd ${dir}
+    pwd
+    qsub job_archive_bash.pbs &
+    cd ..
+done
+""" % "  ".join(["\"%s\"" % target for target in target_list])
+create_x(results, name="do_multiple_archive.sh")
+
+
+
+results = """
+#!/bin/bash
+
+
+list_run=(%s)
+
+for dir in "${list_run[@]}";
+do
+    cp job_cut_bash.pbs ${dir}/
+    cp -r scripts/ ${dir}/
+    cd ${dir}
+    pwd
+    qsub job_cut_bash.pbs &
+    cd ..
+done
+""" % "  ".join(["\"%s\"" % target for target in target_list])
+create_x(results, name="do_multiple_cut.sh")

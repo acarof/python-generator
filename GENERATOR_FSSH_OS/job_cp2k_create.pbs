@@ -30,4 +30,5 @@ done
 # Wait for all simulations to complete
 wait
 
-
+#cd ${basedir}
+#qsub job_python_sampling.pbs

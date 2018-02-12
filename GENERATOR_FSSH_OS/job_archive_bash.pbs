@@ -1,6 +1,6 @@
 #!/bin/bash --login
 
-#PBS -N pbs-py-archive
+#PBS -N pbs-archive
 #PBS -l select=serial=true:ncpus=24
 #PBS -l walltime=01:00:00
 #PBS -A e05-softm-blu
