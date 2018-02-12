@@ -1,0 +1,27 @@
+#!/bin/bash --login
+
+#PBS -N pbs-cut-bash
+#PBS -l select=serial=true:ncpus=24
+#PBS -l walltime=01:00:00
+#PBS -A e05-softm-blu
+
+
+# Make sure any symbolic links are resolved to absolute path
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+
+# Change to the directory that the job was submitted from
+cd $PBS_O_WORKDIR
+
+FILES=*
+for f in $FILES
+do
+  echo "Processing $f file..."
+  if [[ $f == *"run-"* ]]; then
+     rm $f/*restart*
+     rm $f/input-1.psf
+     rm $f/run-mix-1.ener
+     rm $f/run-r-1.out
+     rm $f/core*
+  fi
+  # take action on each file. $f store current file name
+done
