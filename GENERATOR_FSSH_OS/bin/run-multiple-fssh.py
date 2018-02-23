@@ -69,7 +69,7 @@ info = {
     'REORDERING_STATES_USING_OVERLAP': 'T',            # Apply reordering of the state with overlap : True ('T') or False ('F')
     'DECO_TIME': 'FORCES_BASED',                       # Which deco time for decoherence: FORCES_BASED, EDC, etc.
     'THRESHOLD_TAU_FORCES': 1E-20,                     # If DECO_TIME is FORCES_BASED, we have a threshold to speed up the calculation
-    'TEMPERATURE_FG_WIDTH': 298,                       # If DECO_TIME is FORCES_BASED, we need the temperature as parameters
+  #  'TEMPERATURE_FG_WIDTH': 298,                       # If DECO_TIME is FORCES_BASED, we need the temperature as parameters
     'EDC_E0': 0.1,                                     # If DECO_TIME is EDC, parameter E0
 
     ###################################################################################
