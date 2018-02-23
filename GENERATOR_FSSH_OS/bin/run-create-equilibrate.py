@@ -36,7 +36,7 @@ anthracene = {
     'FORCEFIELD_FILE': 'ANTHRACENE_HOLE_FF.prm',  # FORCEFIELD
     'PSF_CHARGE_MOL': 'ANTHRACENE_POSITIVE_NO_CHARGE.psf',
     'PSF_NEUTRAL_MOL': 'ANTHRACENE_NEUTRAL_NO_CHARGE.psf',
-    'ELECTROSTATICS' : 'TRUE',
+    'ELECTROSTATICS' : False,
     ##################################################################################
     'TEMPLATE_FILE' : 'FIST_PBC_CRYSTAL.template',         # (do not change)
 }
