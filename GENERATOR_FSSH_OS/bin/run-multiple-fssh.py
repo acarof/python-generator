@@ -41,7 +41,7 @@ info = {
     #### SYSTEM INFORMATION ####
     'FORCEFIELD_FILE': 'ANTHRACENE_HOLE_FF.prm',       # Force field file
     'AOM_COEFF': 'ANTHRACENE_HOLE_AOM.inc',            # AOM P-PI coefficient
-    'SCALING': 0.06685,                                # Scaling factor for AOM method (C = 1.819 eV)
+    'SCALING': 0.1136,                                # Scaling factor for AOM method (C = 1.819 eV)
     'AOM_RADIUS': 3.0,                                 # Radius to define the chain of molecule part of FOBSH
 
     ###################################################################################
