@@ -302,6 +302,9 @@ class CP2KRun(object):
         self._template_file = self._my_sed_dict.get('TEMPLATE_FILE')
         self._timestep = self._my_sed_dict.get('TIMESTEP')
         self._archer = self._my_sed_dict.get('ARCHER', False)
+        self._do_speedup_lj = False
+        if self._my_sed_dict.get('DO_SPEEDUP_LJ','F') is 'T':
+           self._do_speedup_lj = True
 
 
     def print_info(self):
@@ -590,10 +593,16 @@ class FSSHOSCrystal(CP2KRun):
     def _complete_main_input(self):
         self._write_file('%s/%s' % (self.paths['templates'], self._template_file), '%s/run.inp' % self._dir.path)
         with open('%s/run.inp' % self._dir.path, 'ab+') as file_:
-            for molecule in self._list_activated:
-                result = "@SET  ACTIVE_MOL %s\n" % molecule
+            result = ""
+            if self._do_speedup_lj:
+                result += "@SET ACTIVE_MOL %s\n" % self._list_activated[0]
+                result += "@SET DO_LJ  1\n"
                 result += "@INCLUDE FORCE_EVAL.include\n"
-                file_.write(result)
+                result += "@SET DO_LJ  0\n"
+            for molecule in self._list_activated:
+                result += "@SET  ACTIVE_MOL %s\n" % molecule
+                result += "@INCLUDE FORCE_EVAL.include\n"
+            file_.write(result)
         #self._write_file(self._tem, 'FORCEEVAL.tmp', number=len(self._list_activated))
 
     def _kind(self):
@@ -750,9 +759,17 @@ class FSSHOSCrystal(CP2KRun):
         if self._my_sed_dict.get('RCUT') is None:
             self._my_sed_dict.update({'RCUT': 12})
         self._my_sed_dict.update({
-            'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 1),
             'NATOMS'           : self._my_sed_dict['NMOL']*self._my_sed_dict['NATOM_MOL']
         })
+        if self._do_speedup_lj:
+           self._my_sed_dict.update({
+               'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 2),
+           })
+        else:
+           self._my_sed_dict.update({
+               'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 1),
+           })
+
         self._nmol = self._my_sed_dict.get('NMOL')
 
     def _aom(self):
@@ -793,18 +810,51 @@ class FSSHOSCrystal(CP2KRun):
 
 
     def _get_force_field(self):
-        if self._forcefield_format == '.prm':
-            return """
-                    PARMTYPE CHM
-        			PARM_FILE_NAME ../topologies/%s
-                    """ % self._forcefield_file
+        if self._do_speedup_lj:
+           if self._forcefield_format == '.prm':
+               return """
+            @IF ${DO_LJ} == 1
+                DO_NONBONDED     T
+                PARMTYPE CHM
+                PARM_FILE_NAME ../topologies/%s
+            @ENDIF
+            @IF ${DO_LJ} /= 1
+                DO_NONBONDED     F
+                PARMTYPE CHM
+                PARM_FILE_NAME ../topologies/%s
+            @ENDIF
+                      """ % (self._my_sed_dict['FORCEFIELD_LJ_ONLY'], self._forcefield_file)
+           else:
+               with open('%s/%s' % (self._dir.path, self._my_sed_dict['FORCEFIELD_FILE']), 'w') as file:
+                   file.write(self._amend_text(open('%s/%s' % (self.paths.get('topologies'),
+                                                               self._my_sed_dict['FORCEFIELD_FILE']), 'r').read()))
+               with open('%s/%s' % (self._dir.path, self._my_sed_dict['FORCEFIELD_LJ_ONLY']), 'w') as file:
+                   file.write(self._amend_text(open('%s/%s' % (self.paths.get('topologies'),
+                                                               self._my_sed_dict['FORCEFIELD_LJ_ONLU']), 'r').read()))
+               return """
+            @IF ${DO_LJ} == 1
+                DO_NONBONDED     T
+                @INCLUDE %s
+            @ENDIF
+            @IF ${DO_LJ} /= 1
+                DO_NONBONDED     F
+                @INCLUDE %s
+            @ENDIF
+                       """ % (self._my_sed_dict['FORCEFIELD_LJ_ONLY'], self._my_sed_dict['FORCEFIELD_FILE'])
+        
         else:
-            with open('%s/%s' % (self._dir.path, self._my_sed_dict['FORCEFIELD_FILE']), 'w') as file:
-                file.write(self._amend_text(open('%s/%s' % (self.paths.get('topologies'),
-                                                            self._my_sed_dict['FORCEFIELD_FILE']), 'r').read()))
-            return """
-                    @INCLUDE %s
-                    """ % self._my_sed_dict['FORCEFIELD_FILE']
+           if self._forcefield_format == '.prm':
+               return """
+                        PARMTYPE CHM
+                	PARM_FILE_NAME ../topologies/%s
+                      """ % self._forcefield_file
+           else:
+               with open('%s/%s' % (self._dir.path, self._my_sed_dict['FORCEFIELD_FILE']), 'w') as file:
+                   file.write(self._amend_text(open('%s/%s' % (self.paths.get('topologies'),
+                                                               self._my_sed_dict['FORCEFIELD_FILE']), 'r').read()))
+               return """
+                       @INCLUDE %s
+                       """ % self._my_sed_dict['FORCEFIELD_FILE']
 
 
     def _get_velocities(self):

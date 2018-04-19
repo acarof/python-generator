@@ -21,7 +21,7 @@
      &END LENNARD-JONES
      &LENNARD-JONES
       ATOMS                     H   CN
-      EPSILON   [kcalmol]       0.03655D0
+      EPSILON   [kcalmol]       0.03675D0
       SIGMA     [angstrom]      3.02460D0
      &END LENNARD-JONES
      &LENNARD-JONES
