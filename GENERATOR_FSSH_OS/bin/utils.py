@@ -831,6 +831,10 @@ class FSSHOSCrystal(CP2KRun):
 
     def _get_force_field(self):
         if self._do_speedup_lj:
+           if self._do_speedup_intra:
+              ff_name_do_lj=self._my_sed_dict['FORCEFIELD_FILE']
+           else:
+              ff_name_do_lj=self._my_sed_dict['FORCEFIELD_LJ_ONLY']
            if self._forcefield_format == '.prm':
                return """
             @IF ${DO_LJ} == 1
@@ -843,14 +847,14 @@ class FSSHOSCrystal(CP2KRun):
                 PARMTYPE CHM
                 PARM_FILE_NAME ../topologies/%s
             @ENDIF
-                      """ % (self._my_sed_dict['FORCEFIELD_LJ_ONLY'], self._forcefield_file)
+                      """ % (ff_name_do_lj, self._forcefield_file)
            else:
                with open('%s/%s' % (self._dir.path, self._my_sed_dict['FORCEFIELD_FILE']), 'w') as file:
                    file.write(self._amend_text(open('%s/%s' % (self.paths.get('topologies'),
                                                                self._my_sed_dict['FORCEFIELD_FILE']), 'r').read()))
-               with open('%s/%s' % (self._dir.path, self._my_sed_dict['FORCEFIELD_LJ_ONLY']), 'w') as file:
+               with open('%s/%s' % (self._dir.path,  ff_name_do_lj), 'w') as file:
                    file.write(self._amend_text(open('%s/%s' % (self.paths.get('topologies'),
-                                                               self._my_sed_dict['FORCEFIELD_LJ_ONLU']), 'r').read()))
+                                                               ff_name_do_lj), 'r').read()))
                return """
             @IF ${DO_LJ} == 1
                 DO_NONBONDED     T
@@ -860,7 +864,7 @@ class FSSHOSCrystal(CP2KRun):
                 DO_NONBONDED     F
                 @INCLUDE %s
             @ENDIF
-                       """ % (self._my_sed_dict['FORCEFIELD_LJ_ONLY'], self._my_sed_dict['FORCEFIELD_FILE'])
+                       """ % (ff_name_do_lj, self._my_sed_dict['FORCEFIELD_FILE'])
         
         else:
            if self._forcefield_format == '.prm':
@@ -886,6 +890,22 @@ class FSSHOSCrystal(CP2KRun):
         """
         else:
             return "# No initial velocities"
+
+    def _get_include_topology(self):
+        if self._do_speedup_intra:
+           return """
+     @IF ${DO_LJ} /= 1
+        @INCLUDE TOPOLOGY.include
+     @ENDIF
+     @IF ${DO_LJ} == 1
+        @INCLUDE TOPOLOGY-NEUTRAL-ONLY.include
+     @ENDIF
+        """
+        else:
+           return """
+        @INCLUDE TOPOLOGY.include
+        """
+
 
     def _force_eval(self):
         result = """
@@ -914,7 +934,7 @@ class FSSHOSCrystal(CP2KRun):
         #    @INCLUDE COORD.init
         #&END COORD
         %s
-        @INCLUDE TOPOLOGY.include
+        %s
     &END SUBSYS
     &PRINT
             &PROGRAM_RUN_INFO OFF
@@ -924,7 +944,8 @@ class FSSHOSCrystal(CP2KRun):
 &END FORCE_EVAL
             """ % (self._get_force_field(),
                    self._get_electrostatics(),
-                   self._get_velocities())
+                   self._get_velocities(),
+                   self._get_include_topology())
         with open('%s/FORCE_EVAL.include' % self._dir.path, 'w') as file_:
                 file_.write( self._amend_text(result))
 
