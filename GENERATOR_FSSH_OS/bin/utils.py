@@ -597,7 +597,7 @@ class FSSHOSCrystal(CP2KRun):
         self._complete_main_input()
 
     def _one_molecule(self):
-        with open("%s/ONE_MOLECULE.inp" % self._dir.path, "w") as file_:
+        with open("%s/ONE_MOLECULE.include" % self._dir.path, "w") as file_:
              result = """
                                @IF ${CHARGED} == 1
                                   &MOLECULE
