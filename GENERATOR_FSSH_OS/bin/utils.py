@@ -305,6 +305,7 @@ class CP2KRun(object):
         self._do_speedup_lj = False
         if self._my_sed_dict.get('DO_SPEEDUP_LJ','F') is 'T':
            self._do_speedup_lj = True
+        self._do_speedup_intra = False
         if self._my_sed_dict.get('DO_SPEEDUP_INTRA','F') is 'T':
            self._do_speedup_intra = True
 
