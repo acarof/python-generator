@@ -591,10 +591,31 @@ class FSSHOSCrystal(CP2KRun):
         self._topology("TOPOLOGY.include") # CREATE TOPOLOGY,include
         if self._do_speedup_intra:
            self._topology("TOPOLOGY-NEUTRAL-ONLY.include")
-           print 'cp %s/%s %s/ ' % (self.paths['topologies'], self._my_sed_dict['TOPOLOGY_NOBOND'], self._dir.path)
            os.system('cp %s/%s %s/ ' % (self.paths['topologies'], self._my_sed_dict['TOPOLOGY_NOBOND'], self._dir.path))
+           self._one_molecule()
         self._aom()
         self._complete_main_input()
+
+    def _one_molecule(self):
+        with open("%s/ONE_MOLECULE.inp" % self._dir.path, "w") as file_:
+             result = """
+                               @IF ${CHARGED} == 1
+                                  &MOLECULE
+                                    NMOL              1
+                                    CONN_FILE_NAME    ../topologies/%s
+                                    CONN_FILE_FORMAT  UPSF
+                                  &END MOLECULE
+                               @ENDIF
+                               @IF ${CHARGED} /= 1
+                                  &MOLECULE
+                                    NMOL              1
+                                    CONN_FILE_NAME    ../topologies/%s
+                                    CONN_FILE_FORMAT  UPSF
+                                  &END MOLECULE
+                               @ENDIF
+        """ % ( self._my_sed_dict['PSF_CHARGE_MOL'],
+                self._my_sed_dict['PSF_NEUTRAL_MOL'])
+             file_.write(result)
 
     def _complete_main_input(self):
         self._write_file('%s/%s' % (self.paths['templates'], self._template_file), '%s/run.inp' % self._dir.path)
