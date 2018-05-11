@@ -305,6 +305,9 @@ class CP2KRun(object):
         self._do_speedup_lj = False
         if self._my_sed_dict.get('DO_SPEEDUP_LJ','F') is 'T':
            self._do_speedup_lj = True
+        self._do_speedup_intra = False
+        if self._my_sed_dict.get('DO_SPEEDUP_INTRA','F') is 'T':
+           self._do_speedup_intra = True
 
 
     def print_info(self):
@@ -586,22 +589,60 @@ class FSSHOSCrystal(CP2KRun):
     def _write_topo(self):
         #self._write_file('%s/%s' % (self.paths['topologies'], self._forcefield_file), '%s/FORCEFIELD.include' % self._dir.path) # CREATE FORCEFIELD.include
         self._force_eval() # CREATE FORCE_EVAL.include
-        self._topology() # CREATE TOPOLOGY,include
+        self._topology("TOPOLOGY.include") # CREATE TOPOLOGY,include
+        if self._do_speedup_intra:
+           self._topology("TOPOLOGY-NEUTRAL-ONLY.include")
+           os.system('cp %s/%s %s/ ' % (self.paths['topologies'], self._my_sed_dict['TOPOLOGY_NOBOND'], self._dir.path))
+           self._one_molecule()
         self._aom()
         self._complete_main_input()
+
+    def _one_molecule(self):
+        with open("%s/ONE_MOLECULE.include" % self._dir.path, "w") as file_:
+             result = """
+                               @IF ${CHARGED} == 1
+                                  &MOLECULE
+                                    NMOL              1
+                                    CONN_FILE_NAME    ../topologies/%s
+                                    CONN_FILE_FORMAT  UPSF
+                                  &END MOLECULE
+                               @ENDIF
+                               @IF ${CHARGED} /= 1
+                                  &MOLECULE
+                                    NMOL              1
+                                    CONN_FILE_NAME    ../topologies/%s
+                                    CONN_FILE_FORMAT  UPSF
+                                  &END MOLECULE
+                               @ENDIF
+        """ % ( self._my_sed_dict['PSF_CHARGE_MOL'],
+                self._my_sed_dict['PSF_NEUTRAL_MOL'])
+             file_.write(result)
 
     def _complete_main_input(self):
         self._write_file('%s/%s' % (self.paths['templates'], self._template_file), '%s/run.inp' % self._dir.path)
         with open('%s/run.inp' % self._dir.path, 'ab+') as file_:
             result = ""
-            if self._do_speedup_lj:
-                result += "@SET ACTIVE_MOL %s\n" % self._list_activated[0]
-                result += "@SET DO_LJ  1\n"
-                result += "@INCLUDE FORCE_EVAL.include\n"
-                result += "@SET DO_LJ  0\n"
-            for molecule in self._list_activated:
-                result += "@SET  ACTIVE_MOL %s\n" % molecule
-                result += "@INCLUDE FORCE_EVAL.include\n"
+            if self._do_speedup_intra:
+               result += "@SET ACTIVE_MOL %s\n" % self._list_activated[0]
+               result += "@SET DO_LJ  1\n"
+               result += "@SET CHARGED  1\n"
+               result += "@INCLUDE FORCE_EVAL.include\n"
+               result += "@SET DO_LJ  0\n"
+               for molecule in self._list_activated:
+                   result += "@SET  ACTIVE_MOL %s\n" % molecule
+                   result += "@SET CHARGED  1\n"
+                   result += "@INCLUDE FORCE_EVAL.include\n"
+                   result += "@SET CHARGED  0\n"
+                   result += "@INCLUDE FORCE_EVAL.include\n"
+            else:
+               if self._do_speedup_lj:
+                   result += "@SET ACTIVE_MOL %s\n" % self._list_activated[0]
+                   result += "@SET DO_LJ  1\n"
+                   result += "@INCLUDE FORCE_EVAL.include\n"
+                   result += "@SET DO_LJ  0\n"
+               for molecule in self._list_activated:
+                   result += "@SET  ACTIVE_MOL %s\n" % molecule
+                   result += "@INCLUDE FORCE_EVAL.include\n"
             file_.write(result)
         #self._write_file(self._tem, 'FORCEEVAL.tmp', number=len(self._list_activated))
 
@@ -624,21 +665,20 @@ class FSSHOSCrystal(CP2KRun):
             """ % (self._my_sed_dict['SOLVENT'].title(), self._my_sed_dict['SOLVENT'].title())
         return result
 
-    def _new_psf(self):
-        result = ""
-        index = 0
-        for molecule in self._list_activated:
-            if (molecule - index - 1) != 0:
-                result += """
-                            &MOLECULE
-                                NMOL              %s
-                                CONN_FILE_NAME    ../topologies/%s
-                                CONN_FILE_FORMAT  UPSF
-                           &END MOLECULE
+    def _get_charged_molecule(self, molecule):
+        if self._do_speedup_intra:
+            return """
+                           @IF ${ACTIVE_MOL} == %s
+                                @INCLUDE ONE_MOLECULE.include
+                           @ENDIF
+                           @IF ${ACTIVE_MOL} /= %s
+                                @INCLUDE %s
+                           @ENDIF
                    """ % \
-                    (molecule - index - 1, self._my_sed_dict['PSF_NEUTRAL_MOL'])
-                # ( molecule - index - 1, self._mol_name + "_NEUTRE.psf")
-            result += """
+                    ( molecule, 
+                      molecule, self._my_sed_dict['TOPOLOGY_NOBOND'])
+        else:
+            return """
                            @IF ${ACTIVE_MOL} == %s
                                 &MOLECULE
                                     NMOL              1
@@ -658,6 +698,27 @@ class FSSHOSCrystal(CP2KRun):
                       molecule, self._my_sed_dict['PSF_NEUTRAL_MOL'])
             # ( molecule, self._mol_name + "_CHARGE.psf",
             #   molecule, self._mol_name + "_NEUTRE.psf")
+
+
+    def _new_psf(self, name="TOPOLOGY.include"):
+        result = ""
+        index = 0
+        if name == "TOPOLOGY-NEUTRAL-ONLY.include":
+           my_list = []
+        else:
+           my_list = self._list_activated
+        for molecule in my_list:
+            if (molecule - index - 1) != 0:
+                result += """
+                            &MOLECULE
+                                NMOL              %s
+                                CONN_FILE_NAME    ../topologies/%s
+                                CONN_FILE_FORMAT  UPSF
+                           &END MOLECULE
+                   """ % \
+                    (molecule - index - 1, self._my_sed_dict['PSF_NEUTRAL_MOL'])
+                # ( molecule - index - 1, self._mol_name + "_NEUTRE.psf")
+            result += self._get_charged_molecule(molecule)
             index = molecule
         if (index != self._nmol):
             result += """
@@ -717,9 +778,9 @@ class FSSHOSCrystal(CP2KRun):
 """ % '    '.join(map(str, self._my_sed_dict['SIZE_BOX']))
 
 
-    def _topology(self):
+    def _topology(self, name="TOPOLOGY.include"):
         self._kind()
-        with open('%s/TOPOLOGY.include' % self._dir.path, 'w') as file_:
+        with open('%s/%s' % (self._dir.path, name), 'w') as file_:
             result = """
                 %s
                 %s
@@ -742,7 +803,7 @@ class FSSHOSCrystal(CP2KRun):
             """ %\
             (self._get_cell(),
              self._kind(),
-             self._new_psf(),
+             self._new_psf(name),
              self._get_colvar())
             file_.write( self._amend_text(result))
 
@@ -761,14 +822,19 @@ class FSSHOSCrystal(CP2KRun):
         self._my_sed_dict.update({
             'NATOMS'           : self._my_sed_dict['NMOL']*self._my_sed_dict['NATOM_MOL']
         })
-        if self._do_speedup_lj:
+        if self._do_speedup_intra:
            self._my_sed_dict.update({
-               'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 2),
+               'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated)*2 + 2),
            })
         else:
-           self._my_sed_dict.update({
-               'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 1),
-           })
+           if self._do_speedup_lj:
+              self._my_sed_dict.update({
+                  'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 2),
+              })
+           else:
+              self._my_sed_dict.update({
+                  'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 1),
+              })
 
         self._nmol = self._my_sed_dict.get('NMOL')
 
@@ -811,6 +877,10 @@ class FSSHOSCrystal(CP2KRun):
 
     def _get_force_field(self):
         if self._do_speedup_lj:
+           if self._do_speedup_intra:
+              ff_name_do_lj=self._my_sed_dict['FORCEFIELD_FILE']
+           else:
+              ff_name_do_lj=self._my_sed_dict['FORCEFIELD_LJ_ONLY']
            if self._forcefield_format == '.prm':
                return """
             @IF ${DO_LJ} == 1
@@ -823,14 +893,14 @@ class FSSHOSCrystal(CP2KRun):
                 PARMTYPE CHM
                 PARM_FILE_NAME ../topologies/%s
             @ENDIF
-                      """ % (self._my_sed_dict['FORCEFIELD_LJ_ONLY'], self._forcefield_file)
+                      """ % (ff_name_do_lj, self._forcefield_file)
            else:
                with open('%s/%s' % (self._dir.path, self._my_sed_dict['FORCEFIELD_FILE']), 'w') as file:
                    file.write(self._amend_text(open('%s/%s' % (self.paths.get('topologies'),
                                                                self._my_sed_dict['FORCEFIELD_FILE']), 'r').read()))
-               with open('%s/%s' % (self._dir.path, self._my_sed_dict['FORCEFIELD_LJ_ONLY']), 'w') as file:
+               with open('%s/%s' % (self._dir.path,  ff_name_do_lj), 'w') as file:
                    file.write(self._amend_text(open('%s/%s' % (self.paths.get('topologies'),
-                                                               self._my_sed_dict['FORCEFIELD_LJ_ONLU']), 'r').read()))
+                                                               ff_name_do_lj), 'r').read()))
                return """
             @IF ${DO_LJ} == 1
                 DO_NONBONDED     T
@@ -840,7 +910,7 @@ class FSSHOSCrystal(CP2KRun):
                 DO_NONBONDED     F
                 @INCLUDE %s
             @ENDIF
-                       """ % (self._my_sed_dict['FORCEFIELD_LJ_ONLY'], self._my_sed_dict['FORCEFIELD_FILE'])
+                       """ % (ff_name_do_lj, self._my_sed_dict['FORCEFIELD_FILE'])
         
         else:
            if self._forcefield_format == '.prm':
@@ -866,6 +936,22 @@ class FSSHOSCrystal(CP2KRun):
         """
         else:
             return "# No initial velocities"
+
+    def _get_include_topology(self):
+        if self._do_speedup_intra:
+           return """
+     @IF ${DO_LJ} /= 1
+        @INCLUDE TOPOLOGY.include
+     @ENDIF
+     @IF ${DO_LJ} == 1
+        @INCLUDE TOPOLOGY-NEUTRAL-ONLY.include
+     @ENDIF
+        """
+        else:
+           return """
+        @INCLUDE TOPOLOGY.include
+        """
+
 
     def _force_eval(self):
         result = """
@@ -894,7 +980,7 @@ class FSSHOSCrystal(CP2KRun):
         #    @INCLUDE COORD.init
         #&END COORD
         %s
-        @INCLUDE TOPOLOGY.include
+        %s
     &END SUBSYS
     &PRINT
             &PROGRAM_RUN_INFO OFF
@@ -904,7 +990,8 @@ class FSSHOSCrystal(CP2KRun):
 &END FORCE_EVAL
             """ % (self._get_force_field(),
                    self._get_electrostatics(),
-                   self._get_velocities())
+                   self._get_velocities(),
+                   self._get_include_topology())
         with open('%s/FORCE_EVAL.include' % self._dir.path, 'w') as file_:
                 file_.write( self._amend_text(result))
 

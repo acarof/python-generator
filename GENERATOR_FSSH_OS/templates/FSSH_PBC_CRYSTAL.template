@@ -64,6 +64,7 @@
                 MIXING_TYPE ADIABATIC
                 &ADIABATIC
                         DO_SPEEDUP_LJ                         sedDO_SPEEDUP_LJ
+                        DO_SPEEDUP_INTRA                      sedDO_SPEEDUP_INTRA
                         METHOD_PROPAGATION                    sedPROPAGATION
                         METHOD_COUPLING                       AOM
                         SURF_HOP_CHOICE                       sedSURF_HOP_CHOICE
