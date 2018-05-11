@@ -591,6 +591,8 @@ class FSSHOSCrystal(CP2KRun):
         self._topology("TOPOLOGY.include") # CREATE TOPOLOGY,include
         if self._do_speedup_intra:
            self._topology("TOPOLOGY-NEUTRAL-ONLY.include")
+           print 'cp %s/%s %s/ ' % (self.paths['topologies'], self._my_sed_dict['TOPOLOGY_NOBOND'], self._dir.path)
+           os.system('cp %s/%s %s/ ' % (self.paths['topologies'], self._my_sed_dict['TOPOLOGY_NOBOND'], self._dir.path))
         self._aom()
         self._complete_main_input()
 
@@ -641,25 +643,20 @@ class FSSHOSCrystal(CP2KRun):
             """ % (self._my_sed_dict['SOLVENT'].title(), self._my_sed_dict['SOLVENT'].title())
         return result
 
-    def _new_psf(self):
-        result = ""
-        index = 0
+    def _get_charged_molecule(self, molecule):
         if self._do_speedup_intra:
-           my_list = []
-        else:
-           my_list = self._list_activated
-        for molecule in my_list:
-            if (molecule - index - 1) != 0:
-                result += """
-                            &MOLECULE
-                                NMOL              %s
-                                CONN_FILE_NAME    ../topologies/%s
-                                CONN_FILE_FORMAT  UPSF
-                           &END MOLECULE
+            return """
+                           @IF ${ACTIVE_MOL} == %s
+                                @INCLUDE ONE_MOLECULE.include
+                           @ENDIF
+                           @IF ${ACTIVE_MOL} /= %s
+                                @INCLUDE %s
+                           @ENDIF
                    """ % \
-                    (molecule - index - 1, self._my_sed_dict['PSF_NEUTRAL_MOL'])
-                # ( molecule - index - 1, self._mol_name + "_NEUTRE.psf")
-            result += """
+                    ( molecule, 
+                      molecule, self._my_sed_dict['TOPOLOGY_NOBOND'])
+        else:
+            return """
                            @IF ${ACTIVE_MOL} == %s
                                 &MOLECULE
                                     NMOL              1
@@ -679,6 +676,27 @@ class FSSHOSCrystal(CP2KRun):
                       molecule, self._my_sed_dict['PSF_NEUTRAL_MOL'])
             # ( molecule, self._mol_name + "_CHARGE.psf",
             #   molecule, self._mol_name + "_NEUTRE.psf")
+
+
+    def _new_psf(self, name="TOPOLOGY.include"):
+        result = ""
+        index = 0
+        if name == "TOPOLOGY-NEUTRAL-ONLY.include":
+           my_list = []
+        else:
+           my_list = self._list_activated
+        for molecule in my_list:
+            if (molecule - index - 1) != 0:
+                result += """
+                            &MOLECULE
+                                NMOL              %s
+                                CONN_FILE_NAME    ../topologies/%s
+                                CONN_FILE_FORMAT  UPSF
+                           &END MOLECULE
+                   """ % \
+                    (molecule - index - 1, self._my_sed_dict['PSF_NEUTRAL_MOL'])
+                # ( molecule - index - 1, self._mol_name + "_NEUTRE.psf")
+            result += self._get_charged_molecule(molecule)
             index = molecule
         if (index != self._nmol):
             result += """
@@ -763,7 +781,7 @@ class FSSHOSCrystal(CP2KRun):
             """ %\
             (self._get_cell(),
              self._kind(),
-             self._new_psf(),
+             self._new_psf(name),
              self._get_colvar())
             file_.write( self._amend_text(result))
 
