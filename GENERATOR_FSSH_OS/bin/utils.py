@@ -588,7 +588,9 @@ class FSSHOSCrystal(CP2KRun):
     def _write_topo(self):
         #self._write_file('%s/%s' % (self.paths['topologies'], self._forcefield_file), '%s/FORCEFIELD.include' % self._dir.path) # CREATE FORCEFIELD.include
         self._force_eval() # CREATE FORCE_EVAL.include
-        self._topology() # CREATE TOPOLOGY,include
+        self._topology("TOPOLOGY.include") # CREATE TOPOLOGY,include
+        if self._do_speedup_intra:
+           self._topology("TOPOLOGY-NEUTRAL-ONLY.include")
         self._aom()
         self._complete_main_input()
 
@@ -642,7 +644,11 @@ class FSSHOSCrystal(CP2KRun):
     def _new_psf(self):
         result = ""
         index = 0
-        for molecule in self._list_activated:
+        if self._do_speedup_intra:
+           my_list = []
+        else:
+           my_list = self._list_activated
+        for molecule in my_list:
             if (molecule - index - 1) != 0:
                 result += """
                             &MOLECULE
@@ -732,9 +738,9 @@ class FSSHOSCrystal(CP2KRun):
 """ % '    '.join(map(str, self._my_sed_dict['SIZE_BOX']))
 
 
-    def _topology(self):
+    def _topology(self, name="TOPOLOGY.include"):
         self._kind()
-        with open('%s/TOPOLOGY.include' % self._dir.path, 'w') as file_:
+        with open('%s/%s' % (self._dir.path, name), 'w') as file_:
             result = """
                 %s
                 %s
