@@ -305,6 +305,8 @@ class CP2KRun(object):
         self._do_speedup_lj = False
         if self._my_sed_dict.get('DO_SPEEDUP_LJ','F') is 'T':
            self._do_speedup_lj = True
+        if self._my_sed_dict.get('DO_SPEEDUP_INTRA','F') is 'T':
+           self._do_speedup_intra = True
 
 
     def print_info(self):
@@ -594,14 +596,27 @@ class FSSHOSCrystal(CP2KRun):
         self._write_file('%s/%s' % (self.paths['templates'], self._template_file), '%s/run.inp' % self._dir.path)
         with open('%s/run.inp' % self._dir.path, 'ab+') as file_:
             result = ""
-            if self._do_speedup_lj:
-                result += "@SET ACTIVE_MOL %s\n" % self._list_activated[0]
-                result += "@SET DO_LJ  1\n"
-                result += "@INCLUDE FORCE_EVAL.include\n"
-                result += "@SET DO_LJ  0\n"
-            for molecule in self._list_activated:
-                result += "@SET  ACTIVE_MOL %s\n" % molecule
-                result += "@INCLUDE FORCE_EVAL.include\n"
+            if self._do_speedup_intra:
+               result += "@SET ACTIVE_MOL %s\n" % self._list_activated[0]
+               result += "@SET DO_LJ  1\n"
+               result += "@SET CHARGED  1\n"
+               result += "@INCLUDE FORCE_EVAL.include\n"
+               result += "@SET DO_LJ  0\n"
+               for molecule in self._list_activated:
+                   result += "@SET  ACTIVE_MOL %s\n" % molecule
+                   result += "@SET CHARGED  1\n"
+                   result += "@INCLUDE FORCE_EVAL.include\n"
+                   result += "@SET CHARGED  0\n"
+                   result += "@INCLUDE FORCE_EVAL.include\n"
+            else:
+               if self._do_speedup_lj:
+                   result += "@SET ACTIVE_MOL %s\n" % self._list_activated[0]
+                   result += "@SET DO_LJ  1\n"
+                   result += "@INCLUDE FORCE_EVAL.include\n"
+                   result += "@SET DO_LJ  0\n"
+               for molecule in self._list_activated:
+                   result += "@SET  ACTIVE_MOL %s\n" % molecule
+                   result += "@INCLUDE FORCE_EVAL.include\n"
             file_.write(result)
         #self._write_file(self._tem, 'FORCEEVAL.tmp', number=len(self._list_activated))
 
@@ -761,14 +776,19 @@ class FSSHOSCrystal(CP2KRun):
         self._my_sed_dict.update({
             'NATOMS'           : self._my_sed_dict['NMOL']*self._my_sed_dict['NATOM_MOL']
         })
-        if self._do_speedup_lj:
+        if self._do_speedup_intra:
            self._my_sed_dict.update({
-               'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 2),
+               'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated)*2 + 2),
            })
         else:
-           self._my_sed_dict.update({
-               'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 1),
-           })
+           if self._do_speedup_lj:
+              self._my_sed_dict.update({
+                  'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 2),
+              })
+           else:
+              self._my_sed_dict.update({
+                  'FORCE_EVAL_ORDER' : '1..%d' % (len(self._list_activated) + 1),
+              })
 
         self._nmol = self._my_sed_dict.get('NMOL')
 

@@ -56,6 +56,7 @@ info = {
     'PRINT_MORE' : 'T',                                # Level of printing for FSSH information ( T or F)
     'RUNLOG'     : 'LOW',                              # Level of printing for MD information (OFF or LOW)
     'DO_SPEEDUP_LJ' : 'T',                             # Use LJ speed-up (T or F)
+    'DO_SPEEDUP_INTRA' : 'T',                          # Use intra speed-up (T or F)
 
     ###################################################################################
     #### SURFACE HOPPING INFORMATION ####
