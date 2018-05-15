@@ -709,27 +709,41 @@ class FSSHOSCrystal(CP2KRun):
            my_list = self._list_activated
         for molecule in my_list:
             if (molecule - index - 1) != 0:
-                result += """
-                            &MOLECULE
-                                NMOL              %s
-                                CONN_FILE_NAME    ../topologies/%s
-                                CONN_FILE_FORMAT  UPSF
-                           &END MOLECULE
-                   """ % \
-                    (molecule - index - 1, self._my_sed_dict['PSF_NEUTRAL_MOL'])
-                # ( molecule - index - 1, self._mol_name + "_NEUTRE.psf")
+               if not self._do_speedup_intra or name == 'TOPOLOGY-NEUTRAL-ONLY.include':
+                   result += """
+                               &MOLECULE
+                                   NMOL              %s
+                                   CONN_FILE_NAME    ../topologies/%s
+                                   CONN_FILE_FORMAT  UPSF
+                              &END MOLECULE
+                      """ % \
+                       (molecule - index - 1, self._my_sed_dict['PSF_NEUTRAL_MOL'])
+                   # ( molecule - index - 1, self._mol_name + "_NEUTRE.psf")
+               else:
+                   for i in range(molecule-index-1):
+                       result += """
+                                    @INCLUDE %s
+                       """ % \
+                        (self._my_sed_dict['TOPOLOGY_NOBOND'])
             result += self._get_charged_molecule(molecule)
             index = molecule
         if (index != self._nmol):
-            result += """
-                            &MOLECULE
-                                NMOL              %s
-                                CONN_FILE_NAME    ../topologies/%s
-                                CONN_FILE_FORMAT  UPSF
-                            &END MOLECULE
-                    """ % \
-                    (self._nmol - index, self._my_sed_dict['PSF_NEUTRAL_MOL'])
-            #   ( self._nmol - index, self._mol_name + "_NEUTRE.psf")
+               if not self._do_speedup_intra or name == 'TOPOLOGY-NEUTRAL-ONLY.include':
+                   result += """
+                               &MOLECULE
+                                   NMOL              %s
+                                   CONN_FILE_NAME    ../topologies/%s
+                                   CONN_FILE_FORMAT  UPSF
+                              &END MOLECULE
+                      """ % \
+                       (self._nmol - index, self._my_sed_dict['PSF_NEUTRAL_MOL'])
+                   # ( molecule - index - 1, self._mol_name + "_NEUTRE.psf")
+               else:
+                   for i in range(self._nmol-index):
+                      result += """
+                                   @INCLUDE %s
+                      """ % \
+                       (self._my_sed_dict['TOPOLOGY_NOBOND'])
         if self._my_sed_dict['SYSTEM'] == 'OS_SOLVENT':
             result += """
                             &MOLECULE
