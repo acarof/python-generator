@@ -41,9 +41,9 @@ info = {
 
     ###################################################################################
     #### SYSTEM INFORMATION ####
-    'FORCEFIELD_FILE': 'ANTHRACENE_HOLE_FF.prm',       # Force field file
+    'FORCEFIELD_FILE': 'ANTHRACENE_HOLE_HUI_FF.prm',       # Force field file
     'FORCEFIELD_LJ_ONLY': 'ANTHRACENE_ONLYLJ_FF.prm',  # Force field file with only LJ parameters
-    'AOM_COEFF': 'ANTHRACENE_HOLE_AOM.inc',            # AOM P-PI coefficient
+    'AOM_COEFF': 'ANTHRACENE_HOLE_HUI_AOM.inc',            # AOM P-PI coefficient
     'TOPOLOGY_NOBOND' : 'ANTHRACENE_NOBOND_TOPOLOGY.inc',    # File with molecule topology without bond
     'SCALING': 0.1136,                                # Scaling factor for AOM method (C = 1.819 eV)
     'AOM_RADIUS': 3.0,                                 # Radius to define the chain of molecule part of FOBSH
