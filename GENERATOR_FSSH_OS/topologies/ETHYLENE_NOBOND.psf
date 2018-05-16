@@ -1,0 +1,34 @@
+PSF
+
+         1 !NTITLE
+   CP2K generated DUMP of connectivity
+
+         6 !NATOM
+         1 ETNB     1        TIP      CN      CN      0.000000        12.010           0
+         2 ETNB     2        TIP      H       H       0.000000         1.008           0
+         3 ETNB     3        TIP      H       H       0.000000         1.008           0
+         4 ETNB     4        TIP      CN      CN      0.000000        12.010           0
+         5 ETNB     5        TIP      H       H       0.000000         1.008           0
+         6 ETNB     6        TIP      H       H       0.000000         1.008           0
+
+
+         0 !NBOND
+
+
+         0 !NTHETA
+
+
+         0 !NPHI
+
+
+         0 !NIMPHI
+
+
+         0 !NDON
+
+
+         0 !NACC
+
+
+         0 !NNB
+

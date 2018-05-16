@@ -33,9 +33,9 @@ anthracene = {
     'STARTING_POINT': [0.0, 0.0, 0.0],  # (do not change)
     'NATOM_MOL': 24,  # NUMBER OF ATOMS PER MOLECULES
     'NMOL_UNIT': 2,  # NUMBER OF MOLECULES PER UNIT_CELL
-    'FORCEFIELD_FILE': 'ANTHRACENE_HOLE_FF.prm',  # FORCEFIELD
-    'PSF_CHARGE_MOL': 'ANTHRACENE_POSITIVE_NO_CHARGE.psf',
-    'PSF_NEUTRAL_MOL': 'ANTHRACENE_NEUTRAL_NO_CHARGE.psf',
+    'FORCEFIELD_FILE': 'ANTHRACENE_HOLE_HUI_FF.prm',  # FORCEFIELD
+    'PSF_CHARGE_MOL': 'ANTHRACENE_POSITIVE_NO_CHARGE_HUI.psf',
+    'PSF_NEUTRAL_MOL': 'ANTHRACENE_NEUTRAL_NO_CHARGE_HUI.psf',
     'ELECTROSTATICS' : False,
     ##################################################################################
     'TEMPLATE_FILE' : 'FIST_PBC_CRYSTAL.template',         # (do not change)

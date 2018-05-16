@@ -165,7 +165,6 @@
                 &VELOCITY
                     @INCLUDE VELOC.init
                 &END VELOCITY
-                 @SET ACTIVE_MOL 1
-                @INCLUDE TOPOLOGY.include
+                @INCLUDE TOPOLOGY-NEUTRAL-ONLY.include
         &END SUBSYS
 &END FORCE_EVAL
