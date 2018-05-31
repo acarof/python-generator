@@ -100,7 +100,7 @@ def initialize_properties_dict(properties_dict, dict_properties, number_blocks, 
 
 
 def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, histo_info = {}, msd_info = 0.0,
-                       psf_file = ''):
+                       psf_file = '', coms=[]):
     list_dir = run_dict[tuple]
     properties_dict = {}
     index = -1
@@ -117,7 +117,7 @@ def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, hist
         for method in dict_properties:
             dict_ = properties_dict[method]
             for property in dict_properties[method]:
-                prop = dir.extract(property, msd_info=msd_info, psf_file=psf_file)
+                prop = dir.extract(property, msd_info=msd_info, psf_file=psf_file, coms=coms)
                 if method == 'Block-runs-average':
                     block = int(index / length_block)
                     #print block

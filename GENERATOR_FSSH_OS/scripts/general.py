@@ -11,21 +11,20 @@ keywords = ['TEMPERATURE']
 dict_properties = {
     'Runs-average' :  ['Adiabatic-populations', 'Surface-populations', 'Delta_E',
                        'Adiabatic-energies', 'Adiabatic-IPR',
-                       'Populations', 'MSD', 'IPR',
-                       'Projected-populations', 'Projected-MSD', 'Projected-IPR',
-                       'MQC-populations', 'MQC-MSD', 'MQC-IPR'],
-    'Block-runs-average' : [ 'MSD', 'Projected-MSD', 'MQC-MSD'],
+                       'Populations', '3D-MSD', 'IPR'],
+    'Block-runs-average' : [ '3D-MSD'],
     'Specific' : ['FSSH', 'Detailed-FSSH', 'Detailed-CASES'],
     'Mean' : ['Total-energy', 'Temperature'],
     'Histogram' : ['Off-diagonals', 'Delta_E'],
     'Initial'   : ['Delta_E'],
-    'Last' : ['IPR', 'Projected-IPR', 'MQC-IPR']
+    'Last' : ['IPR', ]
 }
 
 
 
 psf_file = './input-1.psf' # ABSOLUTE PATH TO THE PSF FILE TO USE TO CALCULATE 3D MSD
-number_blocks = 2
+structure_file = '../run-fssh-110/pos-init.xyz'
+number_blocks = 1
 msd_length = 6.038
 # FOR HISTO
 histo_info = {
@@ -63,13 +62,14 @@ for i, directory in enumerate(dirlist):
         run_dict[keys].append('../' + directory)
 
 
+coms = find_molecules(psf_file, structure_file)
 
 
 
 # PARALLEL OR SERIAL CALCULATION
 def super_analyse(tuple):
     return analyse_properties(tuple, run_dict, dict_properties, number_blocks=number_blocks, histo_info=histo_info, msd_info = msd_length,
-                              psf_file = psf_file)
+                              psf_file = psf_file, coms=coms)
 try:
     nworker = int( sys.argv[1] )
 except:

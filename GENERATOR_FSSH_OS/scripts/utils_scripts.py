@@ -56,7 +56,7 @@ class FSSHRun(object):
         self.coefficients = self._read_xyz_file("run-coeff-1.xyz")
 
 
-    def extract(self, property, init=False, msd_info = 0.0, psf_file = ''):
+    def extract(self, property, init=False, msd_info = 0.0, psf_file = '', coms=[]):
         if init:
             self.init = True
             self.timestep  = float(self.get_input_key(['\TIMESTEP'])[0])
@@ -64,6 +64,8 @@ class FSSHRun(object):
             self.init = False
         self.msd_info = msd_info
         self._psf_file = psf_file
+        if len(coms) != 0:
+            self._3d_com = coms
         if (property == 'Atoms Number'):
             return self._get_atoms_number()
         elif (property == 'Off-diagonals'):
@@ -411,10 +413,10 @@ class FSSHRun(object):
                     if _convert_float(x) is None:
                         list.append(x)
                     else:
-                        if _convert_int(x) is None:
-                            list.append(_convert_float(x))
-                        else:
+                        if _convert_float(x) is None:
                             list.append(_convert_int(x))
+                        else:
+                            list.append(_convert_float(x))
 
                 results.get(time).append(list)
         file.close()
