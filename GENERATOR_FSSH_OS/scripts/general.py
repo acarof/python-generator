@@ -21,7 +21,11 @@ dict_properties = {
     'Initial'   : ['Delta_E'],
     'Last' : ['IPR', 'Projected-IPR', 'MQC-IPR']
 }
-number_blocks = 5
+
+
+
+psf_file = './input-1.psf' # ABSOLUTE PATH TO THE PSF FILE TO USE TO CALCULATE 3D MSD
+number_blocks = 2
 msd_length = 6.038
 # FOR HISTO
 histo_info = {
@@ -41,7 +45,7 @@ histo_info = {
 name_bucket = os.getcwd().split('/')[-1]
 short_time = time.strftime("%y%m%d%H%M", time.localtime())
 title = '%s-%s' % (name_bucket, short_time,)
-dirlist = os.listdir('.')
+dirlist = os.listdir('..')
 dataname = 'data-%s-%s' % (scripts, title)
 if not os.path.isdir(dataname):
     os.mkdir(dataname)
@@ -56,7 +60,7 @@ for i, directory in enumerate(dirlist):
         keys = tuple(keywords)
         if run_dict.get(keys ) is None:
             run_dict[keys] = []
-        run_dict[keys].append(directory)
+        run_dict[keys].append('../' + directory)
 
 
 
@@ -64,11 +68,12 @@ for i, directory in enumerate(dirlist):
 
 # PARALLEL OR SERIAL CALCULATION
 def super_analyse(tuple):
-    return analyse_properties(tuple, run_dict, dict_properties, number_blocks=number_blocks, histo_info=histo_info, msd_info = msd_length)
+    return analyse_properties(tuple, run_dict, dict_properties, number_blocks=number_blocks, histo_info=histo_info, msd_info = msd_length,
+                              psf_file = psf_file)
 try:
     nworker = int( sys.argv[1] )
 except:
-    nworker = -1
+    nworker = 0
 if nworker == -1:
     nworker = cpu_count()
 if nworker == 0:
