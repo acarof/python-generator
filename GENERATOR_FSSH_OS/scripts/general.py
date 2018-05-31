@@ -23,9 +23,9 @@ dict_properties = {
 
 
 psf_file = './input-1.psf' # ABSOLUTE PATH TO THE PSF FILE TO USE TO CALCULATE 3D MSD
-structure_file = '../run-fssh-110/pos-init.xyz'
-number_blocks = 1
-msd_length = 6.038
+structure_file = 'run-fssh-110/pos-init.xyz'
+number_blocks = 5
+msd_length = 0.0
 # FOR HISTO
 histo_info = {
     'Off-diagonals' : {
@@ -44,7 +44,7 @@ histo_info = {
 name_bucket = os.getcwd().split('/')[-1]
 short_time = time.strftime("%y%m%d%H%M", time.localtime())
 title = '%s-%s' % (name_bucket, short_time,)
-dirlist = os.listdir('..')
+dirlist = os.listdir('.')
 dataname = 'data-%s-%s' % (scripts, title)
 if not os.path.isdir(dataname):
     os.mkdir(dataname)
@@ -59,7 +59,7 @@ for i, directory in enumerate(dirlist):
         keys = tuple(keywords)
         if run_dict.get(keys ) is None:
             run_dict[keys] = []
-        run_dict[keys].append('../' + directory)
+        run_dict[keys].append(directory)
 
 
 coms = find_molecules(psf_file, structure_file)
