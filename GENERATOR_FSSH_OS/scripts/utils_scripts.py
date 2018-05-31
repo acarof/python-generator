@@ -1,6 +1,6 @@
 import re
 import numpy as np
-
+import MDAnalysis as mda
 
 units = {
     'Couplings': 'Ha',
@@ -16,6 +16,38 @@ headers = {
 }
 
 
+def find_molecules(psf_file=None, xyz_file=None):
+    u = mda.Universe(psf_file, xyz_file)
+
+    def detect_molecules(universe):
+        """ Returns a list of atom groups that are molecules as identified by their topology."""
+        molecules = []
+        bonds = [_.indices for _ in u.bonds]
+        atommask = [True] * len(u.atoms)
+        while True in atommask:
+            first = atommask.index(True)
+            found = True
+            mol = [first]
+            while found:
+                found = False
+                for bond in bonds:
+                    if bond[0] in mol and not bond[1] in mol:
+                        mol.append(bond[1])
+                        found = True
+                    if bond[1] in mol and not bond[0] in mol:
+                        mol.append(bond[0])
+                        found = True
+            for atom in mol:
+                atommask[atom] = False
+            molecules.append(u.atoms[mol])
+        return molecules
+
+    molecules = detect_molecules(u)
+    coms = [_.center_of_mass() for _ in molecules]
+    return coms
+
+
+
 class FSSHRun(object):
     def __init__(self, name):
         self.name = name
@@ -24,13 +56,16 @@ class FSSHRun(object):
         self.coefficients = self._read_xyz_file("run-coeff-1.xyz")
 
 
-    def extract(self, property, init=False, msd_info = 0.0):
+    def extract(self, property, init=False, msd_info = 0.0, psf_file = '', coms=[]):
         if init:
             self.init = True
             self.timestep  = float(self.get_input_key(['\TIMESTEP'])[0])
         else:
             self.init = False
         self.msd_info = msd_info
+        self._psf_file = psf_file
+        if len(coms) != 0:
+            self._3d_com = coms
         if (property == 'Atoms Number'):
             return self._get_atoms_number()
         elif (property == 'Off-diagonals'):
@@ -73,6 +108,8 @@ class FSSHRun(object):
         elif property == 'MSD':
             populations = self._extract_population()
             return self._extract_msd(populations)
+        elif property == '3D-MSD':
+            return self._extract_3d_msd(self._extract_population())
         elif property == 'IPR':
             populations = self._extract_population()
             return self._extract_ipr(populations)
@@ -140,6 +177,51 @@ class FSSHRun(object):
                 ipr += popi**2
             ipr = 1.0/ipr
             result[time] = ipr
+        return result
+
+
+
+
+    def _find_list_activated(self):
+        self.list_activated = []
+        with open("%s/TOPOLOGY.include" % self.name) as file_:
+            for line in file_.readlines():
+                pattern = " *@IF \${ACTIVE_MOL} == *([0-9]*)"
+                try:
+                    self.list_activated.append( int(re.findall(pattern, line)[0]) - 1 )
+                except:
+                    pass
+        print "Activated", self.list_activated
+
+    def _extract_3d_com(self, populations):
+        try:
+            result = self._3d_com
+        except:
+            result = []
+            coms = find_molecules(psf_file=self._psf_file,  xyz_file='%s/pos-init.xyz' % self.name)
+            self._find_list_activated()
+            for mol in self.list_activated:
+                result.append(coms[mol])
+            self._3d_com = result
+
+
+    def _extract_3d_msd(self, populations):
+        self._extract_3d_com(populations)
+        result = {}
+        vect0 = np.array([0.0, 0.0, 0.0])
+        for (x,y) in zip(populations[0.0], self._3d_com):
+            vect0 += x*y
+        print "pos0", vect0
+        for time, pop in populations.items():
+            vect_t = np.array([0.0, 0.0, 0.0])
+            for (x,y) in zip(pop, self._3d_com):
+                vect_t += x*y
+            dvect = vect_t - vect0
+            msd = []
+            for x in list(dvect):
+                for y in list(dvect):
+                    msd.append(x*y)
+            result[time] = msd
         return result
 
     def _extract_msd(self, populations):
@@ -331,10 +413,10 @@ class FSSHRun(object):
                     if _convert_float(x) is None:
                         list.append(x)
                     else:
-                        if _convert_int(x) is None:
-                            list.append(_convert_float(x))
-                        else:
+                        if _convert_float(x) is None:
                             list.append(_convert_int(x))
+                        else:
+                            list.append(_convert_float(x))
 
                 results.get(time).append(list)
         file.close()
