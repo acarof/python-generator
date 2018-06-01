@@ -65,7 +65,7 @@ class FSSHRun(object):
         self.msd_info = msd_info
         self._psf_file = psf_file
         if len(coms) != 0:
-            self._3d_com = coms
+            self._3d_com_all = coms
         if (property == 'Atoms Number'):
             return self._get_atoms_number()
         elif (property == 'Off-diagonals'):
@@ -193,15 +193,21 @@ class FSSHRun(object):
                     pass
         print "Activated", self.list_activated
 
+    def _extract_3d_com_all(self):
+        try:
+            result = self._3d_com_all
+        except:
+            self._3d_com_all = find_molecules(psf_file=self._psf_file,  xyz_file='%s/pos-init.xyz' % self.name)
+
     def _extract_3d_com(self, populations):
         try:
             result = self._3d_com
         except:
             result = []
-            coms = find_molecules(psf_file=self._psf_file,  xyz_file='%s/pos-init.xyz' % self.name)
+            self._extract_3d_com_all()
             self._find_list_activated()
             for mol in self.list_activated:
-                result.append(coms[mol])
+                result.append(self._3d_com_all[mol])
             self._3d_com = result
 
 
