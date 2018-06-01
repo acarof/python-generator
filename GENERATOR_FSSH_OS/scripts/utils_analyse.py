@@ -56,10 +56,10 @@ def print_list_dict( list_, property, tuple, dest = '.'):
     with open('%s/%s' % (dest, filename), 'w') as file:
         for time in sorted(list_[0]):
             result = []
-            for dict_ in list_:
-                result.append(dict_[time])
-            line = '%f  %s\n' % (time, '   '.join(map(str, result)) )
-            file.write(line)
+            for index, dict_ in enumerate(list_):
+                result = dict_[time]
+                line = '%f  %s %s\n' % (time, index, '   '.join(map(str, result)) )
+                file.write(line)
     return filename
 
 

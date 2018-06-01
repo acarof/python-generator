@@ -24,7 +24,7 @@ dict_properties = {
 
 psf_file = './input-1.psf' # ABSOLUTE PATH TO THE PSF FILE TO USE TO CALCULATE 3D MSD
 structure_file = './pos-init.xyz'
-number_blocks = 1
+number_blocks = 5
 msd_length = 0.0
 # FOR HISTO
 histo_info = {
