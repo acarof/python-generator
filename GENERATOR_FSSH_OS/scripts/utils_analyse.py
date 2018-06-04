@@ -90,7 +90,7 @@ def initialize_properties_dict(properties_dict, dict_properties, number_blocks, 
                 nbin = histo_info[property]['nbin']
                 min_ = histo_info[property]['min_']
                 max_ = histo_info[property]['max_']
-                dict_[property] = np.array([0] * nbin)
+                dict_[property] = np.array([0.0] * nbin)
                 dict_[property + 'bins'] = np.linspace(min_, max_, nbin)
             else:
                 print "Unknown method: %s" % method
@@ -164,7 +164,7 @@ def bin_list(nbin, min_, max_, list_):
         length = element - min_
         ind = int(length/step)
         if 0 < ind and ind < nbin:
-            histo[ind-1] += 1
+            histo[ind-1] += 1.0
         else:
             print "One element not is the list:", element
     return histo

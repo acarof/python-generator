@@ -70,6 +70,8 @@ class FSSHRun(object):
             return self._get_atoms_number()
         elif (property == 'Off-diagonals'):
             return self._extract_off_diagonal_elements()
+        elif (property == 'All-off-diagonals'):
+            return self._extract_all_off_diagonal_elements()
         elif (property == 'Couplings'):
             return self._extract_coupling()
         elif (property == 'Populations'):
@@ -523,6 +525,22 @@ class FSSHRun(object):
                      self.hamiltonians.get(time)[i][i + 2]
                 )
         return delta_e
+
+
+    def _extract_all_off_diagonal_elements(self):
+        nadiab = int(self.get_input_key(['NUMBER_DIABATIC_STATES'])[0])
+        couplings = {}
+        for time in self.hamiltonians:
+            #time = 0.0
+            couplings[time] = []
+            for state in range(nadiab-1):
+                for state2 in range(state+1, nadiab):
+                    if self.hamiltonians[time][state][state2 + 2] != 0.0:
+                        couplings[time].append( self.hamiltonians[time][state][state2 + 2]  )
+                #print state, couplings[time]
+            #raise SystemExit
+        return couplings
+
 
     def _extract_coupling(self):
         couplings = {}
