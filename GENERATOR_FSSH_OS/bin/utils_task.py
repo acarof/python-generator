@@ -79,8 +79,7 @@ def add_list_activated(system_info, init):
         for x, y in zip(system_info['ABC'], system_info['DIRECTION']):
             length += (x * y) ** 2
         length = numpy.sqrt(length) * (system_info['NUMBER_MOL_ACTIVE'] - 1)
-        system_info.update({
-            'LIST_ACTIVATED': find_molecules(
+        start, list_activated = find_molecules(
                 coord_first=system_info['COORD_FIRST'],
                 size_crystal=system_info['SIZE_CRYSTAL'],
                 length=length,
@@ -88,16 +87,22 @@ def add_list_activated(system_info, init):
                 radius_aom=system_info['AOM_RADIUS'],
                 psf_file='%s/input-1.psf'  % init,
                 xyz_file='%s/crystal.xyz'  % init,
-                nmol_unit=system_info['NMOL_UNIT']
-
-            ),
+                nmol_unit=system_info['NMOL_UNIT'])
+        system_info.update({
+            'LIST_ACTIVATED': list_activated,
         })
         if system_info['POS_CHARGE'] == 'MIDDLE':
-            system_info.update({
-                'FIRST_DIABAT': int(numpy.ceil(system_info['NUMBER_MOL_ACTIVE'] / 2)) + 1 })
+            print "MIDDLE CHARGED NOT POSSIBLE"
+            raise SystemExit
+            #system_info.update({
+            #    'FIRST_DIABAT': int(numpy.ceil(system_info['NUMBER_MOL_ACTIVE'] / 2)) + 1 })
         elif system_info['POS_CHARGE'] == 'FIRST':
+            print 'start', start
+            print 'list', list_activated
+            print list_activated.index(start) + 1
+            #raise SystemExit
             system_info.update({
-                'FIRST_DIABAT': 1 })
+                'FIRST_DIABAT': list_activated.index(start) + 1 })
         else:
             print "'POS_CHARGE' in info should be 'MIDDLE or 'FIRST"
             raise SystemExit
