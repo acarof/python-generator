@@ -1,0 +1,87 @@
+BONDS
+
+ CC   HA    345.800    1.086
+ CD   HA    345.800    1.086
+ CA   HA    345.800    1.086
+ CA   CP    450.200    1.406
+ CA   CA    461.100    1.398
+ CB   CP    450.200    1.4244075   !growing
+ CP   CP    351.400    1.485
+ CB   CC    461.100    1.3819805  !shrinking
+ CB   CB    461.100    1.3829755  !shrinking
+ CC   CD    461.100    1.4112335  !growing
+ CD   CD    461.100    1.3829755  ! same as CM1CM1
+
+ANGLES
+
+ CB   CC   HA     48.200  119.880
+ CC   CD   HA     48.200  119.880
+ CD   CC   HA     48.200  119.880
+ CD   CD   HA     48.200  119.880
+ CP   CA   HA     48.000  119.860
+ CA   CA   HA     48.200  119.880
+ CA   CP   CB     66.700  118.380
+ CA   CP   CP     64.000  121.110
+ CA   CA   CP     66.300  120.690
+ CP   CA   CP     68.800  111.520
+ CC   CB   CP     66.300  120.690
+ CB   CB   CP     66.300  120.690
+ CB   CP   CP     64.000  121.110
+ CB   CC   CD     66.600  120.020
+ CB   CB   CC     66.600  120.020
+ CC   CD   CD     66.600  120.020
+ CA   CP   CA     66.700  118.380
+ CA   CA   CA     66.600  120.020
+
+DIHEDRALS
+
+ CP   CB   CC   HA      3.625    2  180.000
+ CP   CP   CA   HA      3.625    2  180.000
+ CB   CC   CD   HA      3.625    2  180.000
+ CB   CB   CC   HA      3.625    2  180.000
+ CC   CD   CD   HA      3.625    2  180.000
+ CD   CD   CC   HA      3.625    2  180.000
+ CP   CA   CA   HA      3.625    2  180.000
+ CA   CP   CA   HA      3.625    2  180.000
+ CA   CA   CA   HA      3.625    2  180.000
+
+ HA   CC   CD   HA      3.625    2  180.000
+ HA   CD   CD   HA      3.625    2  180.000
+ HA   CA   CA   HA      3.625    2  180.000
+! HA   CD   CC   HA      3.625    2  180.000
+
+ CA   CP   CB   CC      3.625    2  180.000
+ CA   CP   CB   CB      3.625    2  180.000
+ CA   CP   CP   CA      3.625    2  180.000
+ CA   CA   CP   CB      3.625    2  180.000
+ CA   CA   CP   CP      3.625    2  180.000
+ CP   CA   CA   CP      3.625    2  180.000
+ CB   CP   CA   CP      3.625    2  180.000
+ CP   CA   CP   CP      3.625    2  180.000
+ CD   CC   CB   CP      3.625    2  180.000
+ CP   CB   CB   CP      3.625    2  180.000
+ CC   CB   CB   CP      3.625    2  180.000
+ CA   CP   CP   CB      3.625    2  180.000
+ CB   CC   CD   CD      3.625    2  180.000
+ CB   CB   CP   CP      3.625    2  180.000
+ CB   CB   CC   CD      3.625    2  180.000
+ CC   CB   CP   CP      3.625    2  180.000
+ CC   CB   CB   CC      3.625    2  180.000
+ CC   CD   CD   CC      3.625    2  180.000
+ CA   CA   CA   CP      3.625    2  180.000
+ CA   CP   CA   CA      3.625    2  180.000
+ CA   CA   CA   CA      3.625    2  180.000
+! CA   CA   CP   CA      3.625    2  180.000
+ CA   CP   CA   CP      3.625    2  180.000
+
+NONBONDED
+
+!atom  ignored    epsilon      Rmin/2   ignored   eps,1-4       Rmin/2,1-4
+!
+CA       0.000000000    0.086000000    1.908000000
+CB      0.000000000    0.086000000    1.908000000
+CC       0.000000000    0.086000000    1.908000000
+CD       0.000000000    0.086000000    1.908000000
+HA        0.000000000    0.015700000    1.450000000
+CP       0.000000000    0.086000000    1.908000000
+END

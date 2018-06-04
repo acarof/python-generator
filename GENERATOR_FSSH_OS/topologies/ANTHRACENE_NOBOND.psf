@@ -1,0 +1,56 @@
+PSF
+
+       1 !NTITLE
+ REMARKS VMD-generated NAMD/X-Plor PSF structure file
+
+      24 !NATOM
+         1 ANTB     1       ANTB      CA      CA      0.0000         12.0110          0
+         2 ANTB     2       ANTB      CA      CA      0.0000         12.0110          0
+         3 ANTB     3       ANTB      CA      CA      0.0000         12.0110          0
+         4 ANTB     4       ANTB      CA      CA      0.0000         12.0110          0
+         5 ANTB     5       ANTB      CA      CA      0.0000         12.0110          0
+         6 ANTB     6       ANTB      CA      CA      0.0000         12.0110          0
+         7 ANTB     7       ANTB      CA      CA      0.0000         12.0110          0
+         8 ANTB     8       ANTB      H       H       0.0000          1.0080           0
+         9 ANTB     9       ANTB      H       H       0.0000          1.0080           0
+        10 ANTB     10      ANTB      H       H       0.0000          1.0080           0
+        11 ANTB     11      ANTB      H       H       0.0000          1.0080           0
+        12 ANTB     12      ANTB      H       H       0.0000          1.0080           0
+        13 ANTB     13      ANTB      CA      CA      0.0000         12.0110          0
+        14 ANTB     14      ANTB      CA      CA      0.0000         12.0110          0
+        15 ANTB     15      ANTB      CA      CA      0.0000         12.0110          0
+        16 ANTB     16      ANTB      CA      CA      0.0000         12.0110          0
+        17 ANTB     17      ANTB      H       H       0.0000          1.0080           0
+        18 ANTB     18      ANTB      CA      CA      0.0000         12.0110          0
+        19 ANTB     19      ANTB      CA      CA      0.0000         12.0110          0
+        20 ANTB     20      ANTB      H       H       0.0000          1.0080           0
+        21 ANTB     21      ANTB      CA      CA      0.0000         12.0110          0
+        22 ANTB     22      ANTB      H       H       0.0000          1.0080           0
+        23 ANTB     23      ANTB      H       H       0.0000          1.0080           0
+        24 ANTB     24      ANTB      H       H       0.0000          1.0080           0
+
+      0 !NBOND: bonds
+
+      0 !NTHETA: angles
+
+      0 !NPHI: dihedrals
+
+       0 !NIMPHI: impropers
+
+
+       0 !NDON: donors
+
+
+       0 !NACC: acceptors
+
+
+       0 !NNB
+
+       0       0       0       0       0       0       0       0
+       0       0       0       0       0       0       0       0
+       0       0       0       0       0       0       0       0
+
+
+       1       0 !NGRP
+       0       0       0
+

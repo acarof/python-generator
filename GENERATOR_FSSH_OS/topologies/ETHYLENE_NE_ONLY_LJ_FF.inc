@@ -59,7 +59,7 @@
 #     K   [kcalmol*angstrom^-2]  589.70D0
 #UNITS hartree/bohr^2
      #K                          0.263099D0
-     K                          sedK_CC_CHARGED
+     K                          0.000D0
 #     R0         [bohr]          2.6475D0
      R0         [angstrom]       sedCC_CHARGED
     &END BOND
@@ -68,7 +68,7 @@
      KIND                       AMBER
 #     K   [kcalmol*angstrom^-2]  344.30D0
 #UNITS hartree/bohr^2
-K                          0.15361D0
+K                          0.000D0
 #     R0         [bohr]          2.0540D0
      R0         [angstrom]       1.0868D0
     &END BOND
@@ -77,7 +77,7 @@ K                          0.15361D0
      KIND                       AMBER
 #     K   [kcalmol*angstrom^-2]  589.70D0
 #UNITS hartree/bohr^2
-     K                          0.263099D0
+     K                          0.000D0
 #     R0         [bohr]          2.5020D0
      R0         [angstrom]       1.3239D0
     &END BOND
@@ -86,7 +86,7 @@ K                          0.15361D0
      KIND                       AMBER
 #     K   [kcalmol*angstrom^-2]  344.30D0
 #UNITS hartree/bohr^2
-K                          0.15361D0
+K                          0.000D0
 #     R0         [bohr]          2.0540D0
      R0         [angstrom]       1.0868D0
     &END BOND
@@ -98,7 +98,7 @@ K                          0.15361D0
      KIND                       AMBER
 #     K                          37.810D0
 #UNITS hartree/rad^2
-     K                          0.065026914D0
+     K                          0.0000D0
      THETA0     [rad]           2.075546440D0
     &END BEND
     &BEND
@@ -106,7 +106,7 @@ K                          0.15361D0
      KIND                       AMBER
 #     K                          50.30D0
 #UNITS hartree/rad^2
-     K                          0.0801782D0
+     K                          0.0000D0
      THETA0     [rad]           2.08916001D0
     &END BEND
     &BEND
@@ -114,7 +114,7 @@ K                          0.15361D0
      KIND                       AMBER
 #     K                          37.810D0
 #UNITS hartree/rad^2
-     K                          0.065026914D0
+     K                          0.0000D0
      THETA0     [rad]           2.075546440D0
     &END BEND
     &BEND
@@ -122,7 +122,7 @@ K                          0.15361D0
      KIND                       AMBER
 #     K                          50.30D0
 #UNITS hartree/rad^2
-     K                          0.0801782D0
+     K                          0.0000D0
      THETA0     [rad]           2.08916001D0
     &END BEND
 
@@ -130,15 +130,16 @@ K                          0.15361D0
     &TORSION
      ATOMS                      H CN CN H
      KIND                       AMBER
-     K       [kcalmol]          6.650D0
+     K       [kcalmol]          0.000D0
      M                          2
      PHI0    [rad]              3.1415940D0
     &END TORSION
     &TORSION
      ATOMS                      H CP CP H
      KIND                       AMBER
-     K       [kcalmol]          6.650D0
+     K       [kcalmol]          0.000D0
      M                          2
      PHI0    [rad]              3.1415940D0
     &END TORSION
+
 

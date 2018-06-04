@@ -34,15 +34,17 @@ info = {
     #### TRAJECTORIES INFORMATION ####
     # 'FILE_INIT' : 'run-sample-0',                    # path to the run where initial config can be found
     #'TIMESTEP': 0.5,                                   # Timestep (fs)
-    'NUMBER_CONFIG': 2,                                # number of initial config
-    'NUMBER_REPEAT': 5,                                # number of repetition for each config
+    'NUMBER_CONFIG': 1,                                # number of initial config
+    'NUMBER_REPEAT': 1,                                # number of repetition for each config
     'LENGTH_FS': 10,  # LENGTH IN FS                   # length of the run
     'PRINTING_FREQUENCY_FAST': 1,                      # Print every N fs for FSSH properties (coefficient, hamitlonian)
 
     ###################################################################################
     #### SYSTEM INFORMATION ####
-    'FORCEFIELD_FILE': 'ANTHRACENE_HOLE_FF.prm',       # Force field file
-    'AOM_COEFF': 'ANTHRACENE_HOLE_AOM.inc',            # AOM P-PI coefficient
+    'FORCEFIELD_FILE': 'ANTHRACENE_HOLE_HUI_FF.prm',       # Force field file
+    'FORCEFIELD_LJ_ONLY': 'ANTHRACENE_ONLYLJ_FF.prm',  # Force field file with only LJ parameters
+    'AOM_COEFF': 'ANTHRACENE_HOLE_HUI_AOM.inc',            # AOM P-PI coefficient
+    'TOPOLOGY_NOBOND' : 'ANTHRACENE_NOBOND.psf',    # File with molecule topology without bond
     'SCALING': 0.1136,                                # Scaling factor for AOM method (C = 1.819 eV)
     'AOM_RADIUS': 3.0,                                 # Radius to define the chain of molecule part of FOBSH
 
@@ -54,6 +56,8 @@ info = {
     'LIGHT': False,                                    # Remove some files for production run
     'PRINT_MORE' : 'T',                                # Level of printing for FSSH information ( T or F)
     'RUNLOG'     : 'LOW',                              # Level of printing for MD information (OFF or LOW)
+    'DO_SPEEDUP_LJ' : 'T',                             # Use LJ speed-up (T or F)
+    'DO_SPEEDUP_INTRA' : 'T',                          # Use intra speed-up (T or F)
 
     ###################################################################################
     #### SURFACE HOPPING INFORMATION ####
