@@ -56,10 +56,10 @@ def print_list_dict( list_, property, tuple, dest = '.'):
     with open('%s/%s' % (dest, filename), 'w') as file:
         for time in sorted(list_[0]):
             result = []
-            for dict_ in list_:
-                result.append(dict_[time])
-            line = '%f  %s\n' % (time, '   '.join(map(str, result)) )
-            file.write(line)
+            for index, dict_ in enumerate(list_):
+                result = dict_[time]
+                line = '%f  %s %s\n' % (time, index, '   '.join(map(str, result)) )
+                file.write(line)
     return filename
 
 
@@ -99,7 +99,8 @@ def initialize_properties_dict(properties_dict, dict_properties, number_blocks, 
     return properties_dict
 
 
-def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, histo_info = {}, msd_info = 0.0):
+def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, histo_info = {}, msd_info = 0.0,
+                       psf_file = '', coms=[]):
     list_dir = run_dict[tuple]
     properties_dict = {}
     index = -1
@@ -116,7 +117,7 @@ def analyse_properties(tuple, run_dict, dict_properties, number_blocks = 5, hist
         for method in dict_properties:
             dict_ = properties_dict[method]
             for property in dict_properties[method]:
-                prop = dir.extract(property, msd_info=msd_info)
+                prop = dir.extract(property, msd_info=msd_info, psf_file=psf_file, coms=coms)
                 if method == 'Block-runs-average':
                     block = int(index / length_block)
                     #print block

@@ -124,7 +124,8 @@ def find_molecules(coord_first, size_crystal, length, vector, radius_aom = 0.0, 
 		vector = vector / np.linalg.norm(vector)
 		intermediate = np.linspace(0., length, length / stepwidth + 1)
 
-		start = coms[ _built_list_activated(coord_first, size_crystal, nmol_unit)]
+		first_mol =  _built_list_activated(coord_first, size_crystal, nmol_unit)
+		start = coms[first_mol]
 		active = [False] * len(molecules)
 		for step in intermediate:
 			this = start + step * vector
@@ -135,4 +136,4 @@ def find_molecules(coord_first, size_crystal, length, vector, radius_aom = 0.0, 
 
 		active = [ (_[0]) for _ in enumerate(active) if _[1] == True]
 		print 'Active molecule indices (0-based): ' + ' '.join(map(str, active))
-		return [ x +1 for x in active]
+		return (first_mol+1, [ x +1 for x in active])
