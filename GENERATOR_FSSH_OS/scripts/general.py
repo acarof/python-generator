@@ -15,7 +15,7 @@ dict_properties = {
     'Block-runs-average' : [ '3D-MSD'],
     'Specific' : ['FSSH', 'Detailed-FSSH', 'Detailed-CASES'],
     'Mean' : ['Total-energy', 'Temperature'],
-    'Histogram' : ['Off-diagonals', 'Delta_E'],
+    'Histogram' : ['All-off-diagonals', 'Delta_E'],
     'Initial'   : ['Delta_E'],
     'Last' : ['IPR', ]
 }
@@ -24,14 +24,19 @@ dict_properties = {
 
 psf_file = './input-1.psf' # ABSOLUTE PATH TO THE PSF FILE TO USE TO CALCULATE 3D MSD
 structure_file = './pos-init.xyz'
-number_blocks = 5
+number_blocks = 1
 msd_length = 0.0
 # FOR HISTO
 histo_info = {
-    'Off-diagonals' : {
+    'All-off-diagonals' : {
         'nbin' : 100,
         'max_' : 0.01,
         'min_' : -0.01
+    },
+    'Off-diagonals': {
+        'nbin': 100,
+        'max_': 0.01,
+        'min_': -0.01
     },
     'Delta_E' : {
         'nbin': 100,
@@ -108,6 +113,7 @@ with open('%s/List-tuple.dat' % dataname, 'w') as filetuple:
                         new_list.append(average_dict(element, properties['Length-block']))
                     print_list_dict(new_list, property, tuple, dataname)
                 elif method == 'Histogram':
+                    print property, np.sum(dict_[property])
                     print_histo(property, dict_[property], dict_[property + 'bins'], dataname, tuple=tuple)
                 else:
                     print "Unknown method: %s" % method
