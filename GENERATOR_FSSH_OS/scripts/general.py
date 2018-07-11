@@ -21,7 +21,9 @@ dict_properties = {
 }
 
 
-
+# psf_file in the absolute path to a PSF file that describes the real structure
+# i.e. : it can't be a psf produced by a FSSH run, because those ones are usually rubbish
+# so please us the psf from the sampling/equilibration
 psf_file = './input-1.psf' # ABSOLUTE PATH TO THE PSF FILE TO USE TO CALCULATE 3D MSD
 structure_file = './pos-init.xyz'
 number_blocks = 1
