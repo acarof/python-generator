@@ -107,6 +107,12 @@ class FSSHRun(object):
             return self._extract_adiabatic_population()
         elif property == 'Adiabatic-energies':
             return self._extract_adiabatic_energies()
+        elif property == 'MSD-Elstner':
+            populations = self._extract_population()
+            return self._extract_msd_elstner(populations)
+        elif property == 'MSD-Wang':
+            populations = self._extract_population()
+            return self._extract_msd_wang(populations)
         elif property == 'MSD':
             populations = self._extract_population()
             return self._extract_msd(populations)
@@ -183,6 +189,20 @@ class FSSHRun(object):
 
 
 
+    def _find_list_activated_new_inp(self):
+        self.list_activated = []
+        with open("%s/FORCE_EVAL.include" % self.name) as file_:
+           for line in file_:
+              if "INDEX_MOL_DECOMP" in line:
+                 self.list_activated = [int(t) for t in line.split()[1:]]
+              elif "INDEX_MOL_DECOMP" not in line:
+                 with open("%s/DECOMP.include" % self.name) as file_:
+                    for line in file_:
+                      if "INDEX_MOL_DECOMP" in line:
+                          self.list_activated = [int(t) for t in line.split()[1:]]
+              else:
+                 sys.exit("INDEX_MOL_DECOMP NOT FOUND, MSD CANNOT BE CALCULATED")
+        print "Activated", self.list_activated
 
     def _find_list_activated(self):
         self.list_activated = []
@@ -207,7 +227,7 @@ class FSSHRun(object):
         except:
             result = []
             self._extract_3d_com_all()
-            self._find_list_activated()
+            self._find_list_activated_new_inp()
             for mol in self.list_activated:
                 result.append(self._3d_com_all[mol])
             self._3d_com = result
@@ -231,6 +251,42 @@ class FSSHRun(object):
                     msd.append(x*y)
             result[time] = msd
         return result
+
+    def _extract_msd_wang(self, populations):
+        #populations = self._extract_population()
+        com = self._extract_com()
+        result = {}
+        pos0 = 0.0
+        for (x,y) in zip(populations[0.0], com[0.0]):
+            pos0 +=  x *y
+        print "pos0", pos0
+        for time, pop in populations.items():
+            if com.get(time):
+                msd = 0.0
+                msd1 = 0.0
+                msd2 = 0.0
+                for (x,y) in zip(pop, com[time]):
+                    msd1 += x*(y)**2
+                    msd2 += x*(y)
+                result[time] = msd1 - msd2**2
+        return result
+
+    def _extract_msd_elstner(self, populations):
+        #populations = self._extract_population()
+        com = self._extract_com()
+        result = {}
+        pos0 = 0.0
+        for (x,y) in zip(populations[0.0], com[0.0]):
+            pos0 +=  x *y
+        print "pos0", pos0
+        for time, pop in populations.items():
+            if com.get(time):
+                msd = 0.0
+                for (x,y) in zip(pop, com[time]):
+                    msd += x*(y - pos0)**2
+                result[time] = msd
+        return result
+
 
     def _extract_msd(self, populations):
         #populations = self._extract_population()

@@ -57,8 +57,10 @@ def print_list_dict( list_, property, tuple, dest = '.'):
         for time in sorted(list_[0]):
             result = []
             for index, dict_ in enumerate(list_):
-                result = dict_[time]
-                line = '%f  %s %s\n' % (time, index, '   '.join(map(str, result)) )
+                try:
+                    line = '%f  %s\n' % (time, '   '.join(map(str, dict_[time])))
+                except:
+                    line = '%f  %s\n' % (time, str(dict_[time]))
                 file.write(line)
     return filename
 

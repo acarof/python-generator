@@ -9,22 +9,17 @@ from utils_analyse import *
 scripts = 'general'
 keywords = ['TEMPERATURE']
 dict_properties = {
-    'Runs-average' :  ['Adiabatic-populations', 'Surface-populations', 'Delta_E',
-                       'Adiabatic-energies', 'Adiabatic-IPR',
-                       'Populations', '3D-MSD', 'IPR'],
-    'Block-runs-average' : [ '3D-MSD'],
-    'Specific' : ['FSSH', 'Detailed-FSSH', 'Detailed-CASES'],
-    'Mean' : ['Total-energy', 'Temperature'],
-    'Histogram' : ['All-off-diagonals', 'Delta_E'],
-    'Initial'   : ['Delta_E'],
-    'Last' : ['IPR', ]
+    'Block-runs-average' : [ 'MSD', 'IPR', 'MSD-Elstner', 'MSD-Wang',
+                        'Projected-MSD',  'Projected-IPR',
+                        'MQC-MSD', 'MQC-MSD']
+#'Block-runs-average' : ['3D-MSD']
 }
 
 
 #this is the absolute path to the files present in run-eq-0 or run-sample-0
 psf_file = './input-1.psf' # ABSOLUTE PATH TO THE PSF FILE TO USE TO CALCULATE 3D MSD
 structure_file = './pos-init.xyz'
-number_blocks = 1
+number_blocks = 2
 msd_length = 0.0
 # FOR HISTO
 histo_info = {
